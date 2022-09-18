@@ -18,9 +18,8 @@ public class PedidoModel {
     String pedido;
     String observacao;
     BigDecimal valor;
-    BigDecimal totalPecas;
-    BigDecimal totalServicos;
-    BigDecimal desconto;
+    /*BigDecimal totalPecas;
+    BigDecimal totalServicos;*/
     BigDecimal totalGeral;
     LocalDateTime datCriacao;
     LocalDateTime datOrcamento;
