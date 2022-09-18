@@ -26,7 +26,7 @@ public class PedidoModel {
     LocalDateTime datOrcamento;
     VendedorModel vendedor;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "operator")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pedido")
     List<ServicoModel> servicoList;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "cliente_id", referencedColumnName = "id")
