@@ -10,7 +10,7 @@ public class PedidoController{
 
     public void abreTelaNovoPedido(Stage stage) throws Exception {
         try{
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/TelaInicial.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/CadastroPedido.fxml"));
             BorderPane root = fxmlLoader.load();
             Scene scene = new Scene(root, 700,400);
 

@@ -5,14 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/MainFxController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/PedidoController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/ClienteModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/ClienteModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/view/TelaInicial.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/PedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/PedidoController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
