@@ -1,10 +1,12 @@
 package org.example.model;
 
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
+import javax.persistence.*;
+
+@Getter
+@Setter
 @Table(name = "CLIENTE")
 public class ClienteModel {
 
@@ -19,7 +21,6 @@ public class ClienteModel {
     String uf;
     String telefone;
 
-    @ManyToOne
-    @JoinColumn(name = "pedido_id")
+    @OneToOne
     private PedidoModel pedido;
 }
