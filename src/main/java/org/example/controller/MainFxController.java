@@ -58,7 +58,9 @@ public class MainFxController implements Initializable {
 
     public void criarPedido(ActionEvent actionEvent) throws Exception {
         System.out.println("Criando pedido");
-        pedidoController.abreTelaNovoPedido(new Stage());
+
+        Stage telaPedidosStage = (Stage) this.telaPedidos.getScene().getWindow();
+        pedidoController.abreTelaNovoPedido(telaPedidosStage);
     }
 
     public void gerarPdf(ActionEvent actionEvent) {
