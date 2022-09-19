@@ -15,7 +15,6 @@ public class PedidoModel {
 
     @Id
     Long id;
-    String pedido;
     String observacao;
     BigDecimal valor;
     BigDecimal totalPecas;
