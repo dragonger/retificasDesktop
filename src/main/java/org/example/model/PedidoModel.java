@@ -28,7 +28,7 @@ public class PedidoModel {
     BigDecimal totalGeral;
     LocalDateTime datCriacao;
     LocalDateTime datOrcamento;
-    VendedorModel vendedor;
+
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pedido")
     List<ServicoModel> servicoList;
