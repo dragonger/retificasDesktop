@@ -16,6 +16,6 @@ public class ServicoModel {
     BigDecimal valorUnitario;
 
     @ManyToOne
-    @JoinColumn(name = "pedido_id")
+    @JoinColumn(name = "PEDIDO_ID")
     private PedidoModel pedido;
 }

@@ -1,12 +1,20 @@
 package org.example.controller;
 
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Scene;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.example.DAO.PedidoDAO;
+import org.example.model.PedidoModel;
 
 public class PedidoController{
+
+    @FXML
+    private TextArea inputTexto;
+
+    private PedidoDAO pedidoDAO = new PedidoDAO();
 
     public void abreTelaNovoPedido(Stage stage) throws Exception {
         try{
@@ -20,4 +28,13 @@ public class PedidoController{
             e.printStackTrace();
         }
     }
+
+    @FXML
+    private void cadastrarPedido(){
+        PedidoModel pedidoModel = new PedidoModel();
+        pedidoModel.setObservacao(inputTexto.getText());
+        System.out.println(pedidoModel.getObservacao());
+        pedidoDAO.salvarPedido(pedidoModel);
+    }
+
 }
