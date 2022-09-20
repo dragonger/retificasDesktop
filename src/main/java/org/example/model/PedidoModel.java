@@ -1,21 +1,27 @@
 package org.example.model;
 
+
+import javax.persistence.*;
+
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Setter
+@Entity
 @Table(name = "PEDIDO")
 public class PedidoModel {
 
     @Id
     Long id;
+    @Column
     String observacao;
+    @Column
     BigDecimal valor;
     BigDecimal totalPecas;
     BigDecimal totalServicos;

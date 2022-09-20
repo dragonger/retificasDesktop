@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.example.DAO.PedidoDAO;
 import org.example.model.PedidoModel;
 
 public class PedidoController{
@@ -13,7 +14,8 @@ public class PedidoController{
     @FXML
     private TextArea inputTexto;
 
-    PedidoModel pedidoModel = new PedidoModel();
+    private PedidoDAO pedidoDAO = new PedidoDAO();
+
     public void abreTelaNovoPedido(Stage stage) throws Exception {
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/CadastroPedido.fxml"));
@@ -29,9 +31,10 @@ public class PedidoController{
 
     @FXML
     private void cadastrarPedido(){
-        String observacao = inputTexto.getText();
-        pedidoModel.setObservacao(observacao);
+        PedidoModel pedidoModel = new PedidoModel();
+        pedidoModel.setObservacao(inputTexto.getText());
         System.out.println(pedidoModel.getObservacao());
+        pedidoDAO.salvarPedido(pedidoModel);
     }
 
 }
