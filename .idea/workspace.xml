@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/VendedorModel.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/test.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db/test.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,6 +123,14 @@
       <option name="presentableId" value="Default" />
       <updated>1663512176112</updated>
     </task>
+    <task id="LOCAL-00001" summary="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor">
+      <created>1663639169296</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1663639169296</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -141,5 +147,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor" />
+    <option name="LAST_COMMIT_MESSAGE" value="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor" />
   </component>
 </project>
