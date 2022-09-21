@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Redimensionamento da tela inicial">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/test.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db/test.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,6 +31,7 @@
   </component>
   <component name="ProjectId" id="2EwggjexLWiIiQUqBJl1g2SdwXD" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <OptionsSetting value="false" id="Update" />
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
@@ -130,7 +132,14 @@
       <option name="project" value="LOCAL" />
       <updated>1663639169296</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Redimensionamento da tela inicial">
+      <created>1663640458769</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1663640458769</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -150,6 +159,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor" />
-    <option name="LAST_COMMIT_MESSAGE" value="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor" />
+    <MESSAGE value="Redimensionamento da tela inicial" />
+    <option name="LAST_COMMIT_MESSAGE" value="Redimensionamento da tela inicial" />
   </component>
 </project>
