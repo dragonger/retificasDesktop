@@ -18,7 +18,6 @@ public class ClienteModel {
     String bairro;
     String cep;
     String municipio;
-    String uf;
     String telefone;
 
     @OneToOne

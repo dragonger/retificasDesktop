@@ -176,13 +176,13 @@
                                     <ChoiceBox prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                                     <ChoiceBox prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                                     <ChoiceBox prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                                    <ChoiceBox maxWidth="-Infinity" prefWidth="91.0" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-                                    <ChoiceBox maxWidth="-Infinity" prefHeight="0.0" prefWidth="91.0" GridPane.columnIndex="4" GridPane.rowIndex="3" />
-                                    <ChoiceBox maxWidth="-Infinity" prefHeight="0.0" prefWidth="91.0" GridPane.columnIndex="4" GridPane.rowIndex="4" />
-                                    <ChoiceBox maxWidth="-Infinity" prefHeight="0.0" prefWidth="91.0" GridPane.columnIndex="4" GridPane.rowIndex="5" />
-                                    <ChoiceBox maxWidth="-Infinity" prefHeight="0.0" prefWidth="91.0" GridPane.columnIndex="4" GridPane.rowIndex="6" />
-                                    <ChoiceBox maxWidth="-Infinity" prefHeight="0.0" prefWidth="91.0" GridPane.columnIndex="4" GridPane.rowIndex="7" />
-                                    <ChoiceBox maxWidth="-Infinity" prefHeight="0.0" prefWidth="91.0" GridPane.columnIndex="4" GridPane.rowIndex="8" />
+                                    <ChoiceBox maxWidth="-Infinity" prefHeight="25.0" prefWidth="99.0" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                                    <ChoiceBox maxWidth="-Infinity" prefHeight="25.0" prefWidth="98.0" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+                                    <ChoiceBox maxWidth="-Infinity" prefHeight="25.0" prefWidth="99.0" GridPane.columnIndex="4" GridPane.rowIndex="4" />
+                                    <ChoiceBox maxWidth="-Infinity" prefHeight="25.0" prefWidth="99.0" GridPane.columnIndex="4" GridPane.rowIndex="5" />
+                                    <ChoiceBox maxWidth="-Infinity" prefHeight="25.0" prefWidth="96.0" GridPane.columnIndex="4" GridPane.rowIndex="6" />
+                                    <ChoiceBox maxWidth="-Infinity" prefHeight="25.0" prefWidth="99.0" GridPane.columnIndex="4" GridPane.rowIndex="7" />
+                                    <ChoiceBox maxWidth="-Infinity" prefHeight="25.0" prefWidth="97.0" GridPane.columnIndex="4" GridPane.rowIndex="8" />
                                     <Text fontSmoothingType="LCD" layoutX="355.0" layoutY="33.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Serviço" textAlignment="CENTER" wrappingWidth="237.13671875">
                                        <font>
                                           <Font name="System Italic" size="16.0" />
@@ -214,8 +214,8 @@
                                     <TextField GridPane.columnIndex="5" GridPane.rowIndex="1" />
                                     <TextField layoutX="714.0" layoutY="50.0" GridPane.columnIndex="5" GridPane.rowIndex="2" />
                                     <TextField layoutX="714.0" layoutY="87.0" GridPane.columnIndex="5" GridPane.rowIndex="3" />
-                                    <TextField layoutX="714.0" layoutY="123.0" GridPane.columnIndex="5" GridPane.rowIndex="4" />
                                     <TextField layoutX="714.0" layoutY="157.0" GridPane.columnIndex="5" GridPane.rowIndex="5" />
+                                    <TextField layoutX="714.0" layoutY="123.0" GridPane.columnIndex="5" GridPane.rowIndex="4" />
                                     <TextField GridPane.columnIndex="5" GridPane.rowIndex="6" />
                                     <TextField layoutX="714.0" layoutY="222.0" GridPane.columnIndex="5" GridPane.rowIndex="7" />
                                     <TextField layoutX="714.0" layoutY="253.0" GridPane.columnIndex="5" GridPane.rowIndex="8" />
@@ -244,7 +244,79 @@
                   </BorderPane>
                </content>
           </Tab>
-          <Tab text="Untitled Tab 2" />
+          <Tab text="Clientes">
+               <content>
+                  <BorderPane prefHeight="200.0" prefWidth="200.0">
+                     <top>
+                        <GridPane gridLinesVisible="true" prefHeight="453.0" prefWidth="762.0" BorderPane.alignment="CENTER">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="376.0" minWidth="10.0" prefWidth="83.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="687.0" minWidth="10.0" prefWidth="679.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints maxHeight="161.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
+                            <RowConstraints maxHeight="315.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
+                            <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <Text smooth="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Nome:" wrappingWidth="74.619140625">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Text>
+                              <TextField maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" />
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Telefone:" wrappingWidth="74.59765625" GridPane.rowIndex="1">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Text>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Rua:" wrappingWidth="76.07421875" GridPane.rowIndex="2">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Text>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Bairro:" wrappingWidth="76.8984375" GridPane.rowIndex="3">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Text>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cep:" wrappingWidth="78.205078125" GridPane.rowIndex="4">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Text>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Municipio:" wrappingWidth="92.205078125" GridPane.rowIndex="5">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Text>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Telefone:" wrappingWidth="75.205078125" GridPane.rowIndex="6">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Text>
+                              <TextField layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <TextField layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <TextField layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <TextField layoutX="93.0" layoutY="131.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                              <TextField layoutX="93.0" layoutY="157.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                              <TextField layoutX="93.0" layoutY="248.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                           </children>
+                        </GridPane>
+                     </top>
+                     <bottom>
+                        <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                          <buttons>
+                            <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="104.0" text="Cadastrar" />
+                          </buttons>
+                        </ButtonBar>
+                     </bottom>
+                  </BorderPane>
+               </content></Tab>
             <Tab text="Untitled Tab" />
         </tabs>
       </TabPane>
