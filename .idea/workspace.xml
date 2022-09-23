@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Design cadastro do pedido de cabeçote finalizado">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Desing da aba clientes concluido.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
     </list>
@@ -145,7 +145,14 @@
       <option name="project" value="LOCAL" />
       <updated>1663732272732</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Desing da aba clientes concluido.">
+      <created>1663794500000</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1663794500000</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -167,6 +174,7 @@
     <MESSAGE value="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor" />
     <MESSAGE value="Redimensionamento da tela inicial" />
     <MESSAGE value="Design cadastro do pedido de cabeçote finalizado" />
-    <option name="LAST_COMMIT_MESSAGE" value="Design cadastro do pedido de cabeçote finalizado" />
+    <MESSAGE value="Desing da aba clientes concluido." />
+    <option name="LAST_COMMIT_MESSAGE" value="Desing da aba clientes concluido." />
   </component>
 </project>
