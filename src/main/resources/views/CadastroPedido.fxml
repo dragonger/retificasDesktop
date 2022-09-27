@@ -14,7 +14,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="527.0" prefWidth="762.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controller.PedidoController">
+<BorderPane fx:id="cadastroPedido" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="527.0" prefWidth="762.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controller.PedidoController">
    <center>
       <TabPane prefHeight="461.0" prefWidth="868.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="TOP_LEFT">
         <tabs>
@@ -51,6 +51,7 @@
                      <bottom>
                         <ButtonBar prefHeight="32.0" prefWidth="666.0" BorderPane.alignment="CENTER">
                           <buttons>
+                              <Button onAction="#voltarListagemPedidos" mnemonicParsing="false" text="Voltar" />
                             <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="82.0" text="Registrar" />
                           </buttons>
                         </ButtonBar>
