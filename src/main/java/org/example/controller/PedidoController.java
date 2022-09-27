@@ -9,6 +9,8 @@ import javafx.stage.Stage;
 import org.example.DAO.PedidoDAO;
 import org.example.model.PedidoModel;
 
+import java.util.List;
+
 public class PedidoController{
 
     @FXML
@@ -29,7 +31,7 @@ public class PedidoController{
         }
     }
 
-    @FXML
+        @FXML
     private void cadastrarPedido(){
         PedidoModel pedidoModel = new PedidoModel();
         pedidoModel.setObservacao(inputTexto.getText());

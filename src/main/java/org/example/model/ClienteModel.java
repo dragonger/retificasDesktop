@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -14,11 +15,10 @@ public class ClienteModel {
     Long id;
     String nome;
     String numero;
-    String rua;
-    String bairro;
-    String cep;
-    String municipio;
-    String telefone;
+    String email;
+    String cpfCpnj;
+    LocalDateTime dataCadastro;
+    String observacoes;
 
     @OneToOne
     private PedidoModel pedido;

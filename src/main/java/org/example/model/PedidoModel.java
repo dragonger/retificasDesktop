@@ -29,10 +29,12 @@ public class PedidoModel {
     LocalDateTime datCriacao;
     LocalDateTime datOrcamento;
 
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pedido")
     List<ServicoModel> servicoList;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "cliente_id", referencedColumnName = "id")
     ClienteModel cliente;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cabecote_id", referencedColumnName = "id")
+    CabecoteModel cabecote;
 }
