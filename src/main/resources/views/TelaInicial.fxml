@@ -13,10 +13,9 @@
    <bottom>
       <ButtonBar prefHeight="40.0" prefWidth="200.0">
          <buttons>
-            <Button onAction="#listagemPedidos" mnemonicParsing="false" text="Ver pedidos" />
-            <Button mnemonicParsing="false" text="Cadastrar clientes" />
-            <Button mnemonicParsing="false" text="Cadastrar cabeçote" />
-            <Button mnemonicParsing="false" text="Cadastrar serviço" />
+            <Button mnemonicParsing="false" onAction="#listagemPedidos" prefWidth="91.0" text="Ver pedidos" />
+            <Button mnemonicParsing="false" text="Ver clientes" />
+            <Button mnemonicParsing="false" text="Ver cabeçotes" />
          </buttons>
          <padding>
             <Insets left="10.0" right="10.0" />

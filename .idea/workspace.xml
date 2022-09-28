@@ -4,9 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Desing da aba clientes concluido.">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Desing tela pedido">
+      <change afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroCabeçotes.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/views/CadrastroCliente.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -152,7 +155,14 @@
       <option name="project" value="LOCAL" />
       <updated>1663794500000</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Desing tela pedido">
+      <created>1663893470756</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1663893470756</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -175,6 +185,7 @@
     <MESSAGE value="Redimensionamento da tela inicial" />
     <MESSAGE value="Design cadastro do pedido de cabeçote finalizado" />
     <MESSAGE value="Desing da aba clientes concluido." />
-    <option name="LAST_COMMIT_MESSAGE" value="Desing da aba clientes concluido." />
+    <MESSAGE value="Desing tela pedido" />
+    <option name="LAST_COMMIT_MESSAGE" value="Desing tela pedido" />
   </component>
 </project>
