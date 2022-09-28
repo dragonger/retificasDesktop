@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Tela clientes criada">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Tela de cadrastro e gerenciamento de cabeçotes registrados">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroCabeçotes.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroCabeçotes.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaCabeçote.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaCabeçote.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -209,7 +208,21 @@
       <option name="project" value="LOCAL" />
       <updated>1664393532309</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Tela CadastroPedido.fxml transformada em scrollPane">
+      <created>1664393670422</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393670422</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Tela de cadrastro e gerenciamento de cabeçotes registrados">
+      <created>1664393926587</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393926587</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -240,6 +253,8 @@
     <MESSAGE value="PedidoController mudado de Border para Scroll pane" />
     <MESSAGE value="Mudado o tamanho da resolução e adaptação" />
     <MESSAGE value="Tela clientes criada" />
-    <option name="LAST_COMMIT_MESSAGE" value="Tela clientes criada" />
+    <MESSAGE value="Tela CadastroPedido.fxml transformada em scrollPane" />
+    <MESSAGE value="Tela de cadrastro e gerenciamento de cabeçotes registrados" />
+    <option name="LAST_COMMIT_MESSAGE" value="Tela de cadrastro e gerenciamento de cabeçotes registrados" />
   </component>
 </project>
