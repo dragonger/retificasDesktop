@@ -49,9 +49,9 @@
                         </GridPane>
                      </top>
                      <bottom>
-                        <ButtonBar prefHeight="32.0" prefWidth="666.0" BorderPane.alignment="CENTER">
+                        <ButtonBar prefHeight="0.0" prefWidth="750.0" BorderPane.alignment="CENTER">
                           <buttons>
-                              <Button onAction="#voltarListagemPedidos" mnemonicParsing="false" text="Voltar" />
+                              <Button mnemonicParsing="false" onAction="#voltarListagemPedidos" text="Voltar" />
                             <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="82.0" text="Registrar" />
                           </buttons>
                         </ButtonBar>
@@ -70,14 +70,17 @@
                                 </columnConstraints>
                                 <rowConstraints>
                                     <RowConstraints maxHeight="35.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                    <RowConstraints maxHeight="35.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
-                                    <RowConstraints maxHeight="55.0" minHeight="0.0" prefHeight="24.0" vgrow="SOMETIMES" />
-                                    <RowConstraints maxHeight="61.0" minHeight="0.0" prefHeight="18.0" vgrow="SOMETIMES" />
-                                  <RowConstraints maxHeight="55.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
-                                  <RowConstraints maxHeight="55.0" minHeight="0.0" prefHeight="17.0" vgrow="SOMETIMES" />
-                                    <RowConstraints maxHeight="55.0" minHeight="0.0" prefHeight="18.0" vgrow="SOMETIMES" />
-                                    <RowConstraints maxHeight="52.0" minHeight="0.0" prefHeight="16.0" vgrow="SOMETIMES" />
-                                    <RowConstraints maxHeight="53.0" minHeight="0.0" prefHeight="16.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="53.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="53.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="53.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                  <RowConstraints maxHeight="53.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                  <RowConstraints maxHeight="53.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="53.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="53.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="53.0" minHeight="0.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="53.0" minHeight="10.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="53.0" minHeight="10.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="53.0" minHeight="10.0" prefHeight="22.0" vgrow="SOMETIMES" />
                                 </rowConstraints>
                                  <children>
                                     <CheckBox contentDisplay="RIGHT" layoutX="92.0" layoutY="56.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="17.0" prefWidth="143.0" text="Trocar guia" GridPane.rowIndex="2">
@@ -95,7 +98,7 @@
                                           <Font size="14.0" />
                                        </font>
                                     </CheckBox>
-                                    <CheckBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="20.0" prefWidth="218.0" text="Colocar Rosca na Veia" GridPane.rowIndex="5">
+                                    <CheckBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="20.0" prefWidth="218.0" text="Colocar Rosca na Vela" GridPane.rowIndex="5">
                                        <font>
                                           <Font size="14.0" />
                                        </font>
@@ -220,6 +223,49 @@
                                     <TextField GridPane.columnIndex="5" GridPane.rowIndex="6" />
                                     <TextField layoutX="714.0" layoutY="222.0" GridPane.columnIndex="5" GridPane.rowIndex="7" />
                                     <TextField layoutX="714.0" layoutY="253.0" GridPane.columnIndex="5" GridPane.rowIndex="8" />
+                                    <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="217.0" text="Osinar linha de comando" GridPane.rowIndex="9">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </CheckBox>
+                                    <CheckBox mnemonicParsing="false" text="Adaptar valvulas" GridPane.columnIndex="3" GridPane.rowIndex="9">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </CheckBox>
+                                    <ChoiceBox prefWidth="150.0" GridPane.columnIndex="4" GridPane.rowIndex="9" />
+                                    <ChoiceBox layoutX="616.0" layoutY="275.0" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                                    <TextField GridPane.columnIndex="2" GridPane.rowIndex="9" />
+                                    <TextField GridPane.columnIndex="5" GridPane.rowIndex="9" />
+                                    <Text strokeType="OUTSIDE" strokeWidth="0.0" GridPane.rowIndex="10" />
+                                    <TextField GridPane.columnIndex="2" GridPane.rowIndex="10" />
+                                    <TextField GridPane.columnIndex="2" GridPane.rowIndex="11" />
+                                    <TextField GridPane.columnIndex="4" GridPane.rowIndex="10" />
+                                    <TextField GridPane.columnIndex="4" GridPane.rowIndex="11" />
+                                    <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="225.0" text="Adaptar sedes" GridPane.rowIndex="10">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </CheckBox>
+                                    <CheckBox mnemonicParsing="false" text="Adaptar guia" GridPane.rowIndex="11">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </CheckBox>
+                                    <CheckBox mnemonicParsing="false" text="Trocar selo" GridPane.columnIndex="3" GridPane.rowIndex="11">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </CheckBox>
+                                    <CheckBox mnemonicParsing="false" text="Teste de trinca" GridPane.columnIndex="3" GridPane.rowIndex="10">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </CheckBox>
+                                    <ChoiceBox layoutX="616.0" layoutY="246.0" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+                                    <ChoiceBox layoutX="235.0" layoutY="268.0" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+                                    <ChoiceBox prefWidth="150.0" GridPane.columnIndex="4" GridPane.rowIndex="10" />
+                                    <ChoiceBox layoutX="616.0" layoutY="268.0" prefWidth="150.0" GridPane.columnIndex="4" GridPane.rowIndex="11" />
                                  </children>
                               </GridPane>
                            </center>
@@ -245,134 +291,6 @@
                   </BorderPane>
                </content>
           </Tab>
-          <Tab text="Clientes">
-               <content>
-                  <BorderPane prefHeight="200.0" prefWidth="200.0">
-                     <top>
-                        <GridPane gridLinesVisible="true" prefHeight="453.0" prefWidth="762.0" BorderPane.alignment="CENTER">
-                          <columnConstraints>
-                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="376.0" minWidth="10.0" prefWidth="83.0" />
-                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="687.0" minWidth="10.0" prefWidth="679.0" />
-                          </columnConstraints>
-                          <rowConstraints>
-                            <RowConstraints maxHeight="161.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                            <RowConstraints maxHeight="315.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                            <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                          </rowConstraints>
-                           <children>
-                              <Text smooth="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Nome:" wrappingWidth="74.619140625">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <TextField maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" />
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Telefone:" wrappingWidth="74.59765625" GridPane.rowIndex="1">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Rua:" wrappingWidth="76.07421875" GridPane.rowIndex="2">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Bairro:" wrappingWidth="76.8984375" GridPane.rowIndex="3">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cep:" wrappingWidth="78.205078125" GridPane.rowIndex="4">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Municipio:" wrappingWidth="92.205078125" GridPane.rowIndex="5">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Telefone:" wrappingWidth="75.205078125" GridPane.rowIndex="6">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <TextField layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <TextField layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <TextField layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                              <TextField layoutX="93.0" layoutY="131.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                              <TextField layoutX="93.0" layoutY="157.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                              <TextField layoutX="93.0" layoutY="248.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                           </children>
-                        </GridPane>
-                     </top>
-                     <bottom>
-                        <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                          <buttons>
-                            <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="104.0" text="Cadastrar" />
-                          </buttons>
-                        </ButtonBar>
-                     </bottom>
-                  </BorderPane>
-               </content></Tab>
-            <Tab text="Serviços">
-               <content>
-                  <BorderPane prefHeight="200.0" prefWidth="200.0">
-                     <bottom>
-                        <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                          <buttons>
-                            <Button mnemonicParsing="false" text="Adicionar">
-                                 <font>
-                                    <Font size="14.0" />
-                                 </font>
-                              </Button>
-                          </buttons>
-                        </ButtonBar>
-                     </bottom>
-                     <top>
-                        <GridPane gridLinesVisible="true" prefHeight="455.0" prefWidth="762.0" BorderPane.alignment="CENTER">
-                          <columnConstraints>
-                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="376.0" minWidth="10.0" prefWidth="128.0" />
-                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="708.0" minWidth="10.0" prefWidth="634.0" />
-                          </columnConstraints>
-                          <rowConstraints>
-                            <RowConstraints maxHeight="253.0" minHeight="10.0" prefHeight="70.0" vgrow="SOMETIMES" />
-                            <RowConstraints maxHeight="360.0" minHeight="10.0" prefHeight="73.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="360.0" minHeight="10.0" prefHeight="93.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="360.0" minHeight="10.0" prefHeight="93.0" vgrow="SOMETIMES" />
-                          </rowConstraints>
-                           <children>
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="  Nome:" wrappingWidth="85.619140625">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <TextField maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="25.0" prefWidth="142.0" GridPane.columnIndex="1" />
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="  Valor:" wrappingWidth="90.501953125" GridPane.rowIndex="1">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <TextField layoutX="64.0" layoutY="122.0" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="25.0" prefWidth="142.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <CheckBox maxHeight="-Infinity" maxWidth="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="27.0" prefWidth="130.0" text="Quantidade" GridPane.rowIndex="2">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </CheckBox>
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="  Valor medio:" wrappingWidth="128.13671875" GridPane.rowIndex="3">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Text>
-                              <TextField layoutX="138.0" layoutY="152.0" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="25.0" prefWidth="142.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                           </children>
-                        </GridPane>
-                     </top>
-                  </BorderPane>
-               </content></Tab>
         </tabs>
       </TabPane>
    </center>
