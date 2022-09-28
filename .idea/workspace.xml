@@ -4,12 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Desing tela pedido">
-      <change afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroCabeçotes.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/views/CadrastroCliente.fxml" afterDir="false" />
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Tela clientes criada">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroCabeçotes.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroCabeçotes.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaInicial.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -162,7 +160,56 @@
       <option name="project" value="LOCAL" />
       <updated>1663893470756</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Tela Cabeçotes criada e botões tela inicial atalizada">
+      <created>1664376358204</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1664376358204</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Tela ver clientes criada">
+      <created>1664376434606</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1664376434606</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Tela cadrasto pedido atalizada, remoção de não relacionados">
+      <created>1664376576657</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1664376576658</updated>
+    </task>
+    <task id="LOCAL-00009" summary="PedidoController mudado de Border para Scroll pane">
+      <created>1664393304137</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393304137</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Mudado o tamanho da resolução e adaptação">
+      <created>1664393415222</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393415222</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Tela clientes criada">
+      <created>1664393519655</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393519655</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Tela clientes criada">
+      <created>1664393532308</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393532309</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -186,6 +233,13 @@
     <MESSAGE value="Design cadastro do pedido de cabeçote finalizado" />
     <MESSAGE value="Desing da aba clientes concluido." />
     <MESSAGE value="Desing tela pedido" />
-    <option name="LAST_COMMIT_MESSAGE" value="Desing tela pedido" />
+    <MESSAGE value="Tela Cabeçotes criada e botões tela inicial atalizada" />
+    <MESSAGE value="Tela para clientes criada" />
+    <MESSAGE value="Tela ver clientes criada" />
+    <MESSAGE value="Tela cadrasto pedido atalizada, remoção de não relacionados" />
+    <MESSAGE value="PedidoController mudado de Border para Scroll pane" />
+    <MESSAGE value="Mudado o tamanho da resolução e adaptação" />
+    <MESSAGE value="Tela clientes criada" />
+    <option name="LAST_COMMIT_MESSAGE" value="Tela clientes criada" />
   </component>
 </project>
