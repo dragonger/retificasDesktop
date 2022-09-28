@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.BorderPane;
@@ -84,7 +85,7 @@ public class PedidoController implements Initializable {
         System.out.println("Cadastro pedido");
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/CadastroPedido.fxml"));
-            BorderPane root = fxmlLoader.load();
+            ScrollPane root = fxmlLoader.load();
             Stage listagemPedidosStage = (Stage) this.listagemPedidos.getScene().getWindow();
             Scene scene = new Scene(root, 700,400);
 
