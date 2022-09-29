@@ -18,6 +18,8 @@ public class ClienteModel {
     String nome;
     String telefone;
     String cpfCpnj;
+    String endereco;
+    String cep;
     LocalDateTime dataCadastro;
 
     @OneToOne

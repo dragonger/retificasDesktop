@@ -22,13 +22,12 @@
                     <content>
                         <BorderPane prefHeight="200.0" prefWidth="200.0">
                             <center>
-                                <TableView prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                                <TableView fx:id="tblClientes" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                                     <columns>
-                                        <TableColumn prefWidth="154.0" text="Nome" />
-                                        <TableColumn prefWidth="180.0" text="Telefone" />
-                                        <TableColumn prefWidth="217.0" text="Email" />
-                                        <TableColumn prefWidth="143.0" text="Endereço" />
-                                        <TableColumn prefWidth="67.0" text="Obs" />
+                                        <TableColumn fx:id="colNome" prefWidth="154.0" text="Nome" />
+                                        <TableColumn fx:id="colTelefone" prefWidth="180.0" text="Telefone" />
+                                        <TableColumn fx:id="colEndereco" prefWidth="143.0" text="Endereço" />
+                                        <TableColumn fx:id="colCep" prefWidth="67.0" text="Cep" />
                                     </columns>
                                 </TableView>
                             </center>
@@ -50,7 +49,7 @@
                             <bottom>
                                 <ButtonBar prefHeight="37.0" prefWidth="762.0" BorderPane.alignment="CENTER">
                                     <buttons>
-                                        <Button onAction="#voltarTelaInicial" mnemonicParsing="false" text="Voltar" />
+                                        <Button mnemonicParsing="false" onAction="#voltarTelaInicial" text="Voltar" />
                                         <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="104.0" text="Cadastrar" />
                                     </buttons>
                                 </ButtonBar>
@@ -67,7 +66,6 @@
                                         <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
                                         <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
                                         <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                                        <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
                                         <Text smooth="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Nome:" wrappingWidth="74.619140625">
@@ -81,31 +79,25 @@
                                                 <Font size="18.0" />
                                             </font>
                                         </Text>
-                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Email:" wrappingWidth="76.07421875" GridPane.rowIndex="2">
+                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Endereço:" wrappingWidth="96.205078125" GridPane.rowIndex="3">
                                             <font>
                                                 <Font size="18.0" />
                                             </font>
                                         </Text>
-                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Endereço:" wrappingWidth="96.205078125" GridPane.rowIndex="4">
-                                            <font>
-                                                <Font size="18.0" />
-                                            </font>
-                                        </Text>
-                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cep:" wrappingWidth="92.205078125" GridPane.rowIndex="5">
+                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cep:" wrappingWidth="92.205078125" GridPane.rowIndex="4">
                                             <font>
                                                 <Font size="18.0" />
                                             </font>
                                         </Text>
                                         <TextField layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                        <TextField layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                        <TextField layoutX="93.0" layoutY="131.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                        <TextField layoutX="93.0" layoutY="157.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cpf/Cnpj:" wrappingWidth="89.13671875" GridPane.rowIndex="3">
+                                        <TextField layoutX="93.0" layoutY="131.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <TextField layoutX="93.0" layoutY="157.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cpf/Cnpj:" wrappingWidth="89.13671875" GridPane.rowIndex="2">
                                             <font>
                                                 <Font size="18.0" />
                                             </font>
                                         </Text>
-                                        <TextField layoutX="99.0" layoutY="294.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <TextField layoutX="99.0" layoutY="294.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                     </children>
                                 </GridPane>
                             </center>
