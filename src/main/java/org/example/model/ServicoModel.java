@@ -11,8 +11,9 @@ public class ServicoModel {
 
     @Id
     Long id;
+    String nome;
+    String tipoServico;
     String descricao;
-    Integer quantidade;
     BigDecimal valorUnitario;
 
     @ManyToOne

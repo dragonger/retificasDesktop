@@ -18,7 +18,7 @@ public class CabecoteModel {
     Long id;
     String marca;
     String modelo;
-    String valvulas;
+    Integer valvulas;
     String alturaX;
     String alturaY;
 
