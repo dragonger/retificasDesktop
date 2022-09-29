@@ -13,8 +13,8 @@
    <bottom>
       <ButtonBar prefHeight="40.0" prefWidth="200.0">
          <buttons>
-            <Button mnemonicParsing="false" onAction="#listagemPedidos" prefWidth="91.0" text="Ver pedidos" />
-            <Button mnemonicParsing="false" text="Ver clientes" />
+            <Button mnemonicParsing="false" onAction="#abrirListagemPedidos" prefWidth="91.0" text="Ver pedidos" />
+            <Button mnemonicParsing="false" onAction="#abrirTelaCliente" text="Ver clientes" />
             <Button mnemonicParsing="false" text="Ver cabeçotes" />
          </buttons>
          <padding>
