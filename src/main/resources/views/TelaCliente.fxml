@@ -50,7 +50,7 @@
                                 <ButtonBar prefHeight="37.0" prefWidth="762.0" BorderPane.alignment="CENTER">
                                     <buttons>
                                         <Button mnemonicParsing="false" onAction="#voltarTelaInicial" text="Voltar" />
-                                        <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="104.0" text="Cadastrar" />
+                                        <Button mnemonicParsing="false" onAction="#cadastrarNovoCliente" prefHeight="25.0" prefWidth="104.0" text="Cadastrar" />
                                     </buttons>
                                 </ButtonBar>
                             </bottom>
@@ -73,7 +73,7 @@
                                                 <Font size="18.0" />
                                             </font>
                                         </Text>
-                                        <TextField maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" />
+                                        <TextField fx:id="nomeField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" />
                                         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Telefone:" wrappingWidth="74.59765625" GridPane.rowIndex="1">
                                             <font>
                                                 <Font size="18.0" />
@@ -89,15 +89,15 @@
                                                 <Font size="18.0" />
                                             </font>
                                         </Text>
-                                        <TextField layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                        <TextField layoutX="93.0" layoutY="131.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                        <TextField layoutX="93.0" layoutY="157.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                        <TextField fx:id="telefoneField" layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <TextField fx:id="cpfField" layoutX="93.0" layoutY="131.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <TextField fx:id="enderecoField" layoutX="93.0" layoutY="157.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cpf/Cnpj:" wrappingWidth="89.13671875" GridPane.rowIndex="2">
                                             <font>
                                                 <Font size="18.0" />
                                             </font>
                                         </Text>
-                                        <TextField layoutX="99.0" layoutY="294.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <TextField fx:id="cepField" layoutX="99.0" layoutY="294.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                     </children>
                                 </GridPane>
                             </center>

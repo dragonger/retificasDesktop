@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Tela de cadrastro e gerenciamento de cabeçotes registrados">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Listagem de clientes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaCabeçote.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaCabeçote.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/DAO/ClienteDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/DAO/ClienteDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/ClienteController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/ClienteController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaInicialController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaInicialController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/test.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db/test.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaCliente.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaCliente.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,8 +21,9 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="JavaFXApplication" />
-        <option value="Class" />
         <option value="FxmlFile" />
+        <option value="Class" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -42,6 +47,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Flávio/IdeaProjects/retificasDeskt/src/main/resources/views/TelaInicial.fxml&quot;,
     &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
@@ -222,7 +228,49 @@
       <option name="project" value="LOCAL" />
       <updated>1664393926587</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Alterações cliente modelo e tela cliente">
+      <created>1664421284119</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1664421284120</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Alterações modelo cabecote">
+      <created>1664421640291</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1664421640291</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Retirada email dos clientes">
+      <created>1664422296186</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1664422296186</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Alterações de modelos&#10;Alteração banco de dados">
+      <created>1664423643036</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1664423643036</updated>
+    </task>
+    <task id="LOCAL-00019" summary="botões de entrar e sair da tela cliente">
+      <created>1664424262240</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1664424262240</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Listagem de clientes">
+      <created>1664427910475</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1664427910475</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -255,6 +303,13 @@
     <MESSAGE value="Tela clientes criada" />
     <MESSAGE value="Tela CadastroPedido.fxml transformada em scrollPane" />
     <MESSAGE value="Tela de cadrastro e gerenciamento de cabeçotes registrados" />
-    <option name="LAST_COMMIT_MESSAGE" value="Tela de cadrastro e gerenciamento de cabeçotes registrados" />
+    <MESSAGE value="Alterações cliente modelo e tela cliente" />
+    <MESSAGE value="Alterações modelo cabecote" />
+    <MESSAGE value="Retirada observações dos clientes" />
+    <MESSAGE value="Retirada email dos clientes" />
+    <MESSAGE value="Alterações de modelos&#10;Alteração banco de dados" />
+    <MESSAGE value="botões de entrar e sair da tela cliente" />
+    <MESSAGE value="Listagem de clientes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Listagem de clientes" />
   </component>
 </project>

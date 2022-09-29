@@ -37,7 +37,7 @@ public class TelaInicialController {
         System.out.println("tela cliente");
 
         Stage telaInicialStage = (Stage) this.telaInicial.getScene().getWindow();
-        clienteController.abreTelaNovoPedido(telaInicialStage);
+        clienteController.abreTelaCliente(telaInicialStage);
     }
 
 }
