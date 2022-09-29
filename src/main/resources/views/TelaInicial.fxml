@@ -15,7 +15,7 @@
          <buttons>
             <Button mnemonicParsing="false" onAction="#abrirListagemPedidos" prefWidth="91.0" text="Ver pedidos" />
             <Button mnemonicParsing="false" onAction="#abrirTelaCliente" text="Ver clientes" />
-            <Button mnemonicParsing="false" text="Ver cabeçotes" />
+            <Button mnemonicParsing="false" onAction="#abrirTelaCabecote" text="Ver cabeçote" />
          </buttons>
          <padding>
             <Insets left="10.0" right="10.0" />

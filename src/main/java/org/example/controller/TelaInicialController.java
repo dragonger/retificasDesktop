@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
@@ -12,6 +13,7 @@ public class TelaInicialController {
 
     private final PedidoController pedidoController = new PedidoController();
     private final ClienteController clienteController = new ClienteController();
+    private final CabecoteController cabecoteController = new CabecoteController();
 
    /*
 
@@ -40,4 +42,10 @@ public class TelaInicialController {
         clienteController.abreTelaCliente(telaInicialStage);
     }
 
+    public void abrirTelaCabecote() {
+        System.out.println("tela cabecote");
+
+        Stage telaInicialStage = (Stage) this.telaInicial.getScene().getWindow();
+        cabecoteController.abreTelaCabecote(telaInicialStage);
+    }
 }
