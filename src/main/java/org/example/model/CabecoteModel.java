@@ -7,7 +7,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -17,9 +16,11 @@ public class CabecoteModel {
 
     @Id
     Long id;
-    String nome;
-    String descricao;
-    BigDecimal valorUnitario;
+    String marca;
+    String modelo;
+    String valvulas;
+    String alturaX;
+    String alturaY;
 
     @OneToOne
     private PedidoModel pedido;
