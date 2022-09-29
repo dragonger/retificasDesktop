@@ -14,7 +14,7 @@ public class ClienteModel {
     @Id
     Long id;
     String nome;
-    String numero;
+    String telefone;
     String email;
     String cpfCpnj;
     LocalDateTime dataCadastro;
