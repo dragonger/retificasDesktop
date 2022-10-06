@@ -4,6 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.example.ConexaoBanco;
 import org.example.model.PedidoModel;
+import org.example.model.ServicoModel;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -45,6 +46,31 @@ public class PedidoDAO extends ConexaoBanco {
             System.out.println(e.getMessage());
         } finally {
             desconectar();
+        }
+        return obsListModel;
+    }
+
+    public ObservableList<ServicoModel> buscarListagemServico() {
+        conectar();
+        String sql = "SELECT * FROM TBL_SERVICO ts";
+        ObservableList<ServicoModel> obsListModel = FXCollections.observableArrayList();
+        try{
+            PreparedStatement preparedStatement = criarPreparedStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+                ServicoModel servicoModel = new ServicoModel();
+                servicoModel.setId(resultSet.getLong(1));
+                servicoModel.setValorUnitario(resultSet.getBigDecimal(3));
+                servicoModel.setTipoServico(resultSet.getString(4));
+                servicoModel.setNome(resultSet.getString(1));
+                obsListModel.add(servicoModel);
+            }
+        } catch(SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            desconectar();
+
+
         }
         return obsListModel;
     }

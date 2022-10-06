@@ -4,9 +4,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.example.DAO.PedidoDAO;
@@ -21,8 +21,6 @@ public class PedidoController implements Initializable {
     @FXML
     private BorderPane listagemPedidos;
     @FXML
-    private BorderPane cadastroPedido;
-    @FXML
     private TableView<PedidoModel> tblPedidos;
     @FXML
     private TableColumn<PedidoModel, String> colCliente;
@@ -33,24 +31,17 @@ public class PedidoController implements Initializable {
     @FXML
     private TableColumn<PedidoModel, String> colValor;
 
+
+    private final CadastroPedidoController cadastroPedidoController = new CadastroPedidoController();
     private final PedidoDAO pedidoDAO = new PedidoDAO();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        /*colCliente.setCellValueFactory( Pedido -> {
-            SimpleObjectProperty property = new SimpleObjectProperty();
-            property.setValue(Pedido.getValue().getCliente().getNome());
-            return property;
-        });
-        colCliente.setCellValueFactory( Pedido -> {
-            SimpleObjectProperty property = new SimpleObjectProperty();
-            property.setValue(Pedido.getValue().getCabecote().getNome());
-            return property;
-        });
+
         colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("datOrcamento"));
         colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("totalGeral"));
 
-        tblPedidos.setItems(pedidoDAO.buscarListagemPedido());*/
+        tblPedidos.setItems(pedidoDAO.buscarListagemPedido());
     }
 
     public void abreTelaNovoPedido(Stage stage) {
@@ -61,6 +52,7 @@ public class PedidoController implements Initializable {
 
             stage.setScene(scene);
             stage.show();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -80,28 +72,11 @@ public class PedidoController implements Initializable {
         }
     }
 
-
-    public void abrirCadastroPedido() {
-        System.out.println("Cadastro pedido");
-        try{
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/CadastroPedido.fxml"));
-            ScrollPane root = fxmlLoader.load();
-            Stage listagemPedidosStage = (Stage) this.listagemPedidos.getScene().getWindow();
-            Scene scene = new Scene(root, 700,400);
-
-            listagemPedidosStage.setScene(scene);
-            listagemPedidosStage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
     public void voltarListagemPedidos() {
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/ListagemPedidos.fxml"));
             BorderPane root = fxmlLoader.load();
-            Stage cadastroPedidosStage = (Stage) this.cadastroPedido.getScene().getWindow();
+            Stage cadastroPedidosStage = (Stage) this.listagemPedidos.getScene().getWindow();
             Scene scene = new Scene(root, 700,400);
 
             cadastroPedidosStage.setScene(scene);
@@ -116,6 +91,12 @@ public class PedidoController implements Initializable {
         PedidoModel pedidoModel = new PedidoModel();
         System.out.println(pedidoModel.getObservacao());
         pedidoDAO.salvarPedido(pedidoModel);
+    }
+
+    public void abrirCadastroPedido(){
+
+        Stage telaPedidoStage = (Stage) this.listagemPedidos.getScene().getWindow();
+        cadastroPedidoController.abrirCadastroPedido(telaPedidoStage);
     }
 
 }

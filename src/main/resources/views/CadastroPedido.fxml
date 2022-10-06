@@ -2,427 +2,81 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ChoiceBox?>
-<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.text.Font?>
-<?import javafx.scene.text.Text?>
 
 
-<ScrollPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0"
-            xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.controller.PedidoController">
-    <content>
-        <BorderPane fx:id="cadastroPedido" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="1080.0"
-                    prefWidth="1920.0">
-            <center>
-                <TabPane prefHeight="461.0" prefWidth="868.0" tabClosingPolicy="UNAVAILABLE"
-                         BorderPane.alignment="TOP_LEFT">
-                    <tabs>
-                        <Tab text="Pedido">
-                            <content>
-                                <BorderPane prefHeight="200.0" prefWidth="200.0">
-                                    <bottom>
-                                        <ButtonBar prefHeight="38.0" prefWidth="1920.0" BorderPane.alignment="CENTER">
-                                            <buttons>
-                                                <Button mnemonicParsing="false" onAction="#voltarListagemPedidos"
-                                                        text="Voltar"/>
-                                                <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="82.0"
-                                                        text="Registrar"/>
-                                            </buttons>
-                                        </ButtonBar>
-                                    </bottom>
-                                    <center>
-                                        <BorderPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                                            <center>
-                                                <GridPane focusTraversable="true" gridLinesVisible="true"
-                                                          prefHeight="856.0" prefWidth="1920.0"
-                                                          BorderPane.alignment="CENTER">
-                                                    <columnConstraints>
-                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="628.0"
-                                                                           minWidth="10.0" prefWidth="217.0"/>
-                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="337.0"
-                                                                           minWidth="0.0" prefWidth="90.0"/>
-                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="337.0"
-                                                                           minWidth="10.0" prefWidth="50.0"/>
-                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="628.0"
-                                                                           minWidth="10.0" prefWidth="217.0"/>
-                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="628.0"
-                                                                           minWidth="10.0" prefWidth="90.0"/>
-                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="628.0"
-                                                                           minWidth="10.0" prefWidth="50.0"/>
-                                                    </columnConstraints>
-                                                    <rowConstraints>
-                                                        <RowConstraints maxHeight="125.0" minHeight="10.0"
-                                                                        prefHeight="76.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="150.0" minHeight="0.0"
-                                                                        prefHeight="74.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="179.0" minHeight="0.0"
-                                                                        prefHeight="63.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="196.0" minHeight="0.0"
-                                                                        prefHeight="55.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="215.0" minHeight="0.0"
-                                                                        prefHeight="56.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="197.0" minHeight="0.0"
-                                                                        prefHeight="27.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="208.0" minHeight="0.0"
-                                                                        prefHeight="52.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="205.0" minHeight="0.0"
-                                                                        prefHeight="48.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="209.0" minHeight="0.0"
-                                                                        prefHeight="50.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="150.0" minHeight="0.0"
-                                                                        prefHeight="74.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="279.0" minHeight="0.0"
-                                                                        prefHeight="75.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="280.0" minHeight="0.0"
-                                                                        prefHeight="78.0" vgrow="SOMETIMES"/>
-                                                    </rowConstraints>
-                                                    <children>
-                                                        <CheckBox contentDisplay="RIGHT" layoutX="92.0" layoutY="56.0"
-                                                                  maxHeight="-Infinity" maxWidth="-Infinity"
-                                                                  minHeight="-Infinity" minWidth="-Infinity"
-                                                                  mnemonicParsing="false" prefHeight="17.0"
-                                                                  prefWidth="143.0" text="Trocar guia"
-                                                                  GridPane.rowIndex="2">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox layoutX="92.0" layoutY="82.0" mnemonicParsing="false"
-                                                                  prefHeight="20.0" prefWidth="109.0" text="Trocar sede"
-                                                                  GridPane.rowIndex="3">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox layoutX="92.0" layoutY="107.0" maxHeight="-Infinity"
-                                                                  maxWidth="-Infinity" minHeight="-Infinity"
-                                                                  minWidth="-Infinity" mnemonicParsing="false"
-                                                                  prefHeight="20.0" prefWidth="193.0"
-                                                                  text="Colocar estojo sob medida"
-                                                                  GridPane.rowIndex="4">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox maxHeight="-Infinity" maxWidth="-Infinity"
-                                                                  minHeight="-Infinity" minWidth="-Infinity"
-                                                                  mnemonicParsing="false" prefHeight="20.0"
-                                                                  prefWidth="218.0" text="Colocar Rosca na Vela"
-                                                                  GridPane.rowIndex="5">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox maxHeight="-Infinity" maxWidth="-Infinity"
-                                                                  minHeight="-Infinity" minWidth="-Infinity"
-                                                                  mnemonicParsing="false" prefHeight="20.0"
-                                                                  prefWidth="219.0" text="Esmerilar valvulas"
-                                                                  GridPane.rowIndex="6">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox maxHeight="-Infinity" maxWidth="-Infinity"
-                                                                  minHeight="-Infinity" minWidth="-Infinity"
-                                                                  mnemonicParsing="false" prefHeight="20.0"
-                                                                  prefWidth="218.0" text="Retificar valvulas"
-                                                                  GridPane.rowIndex="7">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox maxHeight="-Infinity" maxWidth="-Infinity"
-                                                                  minHeight="-Infinity" minWidth="-Infinity"
-                                                                  mnemonicParsing="false" prefHeight="20.0"
-                                                                  prefWidth="219.0" text="Trocar valvulas"
-                                                                  GridPane.rowIndex="8">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox contentDisplay="RIGHT" layoutX="10.0" layoutY="53.0"
-                                                                  maxHeight="-Infinity" maxWidth="-Infinity"
-                                                                  minHeight="-Infinity" minWidth="-Infinity"
-                                                                  mnemonicParsing="false" prefHeight="17.0"
-                                                                  prefWidth="217.0" text="Recondissionamento geral"
-                                                                  GridPane.rowIndex="1">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" prefHeight="20.0"
-                                                                  prefWidth="237.0" text="Jatear com microesferas"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="1">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox layoutX="440.0" layoutY="54.0" mnemonicParsing="false"
-                                                                  prefHeight="17.0" prefWidth="162.0" text="Solda"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="2">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" prefHeight="17.0"
-                                                                  prefWidth="157.0" text="Regular valvulas"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="3">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" prefHeight="17.0"
-                                                                  prefWidth="159.0" text="Facear"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="4">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" text="Plainar"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="5">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" text="Converte p/"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="6">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" text="Troca de retentor"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="8">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Quantidade"
-                                                              textAlignment="CENTER" wrappingWidth="109.13671875"
-                                                              GridPane.columnIndex="1">
-                                                            <font>
-                                                                <Font name="System Italic" size="18.0"/>
-                                                            </font>
-                                                        </Text>
-                                                        <Text layoutX="228.0" layoutY="34.0" strokeType="OUTSIDE"
-                                                              strokeWidth="0.0" text="Quantidade" textAlignment="CENTER"
-                                                              wrappingWidth="110.13671875" GridPane.columnIndex="4">
-                                                            <font>
-                                                                <Font name="System Italic" size="18.0"/>
-                                                            </font>
-                                                        </Text>
-                                                        <Text fontSmoothingType="LCD" strokeType="OUTSIDE"
-                                                              strokeWidth="0.0" text="Serviço" textAlignment="CENTER"
-                                                              wrappingWidth="237.13671875" GridPane.columnIndex="3">
-                                                            <font>
-                                                                <Font name="System Italic" size="18.0"/>
-                                                            </font>
-                                                        </Text>
-                                                        <ChoiceBox prefHeight="25.0" prefWidth="1111.0"
-                                                                   GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES"
-                                                                   GridPane.rowIndex="2"/>
-                                                        <ChoiceBox prefHeight="25.0" prefWidth="1106.0"
-                                                                   GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-                                                        <ChoiceBox prefWidth="1111.0" GridPane.columnIndex="1"
-                                                                   GridPane.rowIndex="4"/>
-                                                        <ChoiceBox prefHeight="25.0" prefWidth="1111.0"
-                                                                   GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-                                                        <ChoiceBox prefWidth="1111.0" GridPane.columnIndex="1"
-                                                                   GridPane.rowIndex="6"/>
-                                                        <ChoiceBox prefWidth="1111.0" GridPane.columnIndex="1"
-                                                                   GridPane.rowIndex="7"/>
-                                                        <ChoiceBox prefWidth="1111.0" GridPane.columnIndex="1"
-                                                                   GridPane.rowIndex="8"/>
-                                                        <ChoiceBox maxWidth="-Infinity" prefHeight="25.0"
-                                                                   prefWidth="1111.0" GridPane.columnIndex="4"
-                                                                   GridPane.rowIndex="2"/>
-                                                        <ChoiceBox maxWidth="-Infinity" prefHeight="25.0"
-                                                                   prefWidth="1111.0" GridPane.columnIndex="4"
-                                                                   GridPane.rowIndex="3"/>
-                                                        <ChoiceBox maxWidth="-Infinity" prefHeight="25.0"
-                                                                   prefWidth="1111.0" GridPane.columnIndex="4"
-                                                                   GridPane.rowIndex="4"/>
-                                                        <ChoiceBox maxWidth="-Infinity" prefHeight="25.0"
-                                                                   prefWidth="1111.0" GridPane.columnIndex="4"
-                                                                   GridPane.rowIndex="5"/>
-                                                        <ChoiceBox maxWidth="-Infinity" prefHeight="25.0"
-                                                                   prefWidth="1111.0" GridPane.columnIndex="4"
-                                                                   GridPane.rowIndex="6"/>
-                                                        <ChoiceBox maxWidth="-Infinity" prefHeight="25.0"
-                                                                   prefWidth="1111.0" GridPane.columnIndex="4"
-                                                                   GridPane.rowIndex="7"/>
-                                                        <ChoiceBox maxWidth="-Infinity" prefHeight="25.0"
-                                                                   prefWidth="1111.0" GridPane.columnIndex="4"
-                                                                   GridPane.rowIndex="8"/>
-                                                        <Text fontSmoothingType="LCD" layoutX="355.0" layoutY="33.0"
-                                                              strokeType="OUTSIDE" strokeWidth="0.0" text="Serviço"
-                                                              textAlignment="CENTER" wrappingWidth="237.13671875">
-                                                            <font>
-                                                                <Font name="System Italic" size="18.0"/>
-                                                            </font>
-                                                        </Text>
-                                                        <CheckBox layoutX="355.0" layoutY="110.0"
-                                                                  mnemonicParsing="false" prefHeight="17.0"
-                                                                  prefWidth="157.0" text="Montar"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="7">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Valor"
-                                                              textAlignment="CENTER" wrappingWidth="56.66796875"
-                                                              GridPane.columnIndex="2">
-                                                            <font>
-                                                                <Font name="System Italic" size="18.0"/>
-                                                            </font>
-                                                        </Text>
-                                                        <Text layoutX="333.0" layoutY="34.0" strokeType="OUTSIDE"
-                                                              strokeWidth="0.0" text="Valor" textAlignment="CENTER"
-                                                              wrappingWidth="56.66796875" GridPane.columnIndex="5">
-                                                            <font>
-                                                                <Font name="System Italic" size="18.0"/>
-                                                            </font>
-                                                        </Text>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="1"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="2"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="3"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="4"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="5"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="6"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="7"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="8"/>
-                                                        <TextField GridPane.columnIndex="5" GridPane.rowIndex="1"/>
-                                                        <TextField layoutX="714.0" layoutY="50.0"
-                                                                   GridPane.columnIndex="5" GridPane.rowIndex="2"/>
-                                                        <TextField layoutX="714.0" layoutY="87.0"
-                                                                   GridPane.columnIndex="5" GridPane.rowIndex="3"/>
-                                                        <TextField layoutX="714.0" layoutY="157.0"
-                                                                   GridPane.columnIndex="5" GridPane.rowIndex="5"/>
-                                                        <TextField layoutX="714.0" layoutY="123.0"
-                                                                   GridPane.columnIndex="5" GridPane.rowIndex="4"/>
-                                                        <TextField GridPane.columnIndex="5" GridPane.rowIndex="6"/>
-                                                        <TextField layoutX="714.0" layoutY="222.0"
-                                                                   GridPane.columnIndex="5" GridPane.rowIndex="7"/>
-                                                        <TextField layoutX="714.0" layoutY="253.0"
-                                                                   GridPane.columnIndex="5" GridPane.rowIndex="8"/>
-                                                        <CheckBox mnemonicParsing="false" prefHeight="17.0"
-                                                                  prefWidth="217.0" text="Osinar linha de comando"
-                                                                  GridPane.rowIndex="9">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" text="Adaptar valvulas"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="9">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <ChoiceBox prefWidth="1111.0" GridPane.columnIndex="4"
-                                                                   GridPane.rowIndex="9"/>
-                                                        <ChoiceBox layoutX="616.0" layoutY="275.0" prefWidth="1111.0"
-                                                                   GridPane.columnIndex="1" GridPane.rowIndex="9"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="9"/>
-                                                        <TextField GridPane.columnIndex="5" GridPane.rowIndex="9"/>
-                                                        <Text strokeType="OUTSIDE" strokeWidth="0.0"
-                                                              GridPane.rowIndex="10"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="10"/>
-                                                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="11"/>
-                                                        <TextField GridPane.columnIndex="5" GridPane.rowIndex="10"/>
-                                                        <TextField GridPane.columnIndex="5" GridPane.rowIndex="11"/>
-                                                        <CheckBox mnemonicParsing="false" prefHeight="17.0"
-                                                                  prefWidth="225.0" text="Adaptar sedes"
-                                                                  GridPane.rowIndex="10">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" text="Adaptar guia"
-                                                                  GridPane.rowIndex="11">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" text="Trocar selo"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="11">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <CheckBox mnemonicParsing="false" text="Teste de trinca"
-                                                                  GridPane.columnIndex="3" GridPane.rowIndex="10">
-                                                            <font>
-                                                                <Font size="14.0"/>
-                                                            </font>
-                                                        </CheckBox>
-                                                        <ChoiceBox layoutX="616.0" layoutY="246.0" prefWidth="1111.0"
-                                                                   GridPane.columnIndex="1" GridPane.rowIndex="10"/>
-                                                        <ChoiceBox layoutX="235.0" layoutY="268.0" prefWidth="1111.0"
-                                                                   GridPane.columnIndex="1" GridPane.rowIndex="11"/>
-                                                        <ChoiceBox prefWidth="1111.0" GridPane.columnIndex="4"
-                                                                   GridPane.rowIndex="10"/>
-                                                        <ChoiceBox layoutX="616.0" layoutY="268.0" prefWidth="1111.0"
-                                                                   GridPane.columnIndex="4" GridPane.rowIndex="11"/>
-                                                    </children>
-                                                </GridPane>
-                                            </center>
-                                            <top>
-                                                <Text fontSmoothingType="LCD" strokeType="OUTSIDE" strokeWidth="0.0"
-                                                      text="Serviços" textAlignment="CENTER" underline="true"
-                                                      BorderPane.alignment="CENTER">
-                                                    <font>
-                                                        <Font name="System Bold Italic" size="24.0"/>
-                                                    </font>
-                                                </Text>
-                                            </top>
-                                        </BorderPane>
-                                    </center>
-                                    <top>
-                                        <GridPane gridLinesVisible="true" prefHeight="60.0" prefWidth="1268.0"
-                                                  BorderPane.alignment="CENTER">
-                                            <columnConstraints>
-                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1083.0" minWidth="10.0"
-                                                                   prefWidth="119.0"/>
-                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1827.0" minWidth="10.0"
-                                                                   prefWidth="1801.0"/>
-                                            </columnConstraints>
-                                            <rowConstraints>
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                            </rowConstraints>
-                                            <children>
-                                                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cliente:"
-                                                      wrappingWidth="66.650390625">
-                                                    <font>
-                                                        <Font name="System Bold" size="18.0"/>
-                                                    </font>
-                                                </Text>
-                                                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cabeçote:"
-                                                      wrappingWidth="90.78125" GridPane.rowIndex="1">
-                                                    <font>
-                                                        <Font name="System Bold" size="18.0"/>
-                                                    </font>
-                                                </Text>
-                                                <ChoiceBox prefWidth="150.0" GridPane.columnIndex="1"/>
-                                                <ChoiceBox prefWidth="150.0" GridPane.columnIndex="1"
-                                                           GridPane.rowIndex="1"/>
-                                            </children>
-                                        </GridPane>
-                                    </top>
-                                </BorderPane>
-                            </content>
-                        </Tab>
-                    </tabs>
-                </TabPane>
-            </center>
-        </BorderPane>
-    </content>
-</ScrollPane>
+<BorderPane fx:id="cadastroPedido" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controller.CadastroPedidoController">
+   <top>
+      <GridPane BorderPane.alignment="CENTER">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <ComboBox prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <ComboBox prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <TabPane prefHeight="30.0" prefWidth="400.0" tabClosingPolicy="UNAVAILABLE" GridPane.columnSpan="2">
+              <tabs>
+                <Tab text="Pedido">
+                  <content>
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                  </content>
+                </Tab>
+              </tabs>
+            </TabPane>
+            <Label text="Cliente" GridPane.rowIndex="1" />
+            <Label text="Cabeçote" GridPane.rowIndex="2" />
+         </children>
+      </GridPane>
+   </top>
+   <center>
+      <TableView  fx:id="tblServicos" BorderPane.alignment="CENTER">
+        <columns>
+          <TableColumn fx:id="colNomeServico" prefWidth="373.0" text="Nome" />
+          <TableColumn fx:id="colValorServico" prefWidth="73.0" text="Valor" />
+            <TableColumn fx:id="quantidadeServico" text="Quantidade" />
+            <TableColumn fx:id="selecionarServico" prefWidth="73.0" text="Selecionar" />
+        </columns>
+      </TableView>
+   </center>
+   <bottom>
+      <GridPane BorderPane.alignment="CENTER">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <ButtonBar prefHeight="40.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                <buttons>
+                    <Button onAction="#voltarListagemPedido" mnemonicParsing="false" text="Voltar" />
+                </buttons>
+                <buttons>
+                <Button mnemonicParsing="false" text="Cadastrar" />
+              </buttons>
+            </ButtonBar>
+            <Label text="Valor total" GridPane.rowIndex="1" />
+            <Label text="XXXX" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+         </children>
+      </GridPane>
+   </bottom>
+</BorderPane>
