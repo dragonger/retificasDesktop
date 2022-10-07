@@ -1,7 +1,6 @@
 package org.example.model;
 
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Spinner;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,7 +27,7 @@ public class ServicoModel {
     BigDecimal valorUnitario;
 
     CheckBox selecionado;
-    Spinner quantidade;
+    Integer quantidade;
 
     @ManyToOne
     @JoinColumn(name = "PEDIDO_ID")

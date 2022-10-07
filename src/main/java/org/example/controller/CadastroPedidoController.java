@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,7 +11,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
 import org.example.DAO.ClienteDAO;
 import org.example.DAO.PedidoDAO;
 import org.example.model.ClienteModel;
@@ -64,31 +64,6 @@ public class CadastroPedidoController  implements Initializable{
 
     }
 
-    private void popularTabelaServicos(){
-
-        colNomeServico.setCellValueFactory(new PropertyValueFactory<>("nome"));
-        colValorServico.setCellValueFactory(new PropertyValueFactory<>("valorUnitario"));
-        colSelecionarServico.setCellValueFactory(new PropertyValueFactory<>("selecionado"));
-        colQuantidadeServico.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
-
-        ObservableList<ServicoModel> servicoModels = pedidoDAO.buscarListagemServico();
-        ObservableList<ServicoModel> servicoObsComCheckbox = FXCollections.observableArrayList();
-
-        servicoModels.forEach(servicoModel -> {
-            CheckBox checkbox = new CheckBox();
-            Spinner quantidadeBox = new Spinner();
-            servicoModel.setSelecionado(checkbox);
-            servicoModel.setQuantidade(quantidadeBox);
-            servicoObsComCheckbox.add(servicoModel);
-        });
-        tblServicos.setItems(servicoObsComCheckbox);
-    }
-
-    public void popularDropdownClientes(){
-
-        clienteDropdown.setItems(clienteDAO.buscarListagemCliente());
-    }
-
     public void voltarListagemPedido() {
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/ListagemPedidos.fxml"));
@@ -102,4 +77,31 @@ public class CadastroPedidoController  implements Initializable{
             e.printStackTrace();
         }
     }
+
+    private void popularTabelaServicos(){
+
+        colNomeServico.setCellValueFactory(new PropertyValueFactory<>("nome"));
+        colValorServico.setCellValueFactory(new PropertyValueFactory<>("valorUnitario"));
+        colSelecionarServico.setCellValueFactory(new PropertyValueFactory<>("selecionado"));
+        colQuantidadeServico.setCellValueFactory(servicoModelIntegerCellDataFeatures -> {
+            Spinner<Integer> spinner = new Spinner<>(0, 10, 1);
+            return new SimpleObjectProperty<>(spinner);
+        });
+
+        ObservableList<ServicoModel> servicoModels = pedidoDAO.buscarListagemServico();
+        ObservableList<ServicoModel> servicoObsComCheckbox = FXCollections.observableArrayList();
+
+        servicoModels.forEach(servicoModel -> {
+            CheckBox checkbox = new CheckBox();
+            servicoModel.setSelecionado(checkbox);
+            servicoObsComCheckbox.add(servicoModel);
+        });
+        tblServicos.setItems(servicoObsComCheckbox);
+    }
+
+    private void popularDropdownClientes(){
+        clienteDropdown.setItems(clienteDAO.buscarListagemCliente());
+    }
+
+
 }
