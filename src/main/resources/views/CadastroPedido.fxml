@@ -49,8 +49,8 @@
         <columns>
           <TableColumn fx:id="colNomeServico" prefWidth="373.0" text="Nome" />
           <TableColumn fx:id="colValorServico" prefWidth="73.0" text="Valor" />
-            <TableColumn fx:id="quantidadeServico" text="Quantidade" />
-            <TableColumn fx:id="selecionarServico" prefWidth="73.0" text="Selecionar" />
+            <TableColumn fx:id="colQuantidadeServico" text="Quantidade" />
+            <TableColumn fx:id="colSelecionarServico" prefWidth="73.0" text="Selecionar" />
         </columns>
       </TableView>
    </center>

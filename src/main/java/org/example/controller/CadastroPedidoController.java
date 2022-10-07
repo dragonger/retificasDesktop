@@ -1,9 +1,13 @@
 package org.example.controller;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -26,6 +30,10 @@ public class CadastroPedidoController  implements Initializable{
     private TableColumn<ServicoModel, String> colNomeServico;
     @FXML
     private TableColumn<ServicoModel, BigDecimal> colValorServico;
+    @FXML
+    private TableColumn<ServicoModel, CheckBox> colSelecionarServico;
+    @FXML
+    private TableColumn<ServicoModel, Spinner> colQuantidadeServico;
 
     private final PedidoDAO pedidoDAO = new PedidoDAO();
 
@@ -55,8 +63,20 @@ public class CadastroPedidoController  implements Initializable{
 
         colNomeServico.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colValorServico.setCellValueFactory(new PropertyValueFactory<>("valorUnitario"));
+        colSelecionarServico.setCellValueFactory(new PropertyValueFactory<>("selecionado"));
+        colQuantidadeServico.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
 
-        tblServicos.setItems(pedidoDAO.buscarListagemServico());
+        ObservableList<ServicoModel> servicoModels = pedidoDAO.buscarListagemServico();
+        ObservableList<ServicoModel> servicoObsComCheckbox = FXCollections.observableArrayList();
+
+        servicoModels.forEach(servicoModel -> {
+            CheckBox checkbox = new CheckBox();
+            Spinner quantidadeBox = new Spinner();
+            servicoModel.setSelecionado(checkbox);
+            servicoModel.setQuantidade(quantidadeBox);
+            servicoObsComCheckbox.add(servicoModel);
+        });
+        tblServicos.setItems(servicoObsComCheckbox);
     }
 
     public void voltarListagemPedido() {

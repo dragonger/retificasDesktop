@@ -5,13 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Refatoração cadastro pedido">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/DAO/PedidoDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/DAO/PedidoDAO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/PedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/PedidoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/ServicoModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/ServicoModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/test.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db/test.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -280,7 +276,14 @@
       <option name="project" value="LOCAL" />
       <updated>1664433961688</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Refatoração cadastro pedido">
+      <created>1665057463094</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1665057463094</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="UnknownFeatures">
