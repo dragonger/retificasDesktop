@@ -6,14 +6,14 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
+import org.example.DAO.ClienteDAO;
 import org.example.DAO.PedidoDAO;
+import org.example.model.ClienteModel;
 import org.example.model.ServicoModel;
 
 import java.math.BigDecimal;
@@ -35,12 +35,17 @@ public class CadastroPedidoController  implements Initializable{
     @FXML
     private TableColumn<ServicoModel, Spinner> colQuantidadeServico;
 
+    @FXML
+    private ComboBox<ClienteModel> clienteDropdown;
+
     private final PedidoDAO pedidoDAO = new PedidoDAO();
+    private final ClienteDAO clienteDAO = new ClienteDAO();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
         popularTabelaServicos();
+        popularDropdownClientes();
     }
     public void abrirCadastroPedido(Stage telaPedidoStage) {
         System.out.println("Cadastro pedido");
@@ -77,6 +82,11 @@ public class CadastroPedidoController  implements Initializable{
             servicoObsComCheckbox.add(servicoModel);
         });
         tblServicos.setItems(servicoObsComCheckbox);
+    }
+
+    public void popularDropdownClientes(){
+
+        clienteDropdown.setItems(clienteDAO.buscarListagemCliente());
     }
 
     public void voltarListagemPedido() {

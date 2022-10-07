@@ -24,4 +24,9 @@ public class ClienteModel {
 
     @OneToOne
     private PedidoModel pedido;
+
+    @Override
+    public String toString(){
+        return this.nome;
+    }
 }

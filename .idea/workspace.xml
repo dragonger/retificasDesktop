@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Refatoração cadastro pedido">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Dropdown cliente populado">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/DAO/ClienteDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/DAO/ClienteDAO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/ServicoModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/ServicoModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/ClienteModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/ClienteModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -41,18 +42,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Flávio/IdeaProjects/retificasDeskt/src/main/resources/views/TelaInicial.fxml&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "last_opened_file_path": "C:/Users/Flávio/Downloads/agendalive-master/agendalive-master/pom.xml",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "preferences.keymap"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="Maven.retificasDeskt [clean,javafx:run,-e,-X]">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.example.Main" />
@@ -283,7 +284,14 @@
       <option name="project" value="LOCAL" />
       <updated>1665057463094</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Ações tabela de serviços">
+      <created>1665100866621</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1665100866621</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -325,6 +333,8 @@
     <MESSAGE value="Listagem de clientes" />
     <MESSAGE value="Cadastro de cliente&#10;Metodo de atualizar a tabela&#10;Metodo de limpar formulario" />
     <MESSAGE value="Refatoração cadastro pedido" />
-    <option name="LAST_COMMIT_MESSAGE" value="Refatoração cadastro pedido" />
+    <MESSAGE value="Ações tabela de serviços" />
+    <MESSAGE value="Dropdown cliente populado" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dropdown cliente populado" />
   </component>
 </project>
