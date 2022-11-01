@@ -31,9 +31,11 @@ public class CadastroPedidoController  implements Initializable{
     @FXML
     private TableColumn<ServicoModel, BigDecimal> colValorServico;
     @FXML
-    private TableColumn<ServicoModel, CheckBox> colSelecionarServico;
+    private TableColumn<ServicoModel, CheckBox> colSelecionarServico = new TableColumn("selecionado");
     @FXML
-    private TableColumn<ServicoModel, Spinner> colQuantidadeServico;
+    private TableColumn<ServicoModel, Spinner> colQuantidadeServico = new TableColumn<>("quantidade");
+    private ObservableList<ServicoModel> servicoModels = FXCollections.emptyObservableList();
+
 
     @FXML
     private ComboBox<ClienteModel> clienteDropdown;
@@ -88,19 +90,25 @@ public class CadastroPedidoController  implements Initializable{
             return new SimpleObjectProperty<>(spinner);
         });
 
-        ObservableList<ServicoModel> servicoModels = pedidoDAO.buscarListagemServico();
-        ObservableList<ServicoModel> servicoObsComCheckbox = FXCollections.observableArrayList();
-
+        servicoModels = pedidoDAO.buscarListagemServico();
         servicoModels.forEach(servicoModel -> {
-            CheckBox checkbox = new CheckBox();
-            servicoModel.setSelecionado(checkbox);
-            servicoObsComCheckbox.add(servicoModel);
-        });
-        tblServicos.setItems(servicoObsComCheckbox);
+            servicoModel.setSelecionado(new CheckBox());
+            servicoModel.setQuantidade(new Spinner());
+        } );
+
+
+
+        tblServicos.getColumns().addAll(colQuantidadeServico, colSelecionarServico);
+        tblServicos.setItems(servicoModels);
+        tblServicos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
     private void popularDropdownClientes(){
         clienteDropdown.setItems(clienteDAO.buscarListagemCliente());
+    }
+
+    private void verificaServicoMarcado(){
+
     }
 
 

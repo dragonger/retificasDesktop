@@ -17,7 +17,6 @@ public class ClienteDAO extends ConexaoBanco {
         conectar();
         String sql = "SELECT * FROM TBL_CLIENTE t";
         ObservableList<ClienteModel> obsListModel = FXCollections.observableArrayList();
-        System.out.println("buscnado clientes");
         try{
             PreparedStatement preparedStatement = criarPreparedStatement(sql);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -29,7 +28,6 @@ public class ClienteDAO extends ConexaoBanco {
                 clienteModel.setEndereco(resultSet.getString(6));
                 clienteModel.setCep(resultSet.getString(7));
                 obsListModel.add(clienteModel);
-                System.out.println(clienteModel.getNome());
             }
         } catch(SQLException e) {
             System.out.println(e.getMessage());
