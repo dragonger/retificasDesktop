@@ -32,7 +32,5 @@ public class ClienteModel {
         return this.nome;
     }
 
-    public ClienteModel(String nome) {
-        this.nome = nome;
-    }
+
 }

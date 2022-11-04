@@ -41,7 +41,7 @@ public class PedidoController implements Initializable {
         colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("datOrcamento"));
         colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("totalGeral"));
 
-        tblPedidos.setItems(pedidoDAO.buscarListagemPedido());
+        //tblPedidos.setItems(pedidoDAO.buscarListagemPedido());
     }
 
     public void abreTelaNovoPedido(Stage stage) {
@@ -89,8 +89,8 @@ public class PedidoController implements Initializable {
     private void cadastrarPedido() {
 
         PedidoModel pedidoModel = new PedidoModel();
-        System.out.println(pedidoModel.getObservacao());
-        pedidoDAO.salvarPedido(pedidoModel);
+        //System.out.println(pedidoModel.getObservacao());
+        //pedidoDAO.salvarPedido(pedidoModel);
     }
 
     public void abrirCadastroPedido(){

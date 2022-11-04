@@ -14,6 +14,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.example.DAO.ClienteDAO;
 import org.example.model.ClienteModel;
+import org.example.model.Dto.ClienteDto;
 import org.example.repository.ClienteRepository;
 
 import java.net.URL;
@@ -25,7 +26,7 @@ public class ClienteController implements Initializable {
     @FXML
     private BorderPane telaCliente;
     @FXML
-    private TableView<ClienteModel> tblClientes;
+    private TableView<ClienteDto> tblClientes;
     @FXML
     private TableColumn<ClienteModel, String> colNome;
     @FXML
@@ -62,8 +63,8 @@ public class ClienteController implements Initializable {
         colEndereco.setCellValueFactory(new PropertyValueFactory<>("endereco"));
         colCep.setCellValueFactory(new PropertyValueFactory<>("cep"));
 
-        ObservableList<ClienteModel> clienteModelsObservableList = FXCollections.observableArrayList();
-        List<ClienteModel> clienteModelList = clienteRepository.buscarListagemClientes();
+        ObservableList<ClienteDto> clienteModelsObservableList = FXCollections.observableArrayList();
+        List<ClienteDto> clienteModelList = clienteRepository.buscarListagemClientes();
         System.out.println(clienteModelList.size());
         clienteModelsObservableList.addAll(clienteModelList);
 

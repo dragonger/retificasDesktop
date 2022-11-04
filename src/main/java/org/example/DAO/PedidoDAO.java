@@ -13,7 +13,7 @@ import java.sql.Statement;
 
 public class PedidoDAO extends ConexaoBanco {
 
-    public boolean salvarPedido(PedidoModel pedido){
+   /* public boolean salvarPedido(PedidoModel pedido){
         conectar();
         String sql = "INSERT INTO TBL_PEDIDO(observacao) VALUES (?)";
 
@@ -73,5 +73,5 @@ public class PedidoDAO extends ConexaoBanco {
 
         }
         return obsListModel;
-    }
+    }*/
 }

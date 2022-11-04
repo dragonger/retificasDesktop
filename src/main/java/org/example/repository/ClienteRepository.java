@@ -7,6 +7,8 @@ import javax.persistence.criteria.CriteriaBuilder;
 
 import org.example.Utils.HibernateUtil;
 import org.example.model.ClienteModel;
+import org.example.model.ClienteModel_;
+import org.example.model.Dto.ClienteDto;
 
 
 import javax.persistence.criteria.CriteriaQuery;
@@ -15,18 +17,20 @@ import java.util.List;
 
 public class ClienteRepository {
 
-    public List<ClienteModel> buscarListagemClientes(){
+    public List<ClienteDto> buscarListagemClientes(){
         EntityManager em = HibernateUtil.getCurrentSession();
 
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-        CriteriaQuery<ClienteModel> criteriaQuery = criteriaBuilder.createQuery(ClienteModel.class);
-
-
+        CriteriaQuery<ClienteDto> criteriaQuery = criteriaBuilder.createQuery(ClienteDto.class);
         Root<ClienteModel> root = criteriaQuery.from(ClienteModel.class);
-        criteriaQuery.multiselect(root.get("nome"));
+
+       criteriaQuery.multiselect(root.get(ClienteModel_.NOME),
+               root.get(ClienteModel_.TELEFONE),
+               root.get(ClienteModel_.ENDERECO),
+               root.get(ClienteModel_.CEP));
 
         Query query = em.createQuery(criteriaQuery);
-        List<ClienteModel> resultList = query.getResultList();
+        List<ClienteDto> resultList = query.getResultList();
 
          return resultList;
     }

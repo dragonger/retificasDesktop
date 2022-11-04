@@ -4,11 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Tela inicial, botão cabeçote">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Adicionado jpa metaModel">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CabecoteController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CabecoteController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaCabecote.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaCabecote.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaCliente.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaCliente.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/DAO/ClienteDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/DAO/ClienteDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/DAO/PedidoDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/DAO/PedidoDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/ClienteController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/ClienteController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/PedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/PedidoController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/ClienteModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/ClienteModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/ClienteRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/ClienteRepository.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,18 +46,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Flávio/Downloads/agendalive-master/agendalive-master/pom.xml&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "last_opened_file_path": "C:/Users/Flávio/Downloads/agendalive-master/agendalive-master/pom.xml",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="Maven.retificasDeskt [clean,javafx:run,-e,-X]">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.example.Main" />
@@ -297,7 +302,49 @@
       <option name="project" value="LOCAL" />
       <updated>1665174324926</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="spinner de quantidade de serviço">
+      <created>1665177134268</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1665177134268</updated>
+    </task>
+    <task id="LOCAL-00026" summary="checkbox na tabela e spinner de quantidade">
+      <created>1667322634020</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1667322634020</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Adicionado JPA para controle automatico de tabelas">
+      <created>1667526447279</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1667526447279</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Alteração nos modelos">
+      <created>1667529056046</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1667529056046</updated>
+    </task>
+    <task id="LOCAL-00029" summary="Base da utilização de repositorys e criteria query">
+      <created>1667533994973</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1667533994973</updated>
+    </task>
+    <task id="LOCAL-00030" summary="Adicionado jpa metaModel">
+      <created>1667535178125</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1667535178125</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -316,12 +363,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor" />
-    <MESSAGE value="Redimensionamento da tela inicial" />
-    <MESSAGE value="Design cadastro do pedido de cabeçote finalizado" />
-    <MESSAGE value="Desing da aba clientes concluido." />
-    <MESSAGE value="Desing tela pedido" />
-    <MESSAGE value="Tela Cabeçotes criada e botões tela inicial atalizada" />
     <MESSAGE value="Tela para clientes criada" />
     <MESSAGE value="Tela ver clientes criada" />
     <MESSAGE value="Tela cadrasto pedido atalizada, remoção de não relacionados" />
@@ -341,6 +382,12 @@
     <MESSAGE value="Refatoração cadastro pedido" />
     <MESSAGE value="Ações tabela de serviços" />
     <MESSAGE value="Dropdown cliente populado" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dropdown cliente populado" />
+    <MESSAGE value="spinner de quantidade de serviço" />
+    <MESSAGE value="checkbox na tabela e spinner de quantidade" />
+    <MESSAGE value="Adicionado JPA para controle automatico de tabelas" />
+    <MESSAGE value="Alteração nos modelos" />
+    <MESSAGE value="Base da utilização de repositorys e criteria query" />
+    <MESSAGE value="Adicionado jpa metaModel" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adicionado jpa metaModel" />
   </component>
 </project>

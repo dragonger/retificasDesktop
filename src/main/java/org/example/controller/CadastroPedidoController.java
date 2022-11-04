@@ -90,7 +90,7 @@ public class CadastroPedidoController  implements Initializable{
             return new SimpleObjectProperty<>(spinner);
         });
 
-        servicoModels = pedidoDAO.buscarListagemServico();
+        //servicoModels = pedidoDAO.buscarListagemServico();
         servicoModels.forEach(servicoModel -> {
             //servicoModel.setSelecionado(new CheckBox());
             //servicoModel.setQuantidade(new Spinner());
@@ -104,7 +104,7 @@ public class CadastroPedidoController  implements Initializable{
     }
 
     private void popularDropdownClientes(){
-        clienteDropdown.setItems(clienteDAO.buscarListagemCliente());
+        //clienteDropdown.setItems(clienteDAO.buscarListagemCliente());
     }
 
     private void cadastrarPedido(){
