@@ -12,7 +12,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.example.DAO.ClienteDAO;
 import org.example.model.ClienteModel;
 import org.example.model.Dto.ClienteDto;
 import org.example.repository.ClienteRepository;
@@ -46,7 +45,6 @@ public class ClienteController implements Initializable {
     @FXML
     private TextField cepField;
 
-    private final ClienteDAO clienteDAO = new ClienteDAO();
     private final ClienteRepository clienteRepository = new ClienteRepository();
 
     @Override
@@ -65,7 +63,6 @@ public class ClienteController implements Initializable {
 
         ObservableList<ClienteDto> clienteModelsObservableList = FXCollections.observableArrayList();
         List<ClienteDto> clienteModelList = clienteRepository.buscarListagemClientes();
-        System.out.println(clienteModelList.size());
         clienteModelsObservableList.addAll(clienteModelList);
 
         tblClientes.setItems(clienteModelsObservableList);
@@ -99,15 +96,15 @@ public class ClienteController implements Initializable {
     }
 
     public void cadastrarNovoCliente(){
-       /* ClienteModel cliente = new ClienteModel();
+        ClienteModel cliente = new ClienteModel();
         cliente.setNome(nomeField.getText());
         cliente.setTelefone(telefoneField.getText());
         cliente.setCpfCpnj(cpfField.getText());
         cliente.setEndereco(enderecoField.getText());
         cliente.setCep(cepField.getText());
-        clienteDAO.salvarCliente(cliente);
+        clienteRepository.salvarCliente(cliente);
         populaTabela();
-        limparFormulario();*/
+        limparFormulario();
     }
 
     private void limparFormulario(){

@@ -31,8 +31,16 @@ public class ClienteRepository {
 
         Query query = em.createQuery(criteriaQuery);
         List<ClienteDto> resultList = query.getResultList();
+        em.close();
+        return resultList;
+    }
 
-         return resultList;
+    public void salvarCliente(ClienteModel clienteModel){
+        EntityManager em = HibernateUtil.getCurrentSession();
+        em.getTransaction().begin();
+        em.persist(clienteModel);
+        em.getTransaction().commit();
+        em.close();
     }
 
 }
