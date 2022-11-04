@@ -24,6 +24,5 @@ public class PedidoServicoModel {
     ServicoModel servicoModel;
 
     Long quantidadeServico;
-    @Temporal(TemporalType.DATE)
     LocalDateTime dataCriacao;
 }

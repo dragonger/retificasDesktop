@@ -1,5 +1,7 @@
 package org.example.controller;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -12,8 +14,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.example.DAO.ClienteDAO;
 import org.example.model.ClienteModel;
+import org.example.repository.ClienteRepository;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class ClienteController implements Initializable {
@@ -42,6 +46,7 @@ public class ClienteController implements Initializable {
     private TextField cepField;
 
     private final ClienteDAO clienteDAO = new ClienteDAO();
+    private final ClienteRepository clienteRepository = new ClienteRepository();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -57,8 +62,12 @@ public class ClienteController implements Initializable {
         colEndereco.setCellValueFactory(new PropertyValueFactory<>("endereco"));
         colCep.setCellValueFactory(new PropertyValueFactory<>("cep"));
 
-        tblClientes.setItems(clienteDAO.buscarListagemCliente());
+        ObservableList<ClienteModel> clienteModelsObservableList = FXCollections.observableArrayList();
+        List<ClienteModel> clienteModelList = clienteRepository.buscarListagemClientes();
+        System.out.println(clienteModelList.size());
+        clienteModelsObservableList.addAll(clienteModelList);
 
+        tblClientes.setItems(clienteModelsObservableList);
     }
 
     public void abreTelaCliente(Stage stage) {
@@ -89,7 +98,7 @@ public class ClienteController implements Initializable {
     }
 
     public void cadastrarNovoCliente(){
-        ClienteModel cliente = new ClienteModel();
+       /* ClienteModel cliente = new ClienteModel();
         cliente.setNome(nomeField.getText());
         cliente.setTelefone(telefoneField.getText());
         cliente.setCpfCpnj(cpfField.getText());
@@ -97,7 +106,7 @@ public class ClienteController implements Initializable {
         cliente.setCep(cepField.getText());
         clienteDAO.salvarCliente(cliente);
         populaTabela();
-        limparFormulario();
+        limparFormulario();*/
     }
 
     private void limparFormulario(){

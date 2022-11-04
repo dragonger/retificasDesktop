@@ -22,7 +22,6 @@ public class ClienteModel {
     String cpfCpnj;
     String endereco;
     String cep;
-    @Temporal(TemporalType.DATE)
     LocalDateTime dataCadastro;
 
     @OneToOne
@@ -31,5 +30,9 @@ public class ClienteModel {
     @Override
     public String toString(){
         return this.nome;
+    }
+
+    public ClienteModel(String nome) {
+        this.nome = nome;
     }
 }

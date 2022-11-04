@@ -26,9 +26,7 @@ public class PedidoModel {
     BigDecimal totalPecas;
     BigDecimal totalServicos;
     BigDecimal totalGeral;
-    @Temporal(TemporalType.DATE)
     LocalDateTime datCriacao;
-    @Temporal(TemporalType.DATE)
     LocalDateTime datOrcamento;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "id")

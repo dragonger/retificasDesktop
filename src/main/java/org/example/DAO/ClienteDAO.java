@@ -21,13 +21,13 @@ public class ClienteDAO extends ConexaoBanco {
             PreparedStatement preparedStatement = criarPreparedStatement(sql);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()){
-                ClienteModel clienteModel = new ClienteModel();
+              /*  ClienteModel clienteModel = new ClienteModel();
                 clienteModel.setId(resultSet.getLong(1));
                 clienteModel.setNome(resultSet.getString(2));
                 clienteModel.setTelefone(resultSet.getString(3));
                 clienteModel.setEndereco(resultSet.getString(6));
                 clienteModel.setCep(resultSet.getString(7));
-                obsListModel.add(clienteModel);
+                obsListModel.add(clienteModel);*/
             }
         } catch(SQLException e) {
             System.out.println(e.getMessage());
