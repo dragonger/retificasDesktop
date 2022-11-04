@@ -14,7 +14,9 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane fx:id="telaCliente" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="527.0" prefWidth="762.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controller.ClienteController">
+<BorderPane fx:id="telaCliente" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+            prefHeight="527.0" prefWidth="762.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controller.ClienteController">
     <center>
         <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
             <tabs>
@@ -22,21 +24,22 @@
                     <content>
                         <BorderPane prefHeight="200.0" prefWidth="200.0">
                             <center>
-                                <TableView fx:id="tblClientes" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                                <TableView fx:id="tblClientes" prefHeight="200.0" prefWidth="200.0"
+                                           BorderPane.alignment="CENTER">
                                     <columns>
-                                        <TableColumn fx:id="colNome" prefWidth="154.0" text="Nome" />
-                                        <TableColumn fx:id="colTelefone" prefWidth="180.0" text="Telefone" />
-                                        <TableColumn fx:id="colEndereco" prefWidth="143.0" text="Endereço" />
-                                        <TableColumn fx:id="colCep" prefWidth="67.0" text="Cep" />
+                                        <TableColumn fx:id="colNome" prefWidth="154.0" text="Nome"/>
+                                        <TableColumn fx:id="colTelefone" prefWidth="180.0" text="Telefone"/>
+                                        <TableColumn fx:id="colEndereco" prefWidth="143.0" text="Endereço"/>
+                                        <TableColumn fx:id="colCep" prefWidth="67.0" text="Cep"/>
                                     </columns>
                                 </TableView>
                             </center>
                             <bottom>
                                 <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                                     <buttons>
-                                        <Button mnemonicParsing="false" onAction="#voltarTelaInicial" text="Voltar" />
-                                        <Button mnemonicParsing="false" text="Editar" />
-                                        <Button mnemonicParsing="false" text="Excluir" />
+                                        <Button mnemonicParsing="false" onAction="#voltarTelaInicial" text="Voltar"/>
+                                        <Button mnemonicParsing="false" text="Editar"/>
+                                        <Button mnemonicParsing="false" text="Excluir"/>
                                     </buttons>
                                 </ButtonBar>
                             </bottom>
@@ -49,55 +52,83 @@
                             <bottom>
                                 <ButtonBar prefHeight="37.0" prefWidth="762.0" BorderPane.alignment="CENTER">
                                     <buttons>
-                                        <Button mnemonicParsing="false" onAction="#voltarTelaInicial" text="Voltar" />
-                                        <Button mnemonicParsing="false" onAction="#cadastrarNovoCliente" prefHeight="25.0" prefWidth="104.0" text="Cadastrar" />
+                                        <Button mnemonicParsing="false" onAction="#voltarTelaInicial" text="Voltar"/>
+                                        <Button mnemonicParsing="false" onAction="#cadastrarNovoCliente"
+                                                prefHeight="25.0" prefWidth="104.0" text="Cadastrar"/>
                                     </buttons>
                                 </ButtonBar>
                             </bottom>
                             <center>
-                                <GridPane gridLinesVisible="true" prefHeight="497.0" prefWidth="762.0" BorderPane.alignment="CENTER">
+                                <GridPane gridLinesVisible="true" prefHeight="497.0" prefWidth="762.0"
+                                          BorderPane.alignment="CENTER">
                                     <columnConstraints>
-                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="376.0" minWidth="10.0" prefWidth="158.0" />
-                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="687.0" minWidth="10.0" prefWidth="604.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="376.0" minWidth="10.0"
+                                                           prefWidth="158.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="687.0" minWidth="10.0"
+                                                           prefWidth="604.0"/>
                                     </columnConstraints>
                                     <rowConstraints>
-                                        <RowConstraints maxHeight="161.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                                        <RowConstraints maxHeight="315.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                                        <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                                        <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
-                                        <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="161.0" minHeight="10.0" prefHeight="68.0"
+                                                        vgrow="SOMETIMES"/>
+                                        <RowConstraints maxHeight="315.0" minHeight="10.0" prefHeight="68.0"
+                                                        vgrow="SOMETIMES"/>
+                                        <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0"
+                                                        vgrow="SOMETIMES"/>
+                                        <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0"
+                                                        vgrow="SOMETIMES"/>
+                                        <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="68.0"
+                                                        vgrow="SOMETIMES"/>
                                     </rowConstraints>
                                     <children>
-                                        <Text smooth="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Nome:" wrappingWidth="74.619140625">
+                                        <Text smooth="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Nome:"
+                                              wrappingWidth="74.619140625">
                                             <font>
-                                                <Font size="18.0" />
+                                                <Font size="18.0"/>
                                             </font>
                                         </Text>
-                                        <TextField fx:id="nomeField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" />
-                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Telefone:" wrappingWidth="74.59765625" GridPane.rowIndex="1">
+                                        <TextField fx:id="nomeField" maxHeight="-Infinity" maxWidth="-Infinity"
+                                                   minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0"
+                                                   prefWidth="167.0" GridPane.columnIndex="1"/>
+                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Telefone:"
+                                              wrappingWidth="74.59765625" GridPane.rowIndex="1">
                                             <font>
-                                                <Font size="18.0" />
+                                                <Font size="18.0"/>
                                             </font>
                                         </Text>
-                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Endereço:" wrappingWidth="96.205078125" GridPane.rowIndex="3">
+                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Endereço:"
+                                              wrappingWidth="96.205078125" GridPane.rowIndex="3">
                                             <font>
-                                                <Font size="18.0" />
+                                                <Font size="18.0"/>
                                             </font>
                                         </Text>
-                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cep:" wrappingWidth="92.205078125" GridPane.rowIndex="4">
+                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cep:"
+                                              wrappingWidth="92.205078125" GridPane.rowIndex="4">
                                             <font>
-                                                <Font size="18.0" />
+                                                <Font size="18.0"/>
                                             </font>
                                         </Text>
-                                        <TextField fx:id="telefoneField" layoutX="93.0" layoutY="43.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                        <TextField fx:id="cpfField" layoutX="93.0" layoutY="131.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                        <TextField fx:id="enderecoField" layoutX="93.0" layoutY="157.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cpf/Cnpj:" wrappingWidth="89.13671875" GridPane.rowIndex="2">
+                                        <TextField fx:id="telefoneField" layoutX="93.0" layoutY="43.0"
+                                                   maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+                                                   minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0"
+                                                   GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                        <TextField fx:id="cpfField" layoutX="93.0" layoutY="131.0" maxHeight="-Infinity"
+                                                   maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+                                                   prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1"
+                                                   GridPane.rowIndex="3"/>
+                                        <TextField fx:id="enderecoField" layoutX="93.0" layoutY="157.0"
+                                                   maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+                                                   minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0"
+                                                   GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Cpf/Cnpj:"
+                                              wrappingWidth="89.13671875" GridPane.rowIndex="2">
                                             <font>
-                                                <Font size="18.0" />
+                                                <Font size="18.0"/>
                                             </font>
                                         </Text>
-                                        <TextField fx:id="cepField" layoutX="99.0" layoutY="294.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <TextField fx:id="cepField" layoutX="99.0" layoutY="294.0" maxHeight="-Infinity"
+                                                   maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+                                                   prefHeight="25.0" prefWidth="167.0" GridPane.columnIndex="1"
+                                                   GridPane.rowIndex="2"/>
                                     </children>
                                 </GridPane>
                             </center>
