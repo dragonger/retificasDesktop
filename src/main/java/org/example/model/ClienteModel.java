@@ -22,10 +22,11 @@ public class ClienteModel {
     String cpfCpnj;
     String endereco;
     String cep;
+    @Temporal(TemporalType.DATE)
     LocalDateTime dataCadastro;
 
-   // @OneToOne
-    //private PedidoModel pedido;
+    @OneToOne
+    private PedidoModel pedido;
 
     @Override
     public String toString(){

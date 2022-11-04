@@ -7,12 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.Objects;
+import java.util.List;
 
 @Getter
 @Setter
@@ -30,19 +27,25 @@ public class ServicoModel {
     String descricao;
     BigDecimal valorUnitario;
 
-    //CheckBox selecionado;
-   // Spinner quantidade;
+    @OneToMany()
+    List<PedidoServicoModel> pedidoServicoList;
+
+    @Transient
+    CheckBox selecionado;
+    @Transient
+    Spinner quantidade;
 
     public ServicoModel(String nome, String tipoServico, String descricao, BigDecimal valorUnitario, CheckBox selecionado, Spinner quantidade) {
         this.nome = nome;
         this.tipoServico = tipoServico;
         this.descricao = descricao;
         this.valorUnitario = valorUnitario;
-       // this.selecionado = new CheckBox();
-        //this.quantidade = new Spinner();
+        this.selecionado = new CheckBox();
+        this.quantidade = new Spinner();
     }
 
-    //private PedidoModel pedido;
+
+
 
 
 

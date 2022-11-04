@@ -21,22 +21,20 @@ public class PedidoModel {
 
     @Id
     Long id;
-    @Column
     String observacao;
-    @Column
     BigDecimal valor;
-    /*BigDecimal totalPecas;
-    BigDecimal totalServicos;*/
+    BigDecimal totalPecas;
+    BigDecimal totalServicos;
     BigDecimal totalGeral;
+    @Temporal(TemporalType.DATE)
     LocalDateTime datCriacao;
+    @Temporal(TemporalType.DATE)
     LocalDateTime datOrcamento;
 
-   // @OneToMany(cascade = CascadeType.ALL, mappedBy = "pedido")
-    //List<ServicoModel> servicoList;
-   // @OneToOne(cascade = CascadeType.ALL)
-   // @JoinColumn(name = "cliente_id", referencedColumnName = "id")
-    //ClienteModel cliente;
-   // @OneToOne(cascade = CascadeType.ALL)
-   // @JoinColumn(name = "cabecote_id", referencedColumnName = "id")
-   // CabecoteModel cabecote;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "id")
+    List<PedidoServicoModel> pedidoServicoList;
+    @OneToOne(cascade = CascadeType.ALL)
+    ClienteModel cliente;
+    @OneToOne(cascade = CascadeType.ALL)
+    CabecoteModel cabecote;
 }
