@@ -92,8 +92,8 @@ public class CadastroPedidoController  implements Initializable{
 
         servicoModels = pedidoDAO.buscarListagemServico();
         servicoModels.forEach(servicoModel -> {
-            servicoModel.setSelecionado(new CheckBox());
-            servicoModel.setQuantidade(new Spinner());
+            //servicoModel.setSelecionado(new CheckBox());
+            //servicoModel.setQuantidade(new Spinner());
         } );
 
 
@@ -107,9 +107,23 @@ public class CadastroPedidoController  implements Initializable{
         clienteDropdown.setItems(clienteDAO.buscarListagemCliente());
     }
 
-    private void verificaServicoMarcado(){
+    private void cadastrarPedido(){
+        ObservableList servicosSelecionados = buscarServicosSelecionados();
+
+
 
     }
 
+    private ObservableList buscarServicosSelecionados(){
+        ObservableList<ServicoModel> servicosSelecionadosList = FXCollections.emptyObservableList();
+
+       /* servicoModels.forEach(servicoModel -> {
+            if(servicoModel.getSelecionado().isSelected()){
+                servicosSelecionadosList.add(servicoModel);
+            }
+        });*/
+
+        return servicosSelecionadosList;
+    }
 
 }

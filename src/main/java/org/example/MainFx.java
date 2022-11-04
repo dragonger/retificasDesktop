@@ -6,6 +6,9 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -27,24 +30,19 @@ public class MainFx extends Application {
         }
     }
 
-    public static void createNewDatabase(String fileName) {
+    public static void jpaTables(){
 
-        String url = "jdbc:sqlite:src/main/resources/db/" + fileName;
-
-        try (Connection conn = DriverManager.getConnection(url)) {
-            if (conn != null) {
-                DatabaseMetaData meta = conn.getMetaData();
-                System.out.println("The driver name is " + meta.getDriverName());
-                System.out.println("A new database has been created.");
-            }
-
-        } catch (SQLException e) {
+        try {
+            EntityManager em = Persistence.createEntityManagerFactory("test").createEntityManager();
+            System.out.println("Tabelas geradas com sucesso !!!");
+        } catch (Exception e) {
             System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
     public static void main(String[] args) {
-        createNewDatabase("test.db");
+        jpaTables();
         launch(args);
 
     }

@@ -1,19 +1,21 @@
 package org.example.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@Table(name = "CLIENTE")
+@EqualsAndHashCode
+@Entity
+@Table(name = "TBL_CLIENTE")
 public class ClienteModel {
 
     @Id
+    @GeneratedValue
     Long id;
     String nome;
     String telefone;
@@ -22,8 +24,8 @@ public class ClienteModel {
     String cep;
     LocalDateTime dataCadastro;
 
-    @OneToOne
-    private PedidoModel pedido;
+   // @OneToOne
+    //private PedidoModel pedido;
 
     @Override
     public String toString(){

@@ -69,7 +69,7 @@
                     <Button onAction="#voltarListagemPedido" mnemonicParsing="false" text="Voltar" />
                 </buttons>
                 <buttons>
-                <Button mnemonicParsing="false" text="Cadastrar" />
+                <Button onAction="#CadastrarPedido" mnemonicParsing="false" text="Cadastrar" />
               </buttons>
             </ButtonBar>
             <Label text="Valor total" GridPane.rowIndex="1" />

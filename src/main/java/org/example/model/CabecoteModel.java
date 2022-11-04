@@ -1,20 +1,20 @@
 package org.example.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 @Entity
 @Table(name = "TBL_CABECOTE")
 public class CabecoteModel {
 
     @Id
+    @GeneratedValue()
     Long id;
     String marca;
     String modelo;
@@ -22,6 +22,6 @@ public class CabecoteModel {
     String alturaX;
     String alturaY;
 
-    @OneToOne
-    private PedidoModel pedido;
+   @OneToOne
+   private PedidoModel pedido;
 }
