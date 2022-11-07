@@ -5,19 +5,24 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.example.model.CabecoteModel;
+import org.example.repository.CabecoteRespository;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainFx extends Application {
 
+    private static final CabecoteRespository cabecoteRespository = new CabecoteRespository();
+
+
+    public static void main(String[] args) {
+        criarTabelasCabecote();
+        launch(args);
+    }
+
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/TelaInicial.fxml"));
             BorderPane root = fxmlLoader.load();
@@ -30,20 +35,23 @@ public class MainFx extends Application {
         }
     }
 
-    public static void jpaTables(){
+    private static void criarTabelasCabecote(){
+        CabecoteModel cabecoteModel1 = new CabecoteModel();
+        cabecoteModel1.setAlturaX(1.0);
 
-        try {
-            EntityManager em = Persistence.createEntityManagerFactory("test").createEntityManager();
-            System.out.println("Tabelas geradas com sucesso !!!");
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
+        CabecoteModel cabecoteModel2 = new CabecoteModel();
+        cabecoteModel2.setAlturaX(1.0);
+
+        List<CabecoteModel> cabecoteModelList = new ArrayList<>();
+
+        cabecoteModelList.add(cabecoteModel1);
+        cabecoteModelList.add(cabecoteModel2);
+
+        cabecoteModelList.forEach(
+                cabecote -> cabecoteRespository.salvarCabecote(cabecote)
+        );
+
+
     }
 
-    public static void main(String[] args) {
-        jpaTables();
-        launch(args);
-
-    }
 }

@@ -19,8 +19,8 @@ public class CabecoteModel {
     String marca;
     String modelo;
     Integer valvulas;
-    String alturaX;
-    String alturaY;
+    Double alturaX;
+    Double alturaY;
 
    @OneToOne
    private PedidoModel pedido;
