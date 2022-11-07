@@ -14,4 +14,8 @@ public class ClienteDto {
     String endereco;
     String cep;
 
+    @Override
+    public String toString() {
+        return this.getNome();
+    }
 }

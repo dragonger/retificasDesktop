@@ -14,19 +14,6 @@ public class TelaInicialController {
     private final PedidoController pedidoController = new PedidoController();
     private final ClienteController clienteController = new ClienteController();
 
-   /*
-
-    private ObservableList<PedidoModel> criaMockPedidos(){
-        ClienteModel clienteModel = new ClienteModel();
-        clienteModel.setNome("José do cabeçote 69");
-
-        PedidoModel pedidoModel = new PedidoModel();
-        pedidoModel.setId(1L);
-        pedidoModel.setCliente(clienteModel);
-
-        return FXCollections.observableArrayList(pedidoModel, pedidoModel);
-    }*/
-
     public void abrirListagemPedidos() {
         System.out.println("Listagem pedido");
 

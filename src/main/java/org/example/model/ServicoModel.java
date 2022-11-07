@@ -35,18 +35,4 @@ public class ServicoModel {
     @Transient
     Spinner quantidade;
 
-    public ServicoModel(String nome, String tipoServico, String descricao, BigDecimal valorUnitario, CheckBox selecionado, Spinner quantidade) {
-        this.nome = nome;
-        this.tipoServico = tipoServico;
-        this.descricao = descricao;
-        this.valorUnitario = valorUnitario;
-        this.selecionado = new CheckBox();
-        this.quantidade = new Spinner();
-    }
-
-
-
-
-
-
 }

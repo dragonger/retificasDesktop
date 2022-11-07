@@ -9,6 +9,7 @@ import lombok.Setter;
 
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,14 +21,12 @@ import java.util.List;
 public class PedidoModel {
 
     @Id
+    @GeneratedValue()
     Long id;
     String observacao;
-    BigDecimal valor;
-    BigDecimal totalPecas;
-    BigDecimal totalServicos;
     BigDecimal totalGeral;
     LocalDateTime datCriacao;
-    LocalDateTime datOrcamento;
+    LocalDate datEntrega;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "id")
     List<PedidoServicoModel> pedidoServicoList;

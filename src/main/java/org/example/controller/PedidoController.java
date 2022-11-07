@@ -1,5 +1,7 @@
 package org.example.controller;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -9,10 +11,12 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.example.model.Dto.PedidoDto;
 import org.example.model.PedidoModel;
 import org.example.repository.PedidoRepository;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class PedidoController implements Initializable {
@@ -21,7 +25,7 @@ public class PedidoController implements Initializable {
     @FXML
     private BorderPane listagemPedidos;
     @FXML
-    private TableView<PedidoModel> tblPedidos;
+    private TableView<PedidoDto> tblPedidos;
     @FXML
     private TableColumn<PedidoModel, String> colCliente;
     @FXML
@@ -33,13 +37,25 @@ public class PedidoController implements Initializable {
 
 
     private final CadastroPedidoController cadastroPedidoController = new CadastroPedidoController();
-    private PedidoRepository pedidoRepository = new PedidoRepository();
+    private final PedidoRepository pedidoRepository = new PedidoRepository();
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("datOrcamento"));
-        colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("totalGeral"));
+        populaTabela();
+    }
 
+    private void populaTabela(){
+
+        colCliente.setCellValueFactory(new PropertyValueFactory<>("nomeCliente"));
+        colCabecote.setCellValueFactory(new PropertyValueFactory<>("nomeCabecote"));
+        colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("dataEntrega"));
+        colValor.setCellValueFactory(new PropertyValueFactory<>("valor"));
+
+        ObservableList<PedidoDto> pedidoModelObservableList = FXCollections.observableArrayList();
+        List<PedidoDto> pedidoModelList = pedidoRepository.buscarListagemPedidos();
+        pedidoModelObservableList.addAll(pedidoModelList);
+
+        tblPedidos.setItems(pedidoModelObservableList);
     }
 
     public void abreTelaNovoPedido(Stage stage) {
@@ -69,21 +85,6 @@ public class PedidoController implements Initializable {
             e.printStackTrace();
         }
     }
-
-    public void voltarListagemPedidos() {
-        try{
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/ListagemPedidos.fxml"));
-            BorderPane root = fxmlLoader.load();
-            Stage cadastroPedidosStage = (Stage) this.listagemPedidos.getScene().getWindow();
-            Scene scene = new Scene(root, 700,400);
-
-            cadastroPedidosStage.setScene(scene);
-            cadastroPedidosStage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
 
 
     public void abrirCadastroPedido(){
