@@ -9,6 +9,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.example.model.ClienteModel_;
 import org.example.model.PedidoModel;
 import org.example.repository.PedidoRepository;
 
@@ -37,9 +38,21 @@ public class PedidoController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("datOrcamento"));
-        colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("totalGeral"));
+        populaTabela();
+    }
 
+    private void populaTabela(){
+
+        colCliente.setCellValueFactory(new PropertyValueFactory<>(ClienteModel_.NOME));
+        colCabecote.setCellValueFactory(new PropertyValueFactory<>(ClienteModel_.TELEFONE));
+        colDatEntrega.setCellValueFactory(new PropertyValueFactory<>(ClienteModel_.DATA_CADASTRO));
+        colValor.setCellValueFactory(new PropertyValueFactory<>("cep"));
+
+       /* ObservableList<ClienteDto> clienteModelsObservableList = FXCollections.observableArrayList();
+        List<ClienteDto> clienteModelList = clienteRepository.buscarListagemClientes();
+        clienteModelsObservableList.addAll(clienteModelList);*/
+
+        //tblPedidos.setItems();
     }
 
     public void abreTelaNovoPedido(Stage stage) {
@@ -69,21 +82,6 @@ public class PedidoController implements Initializable {
             e.printStackTrace();
         }
     }
-
-    public void voltarListagemPedidos() {
-        try{
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/ListagemPedidos.fxml"));
-            BorderPane root = fxmlLoader.load();
-            Stage cadastroPedidosStage = (Stage) this.listagemPedidos.getScene().getWindow();
-            Scene scene = new Scene(root, 700,400);
-
-            cadastroPedidosStage.setScene(scene);
-            cadastroPedidosStage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
 
 
     public void abrirCadastroPedido(){

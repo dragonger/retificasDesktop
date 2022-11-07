@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class PedidoServicoModel {
 
     @Id
+    @GeneratedValue()
     Long id;
 
     @ManyToOne

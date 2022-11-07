@@ -20,6 +20,7 @@ import java.util.List;
 public class PedidoModel {
 
     @Id
+    @GeneratedValue()
     Long id;
     String observacao;
     BigDecimal valor;
