@@ -11,8 +11,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.example.DAO.ClienteDAO;
-import org.example.DAO.PedidoDAO;
 import org.example.model.ClienteModel;
 import org.example.model.ServicoModel;
 
@@ -40,8 +38,6 @@ public class CadastroPedidoController  implements Initializable{
     @FXML
     private ComboBox<ClienteModel> clienteDropdown;
 
-    private final PedidoDAO pedidoDAO = new PedidoDAO();
-    private final ClienteDAO clienteDAO = new ClienteDAO();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {

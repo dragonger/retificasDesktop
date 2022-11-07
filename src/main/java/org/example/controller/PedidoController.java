@@ -9,8 +9,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.example.DAO.PedidoDAO;
 import org.example.model.PedidoModel;
+import org.example.repository.PedidoRepository;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -33,15 +33,13 @@ public class PedidoController implements Initializable {
 
 
     private final CadastroPedidoController cadastroPedidoController = new CadastroPedidoController();
-    private final PedidoDAO pedidoDAO = new PedidoDAO();
-
+    private PedidoRepository pedidoRepository = new PedidoRepository();
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
         colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("datOrcamento"));
         colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("totalGeral"));
 
-        //tblPedidos.setItems(pedidoDAO.buscarListagemPedido());
     }
 
     public void abreTelaNovoPedido(Stage stage) {
@@ -86,12 +84,7 @@ public class PedidoController implements Initializable {
         }
     }
 
-    private void cadastrarPedido() {
 
-        PedidoModel pedidoModel = new PedidoModel();
-        //System.out.println(pedidoModel.getObservacao());
-        //pedidoDAO.salvarPedido(pedidoModel);
-    }
 
     public void abrirCadastroPedido(){
 
