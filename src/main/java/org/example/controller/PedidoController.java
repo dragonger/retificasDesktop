@@ -1,5 +1,7 @@
 package org.example.controller;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -9,11 +11,12 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.example.model.ClienteModel_;
+import org.example.model.Dto.PedidoDto;
 import org.example.model.PedidoModel;
 import org.example.repository.PedidoRepository;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class PedidoController implements Initializable {
@@ -22,7 +25,7 @@ public class PedidoController implements Initializable {
     @FXML
     private BorderPane listagemPedidos;
     @FXML
-    private TableView<PedidoModel> tblPedidos;
+    private TableView<PedidoDto> tblPedidos;
     @FXML
     private TableColumn<PedidoModel, String> colCliente;
     @FXML
@@ -34,7 +37,7 @@ public class PedidoController implements Initializable {
 
 
     private final CadastroPedidoController cadastroPedidoController = new CadastroPedidoController();
-    private PedidoRepository pedidoRepository = new PedidoRepository();
+    private final PedidoRepository pedidoRepository = new PedidoRepository();
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
@@ -43,16 +46,16 @@ public class PedidoController implements Initializable {
 
     private void populaTabela(){
 
-        colCliente.setCellValueFactory(new PropertyValueFactory<>(ClienteModel_.NOME));
-        colCabecote.setCellValueFactory(new PropertyValueFactory<>(ClienteModel_.TELEFONE));
-        colDatEntrega.setCellValueFactory(new PropertyValueFactory<>(ClienteModel_.DATA_CADASTRO));
-        colValor.setCellValueFactory(new PropertyValueFactory<>("cep"));
+        colCliente.setCellValueFactory(new PropertyValueFactory<>("nomeCliente"));
+        colCabecote.setCellValueFactory(new PropertyValueFactory<>("nomeCabecote"));
+        colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("dataEntrega"));
+        colValor.setCellValueFactory(new PropertyValueFactory<>("valor"));
 
-       /* ObservableList<ClienteDto> clienteModelsObservableList = FXCollections.observableArrayList();
-        List<ClienteDto> clienteModelList = clienteRepository.buscarListagemClientes();
-        clienteModelsObservableList.addAll(clienteModelList);*/
+        ObservableList<PedidoDto> pedidoModelObservableList = FXCollections.observableArrayList();
+        List<PedidoDto> pedidoModelList = pedidoRepository.buscarListagemPedidos();
+        pedidoModelObservableList.addAll(pedidoModelList);
 
-        //tblPedidos.setItems();
+        tblPedidos.setItems(pedidoModelObservableList);
     }
 
     public void abreTelaNovoPedido(Stage stage) {
