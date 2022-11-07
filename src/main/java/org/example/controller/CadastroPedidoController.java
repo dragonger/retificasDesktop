@@ -11,11 +11,13 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.example.model.ClienteModel;
+import org.example.model.Dto.ClienteDto;
 import org.example.model.ServicoModel;
+import org.example.repository.ClienteRepository;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class CadastroPedidoController  implements Initializable{
@@ -33,11 +35,10 @@ public class CadastroPedidoController  implements Initializable{
     @FXML
     private TableColumn<ServicoModel, Spinner> colQuantidadeServico = new TableColumn<>("quantidade");
     private ObservableList<ServicoModel> servicoModels = FXCollections.emptyObservableList();
-
-
     @FXML
-    private ComboBox<ClienteModel> clienteDropdown;
+    private ComboBox<ClienteDto> clienteDropdown;
 
+    private ClienteRepository clienteRepository = new ClienteRepository();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -100,7 +101,11 @@ public class CadastroPedidoController  implements Initializable{
     }
 
     private void popularDropdownClientes(){
-        //clienteDropdown.setItems(clienteDAO.buscarListagemCliente());
+
+        ObservableList<ClienteDto> clienteModelsObservableList = FXCollections.observableArrayList();
+        List<ClienteDto> clienteModelList = clienteRepository.buscarListagemClientes();
+        clienteModelsObservableList.addAll(clienteModelList);
+        clienteDropdown.setItems(clienteModelsObservableList);
     }
 
     private void cadastrarPedido(){
