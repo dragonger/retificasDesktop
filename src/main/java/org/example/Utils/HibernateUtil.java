@@ -43,85 +43,84 @@ public class HibernateUtil {
         servicoModel3.setTipoServico("Sizo");
 
         ServicoModel servicoModel4 = new  ServicoModel();
-        servicoModel3.setNome("Trocar sede");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(80));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel4.setNome("Trocar sede");
+        servicoModel4.setValorUnitario(BigDecimal.valueOf(80));
+        servicoModel4.setTipoServico("Sizo");
 
         ServicoModel servicoModel5 = new  ServicoModel();
-        servicoModel3.setNome("Colocar Estojo sobre medida");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(40));
-        servicoModel3.setTipoServico("Sizo");
-
+        servicoModel5.setNome("Colocar Estojo sobre medida");
+        servicoModel5.setValorUnitario(BigDecimal.valueOf(40));
+        servicoModel5.setTipoServico("Sizo");
 
         ServicoModel servicoModel6 = new  ServicoModel();
-        servicoModel3.setNome("Colocar rosca na vela");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(80));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel6.setNome("Colocar rosca na vela");
+        servicoModel6.setValorUnitario(BigDecimal.valueOf(80));
+        servicoModel6.setTipoServico("Sizo");
 
         ServicoModel servicoModel7 = new  ServicoModel();
-        servicoModel3.setNome("Usinar linha de comando");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(0));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel7.setNome("Usinar linha de comando");
+        servicoModel7.setValorUnitario(BigDecimal.valueOf(0));
+        servicoModel7.setTipoServico("Sizo");
 
         ServicoModel servicoModel8 = new  ServicoModel();
-        servicoModel3.setNome("Adaptar sedes");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(0));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel8.setNome("Adaptar sedes");
+        servicoModel8.setValorUnitario(BigDecimal.valueOf(0));
+        servicoModel8.setTipoServico("Sizo");
 
         ServicoModel servicoModel9 = new  ServicoModel();
-        servicoModel3.setNome("Jatear com micro esferas ");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(100));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel9.setNome("Jatear com micro esferas ");
+        servicoModel9.setValorUnitario(BigDecimal.valueOf(100));
+        servicoModel9.setTipoServico("Sizo");
 
         ServicoModel servicoModel10 = new  ServicoModel();
-        servicoModel3.setNome("Solda");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(85));
-        servicoModel3.setTipoServico("Dih");
+        servicoModel10.setNome("Solda");
+        servicoModel10.setValorUnitario(BigDecimal.valueOf(85));
+        servicoModel10.setTipoServico("Dih");
 
         ServicoModel servicoModel11 = new  ServicoModel();
-        servicoModel3.setNome("Regular valvulas");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(100));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel11.setNome("Regular valvulas");
+        servicoModel11.setValorUnitario(BigDecimal.valueOf(100));
+        servicoModel11.setTipoServico("Sizo");
 
         ServicoModel servicoModel12 = new  ServicoModel();
-        servicoModel3.setNome("Facear");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(240));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel12.setNome("Facear");
+        servicoModel12.setValorUnitario(BigDecimal.valueOf(240));
+        servicoModel12.setTipoServico("Sizo");
 
         ServicoModel servicoModel13 = new  ServicoModel();
-        servicoModel3.setNome("Plainar");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(80));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel13.setNome("Plainar");
+        servicoModel13.setValorUnitario(BigDecimal.valueOf(80));
+        servicoModel13.setTipoServico("Sizo");
 
         ServicoModel servicoModel14 = new  ServicoModel();
-        servicoModel3.setNome("Converter p/");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(240));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel14.setNome("Converter p/");
+        servicoModel14.setValorUnitario(BigDecimal.valueOf(240));
+        servicoModel14.setTipoServico("Sizo");
 
         ServicoModel servicoModel15 = new  ServicoModel();
-        servicoModel3.setNome("Montar");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(150));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel15.setNome("Montar");
+        servicoModel15.setValorUnitario(BigDecimal.valueOf(150));
+        servicoModel15.setTipoServico("Sizo");
 
         ServicoModel servicoModel16 = new  ServicoModel();
-        servicoModel3.setNome("Troca de retentor");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(0));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel16.setNome("Troca de retentor");
+        servicoModel16.setValorUnitario(BigDecimal.valueOf(0));
+        servicoModel16.setTipoServico("Sizo");
 
         ServicoModel servicoModel17 = new  ServicoModel();
-        servicoModel3.setNome("Adaptar valvula");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(0));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel17.setNome("Adaptar valvula");
+        servicoModel17.setValorUnitario(BigDecimal.valueOf(0));
+        servicoModel17.setTipoServico("Sizo");
 
         ServicoModel servicoModel18 = new  ServicoModel();
-        servicoModel3.setNome("Teste de trinca");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(0));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel18.setNome("Teste de trinca");
+        servicoModel18.setValorUnitario(BigDecimal.valueOf(0));
+        servicoModel18.setTipoServico("Sizo");
 
         ServicoModel servicoModel19 = new  ServicoModel();
-        servicoModel3.setNome("Troca de selo");
-        servicoModel3.setValorUnitario(BigDecimal.valueOf(0));
-        servicoModel3.setTipoServico("Sizo");
+        servicoModel19.setNome("Troca de selo");
+        servicoModel19.setValorUnitario(BigDecimal.valueOf(0));
+        servicoModel19.setTipoServico("Sizo");
 
 
         List<ServicoModel> servicoModelList = new ArrayList<>();

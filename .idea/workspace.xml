@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Realocação dos Metodos criarCabçote e criarServiço">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/ServicoRepository.java" afterDir="false" />
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Cadrastro serviços">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Utils/HibernateUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Utils/HibernateUtil.java" afterDir="false" />
     </list>
@@ -350,7 +349,14 @@
       <option name="project" value="LOCAL" />
       <updated>1667535178125</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="Cadrastro serviços">
+      <created>1667864917586</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1667864917586</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -369,7 +375,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Tela para clientes criada" />
     <MESSAGE value="Tela ver clientes criada" />
     <MESSAGE value="Tela cadrasto pedido atalizada, remoção de não relacionados" />
     <MESSAGE value="PedidoController mudado de Border para Scroll pane" />
@@ -394,6 +399,7 @@
     <MESSAGE value="Alteração nos modelos" />
     <MESSAGE value="Base da utilização de repositorys e criteria query" />
     <MESSAGE value="Adicionado jpa metaModel" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adicionado jpa metaModel" />
+    <MESSAGE value="Cadrastro serviços" />
+    <option name="LAST_COMMIT_MESSAGE" value="Cadrastro serviços" />
   </component>
 </project>
