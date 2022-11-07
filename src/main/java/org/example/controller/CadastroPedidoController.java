@@ -53,7 +53,6 @@ public class CadastroPedidoController  implements Initializable{
             BorderPane root = fxmlLoader.load();
             Scene scene = new Scene(root, 700,400);
 
-
             telaPedidoStage.setScene(scene);
             telaPedidoStage.show();
 
@@ -78,7 +77,7 @@ public class CadastroPedidoController  implements Initializable{
     }
 
     private void popularTabelaServicos(){
-
+        //TODO
         colNomeServico.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colValorServico.setCellValueFactory(new PropertyValueFactory<>("valorUnitario"));
         colSelecionarServico.setCellValueFactory(new PropertyValueFactory<>("selecionado"));
@@ -109,22 +108,13 @@ public class CadastroPedidoController  implements Initializable{
     }
 
     private void cadastrarPedido(){
-        ObservableList servicosSelecionados = buscarServicosSelecionados();
+
+        //TODO
 
 
 
     }
 
-    private ObservableList buscarServicosSelecionados(){
-        ObservableList<ServicoModel> servicosSelecionadosList = FXCollections.emptyObservableList();
 
-       /* servicoModels.forEach(servicoModel -> {
-            if(servicoModel.getSelecionado().isSelected()){
-                servicosSelecionadosList.add(servicoModel);
-            }
-        });*/
-
-        return servicosSelecionadosList;
-    }
 
 }
