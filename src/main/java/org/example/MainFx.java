@@ -11,9 +11,10 @@ import org.example.repository.CabecoteRespository;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.example.Utils.HibernateUtil.criarTabelasCabecote;
+
 public class MainFx extends Application {
 
-    private static final CabecoteRespository cabecoteRespository = new CabecoteRespository();
 
 
     public static void main(String[] args) {
@@ -35,23 +36,6 @@ public class MainFx extends Application {
         }
     }
 
-    private static void criarTabelasCabecote(){
-        CabecoteModel cabecoteModel1 = new CabecoteModel();
-        cabecoteModel1.setAlturaX(1.0);
 
-        CabecoteModel cabecoteModel2 = new CabecoteModel();
-        cabecoteModel2.setAlturaX(1.0);
-
-        List<CabecoteModel> cabecoteModelList = new ArrayList<>();
-
-        cabecoteModelList.add(cabecoteModel1);
-        cabecoteModelList.add(cabecoteModel2);
-
-        cabecoteModelList.forEach(
-                cabecote -> cabecoteRespository.salvarCabecote(cabecote)
-        );
-
-
-    }
 
 }
