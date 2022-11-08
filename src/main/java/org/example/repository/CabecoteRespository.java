@@ -12,6 +12,5 @@ public class CabecoteRespository {
         em.getTransaction().begin();
         em.persist(cabecoteModel);
         em.getTransaction().commit();
-        em.close();
     }
 }

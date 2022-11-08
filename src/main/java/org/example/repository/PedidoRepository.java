@@ -22,7 +22,6 @@ public class PedidoRepository {
         Join<PedidoModel, ClienteModel> joinCliente = root.join(PedidoModel_.CLIENTE);
         Join<PedidoModel, CabecoteModel> joinCabecote = root.join(PedidoModel_.CABECOTE);
 
-
         criteriaQuery.multiselect(joinCliente.get(ClienteModel_.NOME),
                 joinCabecote.get(CabecoteModel_.MODELO),
                 root.get(PedidoModel_.DAT_ENTREGA),
@@ -30,7 +29,6 @@ public class PedidoRepository {
 
         Query query = em.createQuery(criteriaQuery);
         List<PedidoDto> resultList = query.getResultList();
-        em.close();
         return resultList;
     }
 }

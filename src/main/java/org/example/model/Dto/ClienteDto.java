@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ClienteDto {
 
+    Long id;
     String nome;
     String telefone;
     String endereco;

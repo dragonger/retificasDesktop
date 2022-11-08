@@ -114,4 +114,12 @@ public class ClienteController implements Initializable {
         enderecoField.setText("");
         cepField.setText("");
     }
+
+    public void excluirCliente(){
+
+        ClienteDto clienteDto = tblClientes.getSelectionModel().getSelectedItem();
+        clienteRepository.deletarCliente(clienteDto.getId());
+        populaTabela();
+        limparFormulario();
+    }
 }
