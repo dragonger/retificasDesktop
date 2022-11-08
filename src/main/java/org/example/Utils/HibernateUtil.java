@@ -16,13 +16,11 @@ import java.util.List;
 
 public class HibernateUtil {
     private static final CabecoteRespository cabecoteRespository = new CabecoteRespository();
-    private static final ServicoRepository servicoRepository  = new ServicoRepository();
 
     public static EntityManager getCurrentSession() {
         EntityManagerFactory emf =
                 Persistence.createEntityManagerFactory("test");
-        EntityManager em = emf.createEntityManager();
-        return em;
+        return emf.createEntityManager();
     }
 
     public static void criarConfiguracaoServico() {

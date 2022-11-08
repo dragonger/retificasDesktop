@@ -5,20 +5,26 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.example.model.CabecoteModel;
-import org.example.repository.CabecoteRespository;
+import org.example.Utils.HibernateUtil;
+import org.example.model.Dto.ConfigDto;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.example.Utils.HibernateUtil.criarTabelasCabecote;
+import java.io.*;
+import java.util.Properties;
 
 public class MainFx extends Application {
 
 
 
     public static void main(String[] args) {
-        criarTabelasCabecote();
+        ConfigDto configDto = getConfig();
+
+        if (configDto.getPrimeiroAcesso()){
+            System.out.println("Populando tabelas");
+            HibernateUtil.criarConfiguracaoServico();
+            HibernateUtil.criarTabelasCabecote();
+            setPrimeiroAcessoFalse();
+        }
+
         launch(args);
     }
 
@@ -36,6 +42,39 @@ public class MainFx extends Application {
         }
     }
 
+    public static ConfigDto getConfig(){
+
+        ConfigDto configDto = new ConfigDto();
+        try{
+            FileReader reader = new FileReader("config.properties");
+            Properties properties = new Properties();
+            properties.load(reader);
+
+            configDto.setPrimeiroAcesso(Boolean.valueOf(properties.getProperty("primeiroAcesso")));
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return configDto;
+    }
+
+    public static void setPrimeiroAcessoFalse(){
+        Properties properties = new Properties();
+        try{
+            FileInputStream configStream = new FileInputStream("config.properties");
+            properties.load(configStream);
+            configStream.close();
+
+            properties.setProperty("primeiroAcesso", "false");
+            FileOutputStream output = new FileOutputStream("config.properties");
+            properties.store(output, "O foi banco populado.");
+            output.close();
 
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
