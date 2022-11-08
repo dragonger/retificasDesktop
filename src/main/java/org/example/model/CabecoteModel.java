@@ -22,6 +22,6 @@ public class CabecoteModel {
     Double alturaX;
     Double alturaY;
 
-   @OneToOne
-   private PedidoModel pedido;
+    @OneToOne
+    private PedidoModel pedido;
 }
