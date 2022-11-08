@@ -20,7 +20,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class CadastroPedidoController  implements Initializable{
+public class CadastroPedidoController implements Initializable {
 
     @FXML
     private BorderPane cadastroPedido;
@@ -46,12 +46,13 @@ public class CadastroPedidoController  implements Initializable{
         popularTabelaServicos();
         popularDropdownClientes();
     }
+
     public void abrirCadastroPedido(Stage telaPedidoStage) {
         System.out.println("Cadastro pedido");
-        try{
+        try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/CadastroPedido.fxml"));
             BorderPane root = fxmlLoader.load();
-            Scene scene = new Scene(root, 700,400);
+            Scene scene = new Scene(root, 700, 400);
 
             telaPedidoStage.setScene(scene);
             telaPedidoStage.show();
@@ -63,11 +64,11 @@ public class CadastroPedidoController  implements Initializable{
     }
 
     public void voltarListagemPedido() {
-        try{
+        try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/ListagemPedidos.fxml"));
             BorderPane root = fxmlLoader.load();
             Stage cadastroPedidosStage = (Stage) this.cadastroPedido.getScene().getWindow();
-            Scene scene = new Scene(root, 700,400);
+            Scene scene = new Scene(root, 700, 400);
 
             cadastroPedidosStage.setScene(scene);
             cadastroPedidosStage.show();
@@ -76,7 +77,7 @@ public class CadastroPedidoController  implements Initializable{
         }
     }
 
-    private void popularTabelaServicos(){
+    private void popularTabelaServicos() {
         //TODO
         colNomeServico.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colValorServico.setCellValueFactory(new PropertyValueFactory<>("valorUnitario"));
@@ -90,8 +91,7 @@ public class CadastroPedidoController  implements Initializable{
         servicoModels.forEach(servicoModel -> {
             //servicoModel.setSelecionado(new CheckBox());
             //servicoModel.setQuantidade(new Spinner());
-        } );
-
+        });
 
 
         tblServicos.getColumns().addAll(colQuantidadeServico, colSelecionarServico);
@@ -99,7 +99,7 @@ public class CadastroPedidoController  implements Initializable{
         tblServicos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
-    private void popularDropdownClientes(){
+    private void popularDropdownClientes() {
 
         ObservableList<ClienteDto> clienteModelsObservableList = FXCollections.observableArrayList();
         List<ClienteDto> clienteModelList = clienteRepository.buscarListagemClientes();
@@ -107,14 +107,12 @@ public class CadastroPedidoController  implements Initializable{
         clienteDropdown.setItems(clienteModelsObservableList);
     }
 
-    private void cadastrarPedido(){
+    private void cadastrarPedido() {
 
         //TODO
 
 
-
     }
-
 
 
 }
