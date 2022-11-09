@@ -1,7 +1,5 @@
 package org.example.model;
 
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Spinner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,9 +28,5 @@ public class ServicoModel {
     @OneToMany()
     List<PedidoServicoModel> pedidoServicoList;
 
-    @Transient
-    CheckBox selecionado;
-    @Transient
-    Spinner quantidade;
 
 }
