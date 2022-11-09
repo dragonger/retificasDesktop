@@ -17,8 +17,9 @@ import java.util.List;
 
 public class ClienteRepository {
 
+    EntityManager em = HibernateUtil.getCurrentSession();
+
     public List<ClienteDto> buscarListagemClientes() {
-        EntityManager em = HibernateUtil.getCurrentSession();
 
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaQuery<ClienteDto> criteriaQuery = criteriaBuilder.createQuery(ClienteDto.class);
@@ -37,14 +38,14 @@ public class ClienteRepository {
     }
 
     public void salvarCliente(ClienteModel clienteModel) {
-        EntityManager em = HibernateUtil.getCurrentSession();
+
         em.getTransaction().begin();
         em.persist(clienteModel);
         em.getTransaction().commit();
     }
 
     public void deletarCliente(Long id) {
-        EntityManager em = HibernateUtil.getCurrentSession();
+
         ClienteModel clienteModel = em.find(ClienteModel.class, id);
 
         em.getTransaction().begin();
@@ -53,7 +54,6 @@ public class ClienteRepository {
     }
 
     public ClienteModel buscarCliente(Long id) {
-        EntityManager em = HibernateUtil.getCurrentSession();
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ClienteModel> criteriaQuery = cb.createQuery(ClienteModel.class);

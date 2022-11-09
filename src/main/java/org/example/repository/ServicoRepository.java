@@ -8,6 +8,7 @@ import javax.persistence.EntityManager;
 public class ServicoRepository {
 
     public static void salvarServico(ServicoModel servicoModel) {
+
         EntityManager em = HibernateUtil.getCurrentSession();
         em.getTransaction().begin();
         em.persist(servicoModel);

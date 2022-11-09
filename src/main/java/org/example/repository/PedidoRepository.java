@@ -13,8 +13,9 @@ import javax.persistence.criteria.Root;
 import java.util.List;
 
 public class PedidoRepository {
+    EntityManager em = HibernateUtil.getCurrentSession();
     public List<PedidoDto> buscarListagemPedidos() {
-        EntityManager em = HibernateUtil.getCurrentSession();
+
 
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaQuery<PedidoDto> criteriaQuery = criteriaBuilder.createQuery(PedidoDto.class);

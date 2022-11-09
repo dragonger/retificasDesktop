@@ -15,7 +15,6 @@ import java.util.List;
 
 
 public class HibernateUtil {
-    private static final CabecoteRespository cabecoteRespository = new CabecoteRespository();
 
     public static EntityManager getCurrentSession() {
         EntityManagerFactory emf =
@@ -153,9 +152,13 @@ public class HibernateUtil {
     public static void criarTabelasCabecote() {
         CabecoteModel cabecoteModel1 = new CabecoteModel();
         cabecoteModel1.setAlturaX(1.0);
+        cabecoteModel1.setModelo("modelo1");
+        cabecoteModel1.setMarca("ronda");
 
         CabecoteModel cabecoteModel2 = new CabecoteModel();
         cabecoteModel2.setAlturaX(1.0);
+        cabecoteModel2.setModelo("modelo2");
+        cabecoteModel2.setMarca("yamara");
 
         List<CabecoteModel> cabecoteModelList = new ArrayList<>();
 
@@ -163,7 +166,7 @@ public class HibernateUtil {
         cabecoteModelList.add(cabecoteModel2);
 
         cabecoteModelList.forEach(
-                cabecote -> cabecoteRespository.salvarCabecote(cabecote)
+                cabecote -> CabecoteRespository.salvarCabecote(cabecote)
         );
 
     }

@@ -11,8 +11,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.example.model.Dto.CabecoteDto;
 import org.example.model.Dto.ClienteDto;
 import org.example.model.ServicoModel;
+import org.example.repository.CabecoteRespository;
 import org.example.repository.ClienteRepository;
 
 import java.math.BigDecimal;
@@ -37,14 +39,18 @@ public class CadastroPedidoController implements Initializable {
     private ObservableList<ServicoModel> servicoModels = FXCollections.emptyObservableList();
     @FXML
     private ComboBox<ClienteDto> clienteDropdown;
+    @FXML
+    private ComboBox<CabecoteDto> cabecoteDropdown;
 
     private ClienteRepository clienteRepository = new ClienteRepository();
+    private CabecoteRespository cabecoteRespository = new CabecoteRespository();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
         popularTabelaServicos();
         popularDropdownClientes();
+        popularDropdownCabecotes();
     }
 
     public void abrirCadastroPedido(Stage telaPedidoStage) {
@@ -105,6 +111,14 @@ public class CadastroPedidoController implements Initializable {
         List<ClienteDto> clienteModelList = clienteRepository.buscarListagemClientes();
         clienteModelsObservableList.addAll(clienteModelList);
         clienteDropdown.setItems(clienteModelsObservableList);
+    }
+
+    private void popularDropdownCabecotes() {
+
+        ObservableList<CabecoteDto> cabecoteModelsObservableList = FXCollections.observableArrayList();
+        List<CabecoteDto> clienteModelList = cabecoteRespository.buscarListagemCabecotes();
+        cabecoteModelsObservableList.addAll(clienteModelList);
+        cabecoteDropdown.setItems(cabecoteModelsObservableList);
     }
 
     private void cadastrarPedido() {

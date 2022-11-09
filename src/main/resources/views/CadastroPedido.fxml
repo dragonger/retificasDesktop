@@ -29,7 +29,7 @@
         </rowConstraints>
          <children>
             <ComboBox fx:id="clienteDropdown" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <ComboBox prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <ComboBox fx:id="cabecoteDropdown" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <TabPane prefHeight="30.0" prefWidth="400.0" tabClosingPolicy="UNAVAILABLE" GridPane.columnSpan="2">
               <tabs>
                 <Tab text="Pedido">
