@@ -66,13 +66,16 @@
                                 <TreeTableView prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                                     <columns>
                                         <TreeTableColumn prefWidth="75.0" text="Socios" />
-                                        <TreeTableColumn prefWidth="46.0" text="Id" />
-                                        <TreeTableColumn prefWidth="478.0" text="Valor" />
+                                        <TreeTableColumn prefWidth="34.0" text="Id" />
+                                        <TreeTableColumn prefWidth="139.0" text="Cliente" />
+                              <TreeTableColumn maxWidth="364.0" prefWidth="180.0" text="Cabeçote" />
+                              <TreeTableColumn prefWidth="75.0" text="Valor Sizo" />
+                              <TreeTableColumn prefWidth="96.0" text="Valor Dih" />
                                     </columns>
                                 </TreeTableView>
                             </center>
                             <bottom>
-                                <GridPane BorderPane.alignment="CENTER">
+                                <GridPane prefHeight="57.0" prefWidth="600.0" BorderPane.alignment="CENTER">
                                     <columnConstraints>
                                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
