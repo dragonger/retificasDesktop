@@ -13,6 +13,8 @@ public class TelaInicialController {
     private final PedidoController pedidoController = new PedidoController();
     private final ClienteController clienteController = new ClienteController();
 
+    private final TelaRelatorioController telaRelatorioController = new TelaRelatorioController();
+
     public void abrirListagemPedidos() {
         System.out.println("Listagem pedido");
 
@@ -25,6 +27,13 @@ public class TelaInicialController {
 
         Stage telaInicialStage = (Stage) this.telaInicial.getScene().getWindow();
         clienteController.abreTelaCliente(telaInicialStage);
+    }
+
+    public void abrirTelaRelatorio() {
+        System.out.println("tela cliente");
+
+        Stage telaInicialStage = (Stage) this.telaInicial.getScene().getWindow();
+        telaRelatorioController.abreTelaRelatorio(telaInicialStage);
     }
 
 

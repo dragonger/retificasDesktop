@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Cadrastro serviços">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Utils/HibernateUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Utils/HibernateUtil.java" afterDir="false" />
-    </list>
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Adicionado botão &quot;Ver relatorio&quot; e funcionalidade" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -24,6 +21,7 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
@@ -51,18 +49,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Flávio/Downloads/agendalive-master/agendalive-master/pom.xml&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "last_opened_file_path": "C:/Users/Flávio/Downloads/agendalive-master/agendalive-master/pom.xml",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="Maven.retificasDeskt [clean,javafx:run,-e,-X]">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.example.Main" />
@@ -356,7 +355,28 @@
       <option name="project" value="LOCAL" />
       <updated>1667864917586</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="Criação da tela relatorio">
+      <created>1668080075923</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1668080075923</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Controller Tela relatorio">
+      <created>1668080132320</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1668080132320</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Adicionado botão &quot;Ver relatorio&quot; e funcionalidade">
+      <created>1668080237038</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1668080237038</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -375,9 +395,7 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Tela ver clientes criada" />
-    <MESSAGE value="Tela cadrasto pedido atalizada, remoção de não relacionados" />
-    <MESSAGE value="PedidoController mudado de Border para Scroll pane" />
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="Mudado o tamanho da resolução e adaptação" />
     <MESSAGE value="Tela clientes criada" />
     <MESSAGE value="Tela CadastroPedido.fxml transformada em scrollPane" />
@@ -400,6 +418,9 @@
     <MESSAGE value="Base da utilização de repositorys e criteria query" />
     <MESSAGE value="Adicionado jpa metaModel" />
     <MESSAGE value="Cadrastro serviços" />
-    <option name="LAST_COMMIT_MESSAGE" value="Cadrastro serviços" />
+    <MESSAGE value="Criação da tela relatorio" />
+    <MESSAGE value="Controller Tela relatorio" />
+    <MESSAGE value="Adicionado botão &quot;Ver relatorio&quot; e funcionalidade" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adicionado botão &quot;Ver relatorio&quot; e funcionalidade" />
   </component>
 </project>
