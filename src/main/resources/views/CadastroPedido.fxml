@@ -73,7 +73,7 @@
               </buttons>
             </ButtonBar>
             <Label text="Valor total" GridPane.rowIndex="1" />
-            <Label text="XXXX" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Label fx:id="somaServicos" text="XXXX" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          </children>
       </GridPane>
    </bottom>
