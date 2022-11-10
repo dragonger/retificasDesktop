@@ -40,7 +40,7 @@ public class ClienteRepository {
     public void salvarCliente(ClienteModel clienteModel) {
 
         em.getTransaction().begin();
-        em.persist(clienteModel);
+        em.merge(clienteModel);
         em.getTransaction().commit();
     }
 

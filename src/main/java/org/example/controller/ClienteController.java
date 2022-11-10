@@ -6,9 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
@@ -44,8 +42,15 @@ public class ClienteController implements Initializable {
     private TextField enderecoField;
     @FXML
     private TextField cepField;
+    @FXML
+    private TabPane tabPaneClientes;
+    @FXML
+    private Tab tabClientes;
+    @FXML
+    private Tab tabCadastroCliente;
 
     private final ClienteRepository clienteRepository = new ClienteRepository();
+    private ClienteModel cliente = new ClienteModel();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -96,15 +101,16 @@ public class ClienteController implements Initializable {
     }
 
     public void cadastrarNovoCliente(){
-        ClienteModel cliente = new ClienteModel();
         cliente.setNome(nomeField.getText());
         cliente.setTelefone(telefoneField.getText());
         cliente.setCpfCpnj(cpfField.getText());
         cliente.setEndereco(enderecoField.getText());
         cliente.setCep(cepField.getText());
         clienteRepository.salvarCliente(cliente);
-        populaTabela();
         limparFormulario();
+        populaTabela();
+        tabPaneClientes.getSelectionModel().select(tabClientes);
+        cliente = new ClienteModel();
     }
 
     private void limparFormulario(){
@@ -121,5 +127,18 @@ public class ClienteController implements Initializable {
         clienteRepository.deletarCliente(clienteDto.getId());
         populaTabela();
         limparFormulario();
+    }
+
+    public void editarCliente(){
+        ClienteDto clienteDto = tblClientes.getSelectionModel().getSelectedItem();
+        ClienteModel clienteModel = clienteRepository.buscarCliente(clienteDto.getId());
+        nomeField.setText(clienteModel.getNome());
+        telefoneField.setText(clienteModel.getTelefone());
+        cpfField.setText(clienteModel.getCpfCpnj());
+        enderecoField.setText(clienteModel.getEndereco());
+        cepField.setText(clienteModel.getCep());
+        tabPaneClientes.getSelectionModel().select(tabCadastroCliente);
+
+        cliente.setId(clienteDto.getId());
     }
 }

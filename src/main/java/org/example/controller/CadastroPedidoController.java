@@ -13,9 +13,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.example.model.Dto.CabecoteDto;
 import org.example.model.Dto.ClienteDto;
+import org.example.model.Dto.ServicoDto;
 import org.example.model.ServicoModel;
 import org.example.repository.CabecoteRespository;
 import org.example.repository.ClienteRepository;
+import org.example.repository.ServicoRepository;
 
 import java.math.BigDecimal;
 import java.net.URL;
@@ -27,16 +29,15 @@ public class CadastroPedidoController implements Initializable {
     @FXML
     private BorderPane cadastroPedido;
     @FXML
-    private TableView<ServicoModel> tblServicos;
+    private TableView<ServicoDto> tblServicos;
     @FXML
     private TableColumn<ServicoModel, String> colNomeServico;
     @FXML
     private TableColumn<ServicoModel, BigDecimal> colValorServico;
     @FXML
-    private TableColumn<ServicoModel, CheckBox> colSelecionarServico = new TableColumn("selecionado");
+    private TableColumn<ServicoDto, CheckBox> colSelecionarServico = new TableColumn("selecionado");
     @FXML
-    private TableColumn<ServicoModel, Spinner> colQuantidadeServico = new TableColumn<>("quantidade");
-    private ObservableList<ServicoModel> servicoModels = FXCollections.emptyObservableList();
+    private TableColumn<ServicoDto, Spinner> colQuantidadeServico = new TableColumn<>("quantidade");
     @FXML
     private ComboBox<ClienteDto> clienteDropdown;
     @FXML
@@ -44,6 +45,7 @@ public class CadastroPedidoController implements Initializable {
 
     private ClienteRepository clienteRepository = new ClienteRepository();
     private CabecoteRespository cabecoteRespository = new CabecoteRespository();
+    private ServicoRepository servicoRepository = new ServicoRepository();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -93,15 +95,19 @@ public class CadastroPedidoController implements Initializable {
             return new SimpleObjectProperty<>(spinner);
         });
 
-        //servicoModels = pedidoDAO.buscarListagemServico();
-        servicoModels.forEach(servicoModel -> {
-            //servicoModel.setSelecionado(new CheckBox());
-            //servicoModel.setQuantidade(new Spinner());
-        });
+        ObservableList<ServicoDto> servicoDtoObservableList = FXCollections.observableArrayList();
+        List<ServicoDto> servicoDtoList = servicoRepository.buscarListagemServicos();
 
+
+        servicoDtoList.forEach(servicoDto -> {
+            servicoDto.setSelecionado(new CheckBox());
+            servicoDto.setQuantidade(new Spinner());
+        } );
+
+        servicoDtoObservableList.addAll(servicoDtoList);
 
         tblServicos.getColumns().addAll(colQuantidadeServico, colSelecionarServico);
-        tblServicos.setItems(servicoModels);
+        tblServicos.setItems(servicoDtoObservableList);
         tblServicos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 

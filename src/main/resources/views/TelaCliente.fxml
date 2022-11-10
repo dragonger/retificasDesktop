@@ -18,8 +18,8 @@
             prefHeight="527.0" prefWidth="762.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controller.ClienteController">
     <center>
-        <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
-            <Tab text="Clientes cadastrados">
+        <TabPane fx:id="tabPaneClientes" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+            <Tab fx:id="tabClientes" text="Clientes cadastrados">
                 <BorderPane prefHeight="200.0" prefWidth="200.0">
                     <center>
                         <TableView fx:id="tblClientes" prefHeight="200.0" prefWidth="200.0"
@@ -36,14 +36,14 @@
                         <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                             <buttons>
                                 <Button mnemonicParsing="false" onAction="#voltarTelaInicial" text="Voltar"/>
-                                <Button mnemonicParsing="false" text="Editar"/>
+                                <Button mnemonicParsing="false" onAction="#editarCliente" text="Editar"/>
                                 <Button mnemonicParsing="false" onAction="#excluirCliente" text="Excluir"/>
                             </buttons>
                         </ButtonBar>
                     </bottom>
                 </BorderPane>
             </Tab>
-            <Tab text="Cadastrar">
+            <Tab fx:id="tabCadastroCliente" text="Cadastrar">
                 <BorderPane prefHeight="200.0" prefWidth="200.0">
                     <bottom>
                         <ButtonBar prefHeight="37.0" prefWidth="762.0" BorderPane.alignment="CENTER">
