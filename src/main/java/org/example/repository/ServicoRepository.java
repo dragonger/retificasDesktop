@@ -1,6 +1,8 @@
 package org.example.repository;
 
 import org.example.Utils.HibernateUtil;
+import org.example.model.ClienteModel;
+import org.example.model.ClienteModel_;
 import org.example.model.Dto.ServicoDto;
 import org.example.model.ServicoModel;
 import org.example.model.ServicoModel_;
@@ -38,5 +40,19 @@ public class ServicoRepository {
         Query query = em.createQuery(criteriaQuery);
         List<ServicoDto> resultList = query.getResultList();
         return resultList;
+    }
+
+    public ServicoModel buscaServico(Long id) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ServicoModel> criteriaQuery = cb.createQuery(ServicoModel.class);
+        Root<ServicoModel> root = criteriaQuery.from(ServicoModel.class);
+
+        criteriaQuery.select(root)
+                .where(cb.equal(root.get(ServicoModel_.ID), id));
+
+        Query query = em.createQuery(criteriaQuery);
+        List<ServicoModel> resultList = query.getResultList();
+        return resultList.get(0);
     }
 }

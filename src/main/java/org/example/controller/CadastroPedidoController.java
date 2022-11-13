@@ -10,15 +10,20 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.example.model.*;
 import org.example.model.Dto.CabecoteDto;
 import org.example.model.Dto.ClienteDto;
 import org.example.model.Dto.ServicoDto;
 import org.example.repository.CabecoteRespository;
 import org.example.repository.ClienteRepository;
+import org.example.repository.PedidoRepository;
 import org.example.repository.ServicoRepository;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -31,7 +36,7 @@ public class CadastroPedidoController implements Initializable {
     @FXML
     private TableColumn<ServicoDto, String> colNomeServico;
     @FXML
-    private TableColumn<ServicoDto, BigDecimal> colValorServico;
+    private TableColumn<ServicoDto, TextField> colValorServico;
     @FXML
     private TableColumn<ServicoDto, CheckBox> colSelecionarServico = new TableColumn("selecionado");
     @FXML
@@ -41,13 +46,19 @@ public class CadastroPedidoController implements Initializable {
     @FXML
     private ComboBox<CabecoteDto> cabecoteDropdown;
     @FXML
+    private DatePicker datePicker;
+    @FXML
+    private TextArea obsText;
+    @FXML
     private Label somaServicos = new Label();
 
     private ClienteRepository clienteRepository = new ClienteRepository();
     private CabecoteRespository cabecoteRespository = new CabecoteRespository();
     private ServicoRepository servicoRepository = new ServicoRepository();
+    private PedidoRepository pedidoRepository = new PedidoRepository();
 
     private Double somaServicosBD = 0.0;
+    PedidoModel pedidoModel = new PedidoModel();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -89,9 +100,8 @@ public class CadastroPedidoController implements Initializable {
     }
 
     private void popularTabelaServicos() {
-        //TODO
         colNomeServico.setCellValueFactory(new PropertyValueFactory<>("nome"));
-        colValorServico.setCellValueFactory(new PropertyValueFactory<>("valorUnitario"));
+        colValorServico.setCellValueFactory(new PropertyValueFactory<>("valorUnitarioTextField"));
 
 
         colSelecionarServico.setCellValueFactory(new PropertyValueFactory<>("selecionado"));
@@ -103,32 +113,24 @@ public class CadastroPedidoController implements Initializable {
 
         servicoDtoList.forEach(servicoDto -> {
 
+            servicoDto.setValorUnitarioTextField(new TextField(servicoDto.getValorUnitario().toString()));
+
             servicoDto.setSelecionado(new CheckBox());
             servicoDto.getSelecionado().selectedProperty().addListener((observableValue, aBoolean, t1) -> {
 
                 int i = servicoDtoObservableList.indexOf(servicoDto);
                 if(servicoDto.getSelecionado().isSelected()){
-                    somaServicos(i, true);
+                    somaServicos(i);
                 } else {
-                    subtraiServicos(i, true);
+                    subtraiServicos(i);
+                    servicoDto.getQuantidade().getValueFactory().setValue(1);
                 }
             });
 
             servicoDto.setQuantidade(new Spinner());
             SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1,10);
             servicoDto.getQuantidade().setValueFactory(valueFactory);
-            servicoDto.getQuantidade().valueProperty().addListener((observableValue, oldValue, newValue) -> {
 
-                int i = servicoDtoObservableList.indexOf(servicoDto);
-                if(oldValue < newValue){
-                    boolean selected = colSelecionarServico.getCellObservableValue(i).getValue().isSelected();
-                    somaServicos(i, selected);
-                } else {
-                    boolean selected = colSelecionarServico.getCellObservableValue(i).getValue().isSelected();
-                    subtraiServicos(i, selected);
-                }
-
-            });
 
 
 
@@ -159,44 +161,66 @@ public class CadastroPedidoController implements Initializable {
         cabecoteDropdown.setItems(cabecoteModelsObservableList);
     }
 
-    private void somaServicos(Integer index, Boolean somar){
-        BigDecimal valorServico = colValorServico.getCellObservableValue(index).getValue();
+    private void somaServicos(Integer index){
+        BigDecimal valorServico = new BigDecimal(colValorServico.getCellObservableValue(index).getValue().getText());
+        Integer quantidade = colQuantidadeServico.getCellObservableValue(index).getValue().getValue();
+        System.out.println(quantidade);
+        System.out.println(valorServico);
+        somaServicosBD = somaServicosBD + (valorServico.doubleValue() * quantidade);
+
+        if (somaServicosBD < 0) {
+            somaServicosBD = 0.0;
+        }
+
+        somaServicos.setText(somaServicosBD.toString());
+    }
+
+    private void subtraiServicos(Integer index){
+        BigDecimal valorServico = new BigDecimal(colValorServico.getCellObservableValue(index).getValue().getText());
         Integer spinnerValue = colQuantidadeServico.getCellObservableValue(index).getValue().getValue();
         System.out.println(spinnerValue);
         System.out.println(valorServico);
-        if(somar){
-            somaServicosBD = somaServicosBD + (valorServico.doubleValue() * spinnerValue);
+        somaServicosBD = somaServicosBD - (valorServico.doubleValue() * spinnerValue);
 
-            if(somaServicosBD < 0){
-                somaServicosBD = 0.0;
-            }
-
-            somaServicos.setText(somaServicosBD.toString());
+        if (somaServicosBD < 0) {
+            somaServicosBD = 0.0;
         }
-    }
 
-    private void subtraiServicos(Integer index, Boolean subtrair){
-        BigDecimal valorServico = colValorServico.getCellObservableValue(index).getValue();
-        Integer spinnerValue = colQuantidadeServico.getCellObservableValue(index).getValue().getValue();
-        System.out.println(spinnerValue);
-        System.out.println(valorServico);
-        if(subtrair){
-            somaServicosBD = somaServicosBD - (valorServico.doubleValue() * spinnerValue);
-
-            if(somaServicosBD < 0){
-                somaServicosBD = 0.0;
-            }
-
-            somaServicos.setText(somaServicosBD.toString());
-        }
+        somaServicos.setText(somaServicosBD.toString());
 
     }
 
-    private void cadastrarPedido() {
+    public void cadastrarPedido() {
+        CabecoteDto cabecoteDto = cabecoteDropdown.getValue();
+        CabecoteModel cabecoteModel = cabecoteRespository.buscarCabecote(cabecoteDto.getId());
 
-        //TODO
+        ClienteDto clienteDto = clienteDropdown.getValue();
+        ClienteModel clienteModel = clienteRepository.buscarCliente(clienteDto.getId());
+
+        List<PedidoServicoModel> pedidoServicoModelList = new ArrayList<>();
+        tblServicos.getItems().forEach(servicoDto -> {
+            if(servicoDto.getSelecionado().isSelected()){
+
+                ServicoModel servicoModel = servicoRepository.buscaServico(servicoDto.getId());
+
+                PedidoServicoModel pedidoServicoModel = new PedidoServicoModel();
+                pedidoServicoModel.setServicoModel(servicoModel);
+                pedidoServicoModel.setQuantidadeServico(servicoDto.getQuantidade().getValue());
+                pedidoServicoModel.setDataCriacao(LocalDateTime.now());
+            }
+        });
 
 
+        pedidoModel.setCabecote(cabecoteModel);
+        pedidoModel.setCliente(clienteModel);
+        pedidoModel.setTotalGeral(BigDecimal.valueOf(somaServicosBD));
+        pedidoModel.setPedidoServicoList(pedidoServicoModelList);
+        pedidoModel.setDatCriacao(LocalDate.now());
+        pedidoModel.setDatEntrega(datePicker.getValue());
+        pedidoModel.setObservacao(obsText.getText());
+
+        pedidoRepository.salvarPedido(pedidoModel);
+        voltarListagemPedido();
     }
 
 

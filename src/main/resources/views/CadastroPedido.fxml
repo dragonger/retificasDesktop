@@ -3,17 +3,18 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
-
 
 <BorderPane fx:id="cadastroPedido" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controller.CadastroPedidoController">
    <top>
@@ -26,6 +27,7 @@
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <ComboBox fx:id="clienteDropdown" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
@@ -41,11 +43,13 @@
             </TabPane>
             <Label text="Cliente" GridPane.rowIndex="1" />
             <Label text="Cabeçote" GridPane.rowIndex="2" />
+            <Label text="Data entrega" GridPane.rowIndex="3" />
+            <DatePicker fx:id="datePicker" GridPane.columnIndex="1" GridPane.rowIndex="3" />
          </children>
       </GridPane>
    </top>
    <center>
-      <TableView  fx:id="tblServicos" BorderPane.alignment="CENTER">
+      <TableView fx:id="tblServicos" BorderPane.alignment="CENTER">
         <columns>
           <TableColumn fx:id="colNomeServico" prefWidth="373.0" text="Nome" />
           <TableColumn fx:id="colValorServico" prefWidth="73.0" text="Valor" />
@@ -66,14 +70,15 @@
          <children>
             <ButtonBar prefHeight="40.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="2">
                 <buttons>
-                    <Button onAction="#voltarListagemPedido" mnemonicParsing="false" text="Voltar" />
+                    <Button mnemonicParsing="false" onAction="#voltarListagemPedido" text="Voltar" />
                 </buttons>
                 <buttons>
-                <Button mnemonicParsing="false" text="Cadastrar" />
+                <Button mnemonicParsing="false" onAction="#cadastrarPedido" text="Cadastrar" />
               </buttons>
             </ButtonBar>
             <Label text="Valor total" GridPane.rowIndex="1" />
             <Label fx:id="somaServicos" text="XXXX" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <TextArea fx:id="obsText" prefHeight="200.0" prefWidth="200.0" promptText="Observações..." GridPane.columnSpan="2" />
          </children>
       </GridPane>
    </bottom>

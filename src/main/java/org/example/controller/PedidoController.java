@@ -27,13 +27,17 @@ public class PedidoController implements Initializable {
     @FXML
     private TableView<PedidoDto> tblPedidos;
     @FXML
-    private TableColumn<PedidoModel, String> colCliente;
+    private TableColumn<PedidoDto, Long> colId;
     @FXML
-    private TableColumn<PedidoModel, String> colCabecote;
+    private TableColumn<PedidoDto, String> colObservacao;
     @FXML
-    private TableColumn<PedidoModel, String> colDatEntrega;
+    private TableColumn<PedidoDto, String> colCliente;
     @FXML
-    private TableColumn<PedidoModel, String> colValor;
+    private TableColumn<PedidoDto, String> colCabecote;
+    @FXML
+    private TableColumn<PedidoDto, String> colDatEntrega;
+    @FXML
+    private TableColumn<PedidoDto, String> colValor;
 
 
     private final CadastroPedidoController cadastroPedidoController = new CadastroPedidoController();
@@ -46,9 +50,12 @@ public class PedidoController implements Initializable {
 
     private void populaTabela(){
 
+        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colObservacao.setCellValueFactory(new PropertyValueFactory<>("observacao"));
         colCliente.setCellValueFactory(new PropertyValueFactory<>("nomeCliente"));
         colCabecote.setCellValueFactory(new PropertyValueFactory<>("nomeCabecote"));
         colDatEntrega.setCellValueFactory(new PropertyValueFactory<>("dataEntrega"));
+        colCliente.setCellValueFactory(new PropertyValueFactory<>("nomeCliente"));
         colValor.setCellValueFactory(new PropertyValueFactory<>("valor"));
 
         ObservableList<PedidoDto> pedidoModelObservableList = FXCollections.observableArrayList();

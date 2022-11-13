@@ -23,7 +23,9 @@ public class PedidoRepository {
         Join<PedidoModel, ClienteModel> joinCliente = root.join(PedidoModel_.CLIENTE);
         Join<PedidoModel, CabecoteModel> joinCabecote = root.join(PedidoModel_.CABECOTE);
 
-        criteriaQuery.multiselect(joinCliente.get(ClienteModel_.NOME),
+        criteriaQuery.multiselect(root.get(PedidoModel_.ID),
+                root.get(PedidoModel_.OBSERVACAO),
+                joinCliente.get(ClienteModel_.NOME),
                 joinCabecote.get(CabecoteModel_.MODELO),
                 root.get(PedidoModel_.DAT_ENTREGA),
                 root.get(PedidoModel_.TOTAL_GERAL));
@@ -31,5 +33,13 @@ public class PedidoRepository {
         Query query = em.createQuery(criteriaQuery);
         List<PedidoDto> resultList = query.getResultList();
         return resultList;
+    }
+
+
+    public void salvarPedido(PedidoModel pedidoModel) {
+
+        em.getTransaction().begin();
+        em.merge(pedidoModel);
+        em.getTransaction().commit();
     }
 }

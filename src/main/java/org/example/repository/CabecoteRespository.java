@@ -3,6 +3,8 @@ package org.example.repository;
 import org.example.Utils.HibernateUtil;
 import org.example.model.CabecoteModel;
 import org.example.model.CabecoteModel_;
+import org.example.model.ClienteModel;
+import org.example.model.ClienteModel_;
 import org.example.model.Dto.CabecoteDto;
 
 import javax.persistence.EntityManager;
@@ -36,5 +38,19 @@ public class CabecoteRespository {
         Query query = em.createQuery(criteriaQuery);
         List<CabecoteDto> resultList = query.getResultList();
         return resultList;
+    }
+
+    public CabecoteModel buscarCabecote(Long id) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<CabecoteModel> criteriaQuery = cb.createQuery(CabecoteModel.class);
+        Root<CabecoteModel> root = criteriaQuery.from(CabecoteModel.class);
+
+        criteriaQuery.select(root)
+                .where(cb.equal(root.get(CabecoteModel_.ID), id));
+
+        Query query = em.createQuery(criteriaQuery);
+        List<CabecoteModel> resultList = query.getResultList();
+        return resultList.get(0);
     }
 }

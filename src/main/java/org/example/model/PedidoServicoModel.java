@@ -24,6 +24,6 @@ public class PedidoServicoModel {
     @ManyToOne
     ServicoModel servicoModel;
 
-    Long quantidadeServico;
+    Integer quantidadeServico;
     LocalDateTime dataCriacao;
 }

@@ -25,7 +25,7 @@ public class PedidoModel {
     Long id;
     String observacao;
     BigDecimal totalGeral;
-    LocalDateTime datCriacao;
+    LocalDate datCriacao;
     LocalDate datEntrega;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "id")
