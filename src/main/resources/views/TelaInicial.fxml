@@ -9,7 +9,7 @@
 <?import javafx.scene.paint.Stop?>
 <?import javafx.scene.shape.Circle?>
 
-<BorderPane fx:id="telaInicial" prefHeight="400.0" prefWidth="606.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controller.TelaInicialController">
+<BorderPane fx:id="telaInicial" prefHeight="1000.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controller.TelaInicialController">
    <bottom>
       <ButtonBar prefHeight="40.0" prefWidth="200.0">
          <buttons>

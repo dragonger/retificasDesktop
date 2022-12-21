@@ -74,7 +74,7 @@ public class CadastroPedidoController implements Initializable {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/CadastroPedido.fxml"));
             BorderPane root = fxmlLoader.load();
-            Scene scene = new Scene(root, 700, 400);
+            Scene scene = new Scene(root, 1000, 600 );
 
             telaPedidoStage.setScene(scene);
             telaPedidoStage.show();
@@ -90,7 +90,7 @@ public class CadastroPedidoController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/ListagemPedidos.fxml"));
             BorderPane root = fxmlLoader.load();
             Stage cadastroPedidosStage = (Stage) this.cadastroPedido.getScene().getWindow();
-            Scene scene = new Scene(root, 700, 400);
+            Scene scene = new Scene(root, 1000, 600 );
 
             cadastroPedidosStage.setScene(scene);
             cadastroPedidosStage.show();

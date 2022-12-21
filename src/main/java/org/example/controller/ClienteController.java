@@ -77,7 +77,7 @@ public class ClienteController implements Initializable {
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/TelaCliente.fxml"));
             BorderPane root = fxmlLoader.load();
-            Scene scene = new Scene(root, 700,400);
+            Scene scene = new Scene(root, 1000, 600 );
 
             stage.setScene(scene);
             stage.show();
@@ -91,7 +91,7 @@ public class ClienteController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/TelaInicial.fxml"));
             BorderPane root = fxmlLoader.load();
             Stage telaClienteStage = (Stage) this.telaCliente.getScene().getWindow();
-            Scene scene = new Scene(root, 700,400);
+            Scene scene = new Scene(root, 1000, 600 );
 
             telaClienteStage.setScene(scene);
             telaClienteStage.show();

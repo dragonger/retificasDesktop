@@ -12,7 +12,7 @@ public class TelaRelatorioController {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/TelaRelatorio.fxml"));
             BorderPane root = fxmlLoader.load();
-            Scene scene = new Scene(root, 700, 400);
+            Scene scene = new Scene(root, 1000, 600 );
 
             stage.setScene(scene);
             stage.show();
@@ -26,7 +26,7 @@ public class TelaRelatorioController {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/TelaInicial.fxml"));
             BorderPane root = fxmlLoader.load();
             Stage telaRelatorio = (Stage) this.TelaRelatorio.getScene().getWindow();
-            Scene scene = new Scene(root, 700,400);
+            Scene scene = new Scene(root, 1000, 600 );
 
             telaRelatorio.setScene(scene);
             telaRelatorio.show();

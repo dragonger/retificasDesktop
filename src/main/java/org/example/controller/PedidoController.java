@@ -74,7 +74,7 @@ public class PedidoController implements Initializable {
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/ListagemPedidos.fxml"));
             BorderPane root = fxmlLoader.load();
-            Scene scene = new Scene(root, 700,400);
+            Scene scene = new Scene(root, 1000, 600 );
 
             stage.setScene(scene);
             stage.show();
@@ -89,7 +89,7 @@ public class PedidoController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/TelaInicial.fxml"));
             BorderPane root = fxmlLoader.load();
             Stage listagemPedidosStage = (Stage) this.listagemPedidos.getScene().getWindow();
-            Scene scene = new Scene(root, 700,400);
+            Scene scene = new Scene(root, 1000, 600 );
 
             listagemPedidosStage.setScene(scene);
             listagemPedidosStage.show();

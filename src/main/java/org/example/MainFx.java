@@ -36,7 +36,7 @@ public class MainFx extends Application {
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/TelaInicial.fxml"));
             BorderPane root = fxmlLoader.load();
-            Scene scene = new Scene(root, 700,400);
+            Scene scene = new Scene(root, 1000, 600 );
 
             stage.setScene(scene);
             stage.show();
