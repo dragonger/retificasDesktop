@@ -207,6 +207,7 @@ public class CadastroPedidoController implements Initializable {
                 pedidoServicoModel.setServicoModel(servicoModel);
                 pedidoServicoModel.setQuantidadeServico(servicoDto.getQuantidade().getValue());
                 pedidoServicoModel.setDataCriacao(LocalDateTime.now());
+                pedidoServicoModelList.add(pedidoServicoModel);
             }
         });
 

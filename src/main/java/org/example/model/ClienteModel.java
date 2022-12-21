@@ -24,7 +24,4 @@ public class ClienteModel {
     String cep;
     LocalDateTime dataCadastro;
 
-    @OneToOne
-    private PedidoModel pedido;
-
 }

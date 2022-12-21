@@ -28,8 +28,11 @@ public class PedidoModel {
     LocalDate datCriacao;
     LocalDate datEntrega;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "id")
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn
     List<PedidoServicoModel> pedidoServicoList;
+
     @OneToOne(cascade = CascadeType.ALL)
     ClienteModel cliente;
     @OneToOne(cascade = CascadeType.ALL)

@@ -11,10 +11,15 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.example.Utils.PdfUtil;
+import org.example.model.ClienteModel;
+import org.example.model.Dto.ClienteDto;
 import org.example.model.Dto.PedidoDto;
 import org.example.model.PedidoModel;
+import org.example.model.PedidoServicoModel;
 import org.example.repository.PedidoRepository;
 
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -98,6 +103,14 @@ public class PedidoController implements Initializable {
 
         Stage telaPedidoStage = (Stage) this.listagemPedidos.getScene().getWindow();
         cadastroPedidoController.abrirCadastroPedido(telaPedidoStage);
+    }
+
+    public void gerarRelatorioPedido() {
+        PedidoDto pedidoDto = tblPedidos.getSelectionModel().getSelectedItem();
+        PedidoModel pedidoModel = pedidoRepository.buscarPedido(pedidoDto.getId());
+        PdfUtil pdfUtil = new PdfUtil(pedidoModel);
+        pdfUtil.gerarRelatorio();
+        pdfUtil.imprimir();
     }
 
 }

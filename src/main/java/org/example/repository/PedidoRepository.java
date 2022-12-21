@@ -16,7 +16,6 @@ public class PedidoRepository {
     EntityManager em = HibernateUtil.getCurrentSession();
     public List<PedidoDto> buscarListagemPedidos() {
 
-
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaQuery<PedidoDto> criteriaQuery = criteriaBuilder.createQuery(PedidoDto.class);
         Root<PedidoModel> root = criteriaQuery.from(PedidoModel.class);
@@ -35,11 +34,47 @@ public class PedidoRepository {
         return resultList;
     }
 
-
-    public void salvarPedido(PedidoModel pedidoModel) {
+    public PedidoModel salvarPedido(PedidoModel pedidoModel) {
 
         em.getTransaction().begin();
-        em.merge(pedidoModel);
+        PedidoModel pedido = em.merge(pedidoModel);
         em.getTransaction().commit();
+        return pedido;
+    }
+
+    public PedidoModel buscarPedido(Long id) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<PedidoModel> criteriaQuery = cb.createQuery(PedidoModel.class);
+        Root<PedidoModel> root = criteriaQuery.from(PedidoModel.class);
+
+        criteriaQuery.select(root)
+                .where(cb.equal(root.get(PedidoModel_.ID), id));
+
+        Query query = em.createQuery(criteriaQuery);
+        List<PedidoModel> resultList = query.getResultList();
+        return resultList.get(0);
+    }
+
+    public void salvarPedidoServico(PedidoServicoModel pedidoServicoModel) {
+
+        em.getTransaction().begin();
+        em.merge(pedidoServicoModel);
+        em.getTransaction().commit();
+    }
+
+    public List<PedidoServicoModel> buscarPedidoServicoList(Long id) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<PedidoServicoModel> criteriaQuery = cb.createQuery(PedidoServicoModel.class);
+        Root<PedidoServicoModel> root = criteriaQuery.from(PedidoServicoModel.class);
+        Join<PedidoServicoModel, PedidoModel> joinPedido = root.join(PedidoServicoModel_.PEDIDO);
+
+        criteriaQuery.select(root)
+                .where(cb.equal(joinPedido.get(PedidoModel_.ID), id));
+
+        Query query = em.createQuery(criteriaQuery);
+        List<PedidoServicoModel> resultList = query.getResultList();
+        return resultList;
     }
 }
