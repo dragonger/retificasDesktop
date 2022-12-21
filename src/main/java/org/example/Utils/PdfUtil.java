@@ -24,7 +24,7 @@ public class PdfUtil {
         this.pedidoModel = pedidoModel;
         this.relatorio = new Document();
         try {
-            PdfWriter.getInstance(relatorio, new FileOutputStream(caminhoRelatorio + "-" +pedidoModel.getId() + "-Cliente-" + pedidoModel.getCliente().getNome()));
+            PdfWriter.getInstance(relatorio, new FileOutputStream(caminhoRelatorio + "-" +pedidoModel.getId() + "-Cliente-" + pedidoModel.getCliente().getNome()+ extensaoArquivo));
 
             //muda o tamanho da pagina
             relatorio.setPageSize(new Rectangle(500, 500));
