@@ -27,7 +27,10 @@ public class PedidoRepository {
                 joinCliente.get(ClienteModel_.NOME),
                 joinCabecote.get(CabecoteModel_.MODELO),
                 root.get(PedidoModel_.DAT_ENTREGA),
-                root.get(PedidoModel_.TOTAL_GERAL));
+                root.get(PedidoModel_.TOTAL_GERAL),
+                root.get(PedidoModel_.FECHADO));
+
+        criteriaQuery.where(criteriaBuilder.equal(root.get(PedidoModel_.fechado), false));
 
         Query query = em.createQuery(criteriaQuery);
         List<PedidoDto> resultList = query.getResultList();
@@ -76,5 +79,35 @@ public class PedidoRepository {
         Query query = em.createQuery(criteriaQuery);
         List<PedidoServicoModel> resultList = query.getResultList();
         return resultList;
+    }
+
+    public List<PedidoDto> buscarListagemPedidosf() {
+
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<PedidoDto> criteriaQuery = criteriaBuilder.createQuery(PedidoDto.class);
+        Root<PedidoModel> root = criteriaQuery.from(PedidoModel.class);
+        Join<PedidoModel, ClienteModel> joinCliente = root.join(PedidoModel_.CLIENTE);
+        Join<PedidoModel, CabecoteModel> joinCabecote = root.join(PedidoModel_.CABECOTE);
+
+        criteriaQuery.multiselect(root.get(PedidoModel_.ID),
+                root.get(PedidoModel_.OBSERVACAO),
+                joinCliente.get(ClienteModel_.NOME),
+                joinCabecote.get(CabecoteModel_.MODELO),
+                root.get(PedidoModel_.DAT_ENTREGA),
+                root.get(PedidoModel_.TOTAL_GERAL),
+        root.get(PedidoModel_.FECHADO));
+
+        criteriaQuery.where(criteriaBuilder.equal(root.get(PedidoModel_.fechado), true));
+
+        Query query = em.createQuery(criteriaQuery);
+        List<PedidoDto> resultList = query.getResultList();
+        return resultList;
+    }
+
+    public void fecharPedido (PedidoModel pedidoModel){
+
+        em.getTransaction().begin();
+        pedidoModel.setFechado(true);
+        em.getTransaction().commit();
     }
 }

@@ -27,6 +27,7 @@ public class PedidoModel {
     BigDecimal totalGeral;
     LocalDate datCriacao;
     LocalDate datEntrega;
+    Boolean fechado = false;
 
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)

@@ -20,13 +20,16 @@ public class PedidoDto {
     LocalDate dataEntrega;
     List<String> servicos;
     BigDecimal valor;
+    Boolean fechado;
 
-    public PedidoDto(Long id, String observacao, String nomeCabecote, String nomeCliente, LocalDate dataEntrega, BigDecimal valor) {
+
+    public PedidoDto(Long id, String observacao, String nomeCabecote, String nomeCliente, LocalDate dataEntrega, BigDecimal valor,Boolean fechado) {
         this.id = id;
         this.observacao = observacao;
         this.nomeCabecote = nomeCabecote;
         this.nomeCliente = nomeCliente;
         this.dataEntrega = dataEntrega;
         this.valor = valor;
+        this.fechado = fechado;
     }
 }

@@ -12,14 +12,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.example.Utils.PdfUtil;
-import org.example.model.ClienteModel;
-import org.example.model.Dto.ClienteDto;
 import org.example.model.Dto.PedidoDto;
 import org.example.model.PedidoModel;
-import org.example.model.PedidoServicoModel;
 import org.example.repository.PedidoRepository;
 
-import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -47,13 +43,14 @@ public class PedidoController implements Initializable {
 
     private final CadastroPedidoController cadastroPedidoController = new CadastroPedidoController();
     private final PedidoRepository pedidoRepository = new PedidoRepository();
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
         populaTabela();
     }
 
-    private void populaTabela(){
+    private void populaTabela() {
 
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colObservacao.setCellValueFactory(new PropertyValueFactory<>("observacao"));
@@ -71,10 +68,10 @@ public class PedidoController implements Initializable {
     }
 
     public void abreTelaNovoPedido(Stage stage) {
-        try{
+        try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/ListagemPedidos.fxml"));
             BorderPane root = fxmlLoader.load();
-            Scene scene = new Scene(root, 1000, 600 );
+            Scene scene = new Scene(root, 1000, 600);
 
             stage.setScene(scene);
             stage.show();
@@ -85,11 +82,11 @@ public class PedidoController implements Initializable {
     }
 
     public void voltarTelaInicial() {
-        try{
+        try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/TelaInicial.fxml"));
             BorderPane root = fxmlLoader.load();
             Stage listagemPedidosStage = (Stage) this.listagemPedidos.getScene().getWindow();
-            Scene scene = new Scene(root, 1000, 600 );
+            Scene scene = new Scene(root, 1000, 600);
 
             listagemPedidosStage.setScene(scene);
             listagemPedidosStage.show();
@@ -99,7 +96,7 @@ public class PedidoController implements Initializable {
     }
 
 
-    public void abrirCadastroPedido(){
+    public void abrirCadastroPedido() {
 
         Stage telaPedidoStage = (Stage) this.listagemPedidos.getScene().getWindow();
         cadastroPedidoController.abrirCadastroPedido(telaPedidoStage);
@@ -111,6 +108,13 @@ public class PedidoController implements Initializable {
         PdfUtil pdfUtil = new PdfUtil(pedidoModel);
         pdfUtil.gerarRelatorio();
         pdfUtil.imprimir();
+    }
+
+    public void fecharPedido(){
+
+        PedidoDto pedidoDto = tblPedidos.getSelectionModel().getSelectedItem();
+        PedidoModel pedidoModel = pedidoRepository.buscarPedido(pedidoDto.getId());
+        pedidoRepository.fecharPedido(pedidoModel);
     }
 
 }

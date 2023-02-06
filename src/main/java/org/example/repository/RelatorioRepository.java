@@ -1,12 +1,11 @@
 package org.example.repository;
 
 import org.example.Utils.HibernateUtil;
-import org.example.model.CabecoteModel;
-import org.example.model.Dto.CabecoteDto;
 import org.example.model.Dto.PedidoDto;
 import org.example.model.PedidoModel_;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -22,13 +21,15 @@ public class RelatorioRepository {
         Root<PedidoDto> root = criteriaQuery.from(PedidoDto.class);
 
         criteriaQuery.multiselect(
+                root.get(PedidoModel_.ID),
                 root.get(PedidoModel_.CLIENTE),
                 root.get(PedidoModel_.CABECOTE),
                 root.get(PedidoModel_.DAT_ENTREGA),
-                root.get(PedidoModel_.)
+                root.get(PedidoModel_.TOTAL_GERAL));
 
-        )
-
+        Query query = em.createQuery(criteriaQuery);
+        List<PedidoDto> resultList = query.getResultList();
+        return resultList;
 
     }
 }

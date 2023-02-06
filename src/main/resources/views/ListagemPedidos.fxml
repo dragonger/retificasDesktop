@@ -17,6 +17,7 @@
          </BorderPane.margin>
          <buttons>
             <Button mnemonicParsing="false" onAction="#voltarTelaInicial" text="Voltar" />
+            <Button mnemonicParsing="false" onAction="#fecharPedido" text="Fechar pedido" />
             <Button mnemonicParsing="false" onAction="#gerarRelatorioPedido" text="Gerar nota fiscal" />
             <Button mnemonicParsing="false" onAction="#abrirCadastroPedido" text="Novo pedido" />
          </buttons>

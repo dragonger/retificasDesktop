@@ -1,31 +1,63 @@
 package org.example.controller;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.example.model.Dto.PedidoDto;
+import org.example.repository.PedidoRepository;
 
-public class TelaRelatorioController {
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+
+public class TelaRelatorioController implements Initializable {
     @FXML
     private BorderPane TelaRelatorio;
     @FXML
-    private TableView tblRelatorio;
+    private TableView<PedidoDto> tblRelatorio;
     @FXML
-    private TableColumn rltId;
+    private TableColumn<PedidoDto, Long> rltId;
     @FXML
-    private TableColumn rltCliente;
+    private TableColumn<PedidoDto, String> rltCliente;
     @FXML
-    private TableColumn rltCabecote;
+    private TableColumn<PedidoDto, String> rltCabecote;
     @FXML
-    private TableColumn rltDivisao;
+    private TableColumn<PedidoDto, String> rltDivisao;
     @FXML
-    private TableColumn rltDataDeEntrega;
+    private TableColumn<PedidoDto, String> rltDataDeEntrega;
     @FXML
-    private TableColumn rltValor;
+    private TableColumn<PedidoDto, String> rltValor;
 
+    private final PedidoRepository pedidoRepository = new PedidoRepository();
+
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+
+        populaTabela();
+    }
+
+    private void populaTabela() {
+
+        rltId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        rltCabecote.setCellValueFactory(new PropertyValueFactory<>("nomeCabecote"));
+        rltCliente.setCellValueFactory(new PropertyValueFactory<>("nomeCliente"));
+        rltDataDeEntrega.setCellValueFactory(new PropertyValueFactory<>("dataEntrega"));
+        rltValor.setCellValueFactory(new PropertyValueFactory<>("valor"));
+
+        ObservableList<PedidoDto> pedidoModelObservableList = FXCollections.observableArrayList();
+        List<PedidoDto> pedidoModelList = pedidoRepository.buscarListagemPedidosf();
+        pedidoModelObservableList.addAll(pedidoModelList);
+
+        tblRelatorio.setItems(pedidoModelObservableList);
+
+    }
 
     public void abreTelaRelatorio(Stage stage) {
         try {
