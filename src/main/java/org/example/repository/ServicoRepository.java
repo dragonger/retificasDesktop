@@ -1,8 +1,6 @@
 package org.example.repository;
 
 import org.example.Utils.HibernateUtil;
-import org.example.model.ClienteModel;
-import org.example.model.ClienteModel_;
 import org.example.model.Dto.ServicoDto;
 import org.example.model.ServicoModel;
 import org.example.model.ServicoModel_;

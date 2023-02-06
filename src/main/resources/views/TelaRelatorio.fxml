@@ -49,10 +49,11 @@
                                     <children>
                                         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Faturamento:" />
                                         <Label prefHeight="17.0" prefWidth="64.0" text="XXXX" GridPane.columnIndex="1" />
-                                        <ButtonBar prefHeight="40.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                        <ButtonBar prefHeight="30.0" prefWidth="372.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                             <buttons>
-                                                <Button mnemonicParsing="false" onAction="#voltarTelaInicial" text="Voltar" />
-                                                <Button mnemonicParsing="false" text="Visualizar" />
+                                                <Button minWidth="45.0" mnemonicParsing="false" onAction="#voltarTelaInicial" prefHeight="25.0" text="Voltar" />
+                                    <Button mnemonicParsing="false" onAction="#reabrirPedido" prefHeight="25.0" prefWidth="178.0" text="Reabrir " />
+                                                <Button minWidth="0.0" mnemonicParsing="false" prefHeight="25.0" text="Visualizar" />
                                             </buttons>
                                         </ButtonBar>
                                     </children>

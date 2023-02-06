@@ -4,21 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="RelatorioRepository, adicionado elemontos fsx">
-      <change afterPath="$PROJECT_DIR$/NotaFiscal-29-Cliente-a.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/model/Dto/RelatorioDto.java" afterDir="false" />
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Buscar pedidodos fechados, popula tabela relatorio, fechar pedidos">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/PedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/PedidoController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Utils/PdfUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Utils/PdfUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaRelatorioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaRelatorioController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/Dto/PedidoDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/Dto/PedidoDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/PedidoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/PedidoRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/RelatorioRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/RelatorioRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/testedb.mv.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db/testedb.mv.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/CadastroPedido.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/ListagemPedidos.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/ListagemPedidos.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaRelatorio.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaRelatorio.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/CabecoteRespository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/CabecoteRespository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/ServicoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/ServicoRepository.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,6 +41,9 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectId" id="2EwggjexLWiIiQUqBJl1g2SdwXD" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <OptionsSetting value="false" id="Update" />
@@ -68,6 +63,7 @@
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
+    "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "Errors"
   }
 }]]></component>
@@ -392,7 +388,14 @@
       <option name="project" value="LOCAL" />
       <updated>1675170043335</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="Buscar pedidodos fechados, popula tabela relatorio, fechar pedidos">
+      <created>1675695602340</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1675695602340</updated>
+    </task>
+    <option name="localTasksCounter" value="37" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -412,7 +415,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Tela clientes criada" />
     <MESSAGE value="Tela CadastroPedido.fxml transformada em scrollPane" />
     <MESSAGE value="Tela de cadrastro e gerenciamento de cabeçotes registrados" />
     <MESSAGE value="Alterações cliente modelo e tela cliente" />
@@ -437,6 +439,7 @@
     <MESSAGE value="Controller Tela relatorio" />
     <MESSAGE value="Adicionado botão &quot;Ver relatorio&quot; e funcionalidade" />
     <MESSAGE value="RelatorioRepository, adicionado elemontos fsx" />
-    <option name="LAST_COMMIT_MESSAGE" value="RelatorioRepository, adicionado elemontos fsx" />
+    <MESSAGE value="Buscar pedidodos fechados, popula tabela relatorio, fechar pedidos" />
+    <option name="LAST_COMMIT_MESSAGE" value="Buscar pedidodos fechados, popula tabela relatorio, fechar pedidos" />
   </component>
 </project>

@@ -12,6 +12,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.example.model.Dto.PedidoDto;
+import org.example.model.PedidoModel;
 import org.example.repository.PedidoRepository;
 
 import java.net.URL;
@@ -85,4 +86,16 @@ public class TelaRelatorioController implements Initializable {
             e.printStackTrace();
         }
     }
+
+    public void  reabrirPedido(){
+
+        PedidoDto pedidoDto = tblRelatorio.getSelectionModel().getSelectedItem();
+        PedidoModel pedidoModel = pedidoRepository.buscarPedido(pedidoDto.getId());
+        pedidoRepository.reabrirPedido(pedidoModel);
+    }
+
+
+
+
+
 }

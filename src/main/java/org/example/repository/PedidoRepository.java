@@ -110,4 +110,11 @@ public class PedidoRepository {
         pedidoModel.setFechado(true);
         em.getTransaction().commit();
     }
+
+    public void reabrirPedido (PedidoModel pedidoModel){
+
+        em.getTransaction().begin();
+        pedidoModel.setFechado(false);
+        em.getTransaction().commit();
+    }
 }

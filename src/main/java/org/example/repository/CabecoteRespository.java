@@ -3,8 +3,6 @@ package org.example.repository;
 import org.example.Utils.HibernateUtil;
 import org.example.model.CabecoteModel;
 import org.example.model.CabecoteModel_;
-import org.example.model.ClienteModel;
-import org.example.model.ClienteModel_;
 import org.example.model.Dto.CabecoteDto;
 
 import javax.persistence.EntityManager;

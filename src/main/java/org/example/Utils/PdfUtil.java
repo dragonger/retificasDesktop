@@ -4,14 +4,10 @@ import com.lowagie.text.*;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfWriter;
 import org.example.model.PedidoModel;
-import org.example.model.PedidoServicoModel;
 
 import java.awt.*;
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 public class PdfUtil {
 
