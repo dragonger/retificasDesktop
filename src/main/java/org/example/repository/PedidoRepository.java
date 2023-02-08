@@ -14,6 +14,7 @@ import java.util.List;
 
 public class PedidoRepository {
     EntityManager em = HibernateUtil.getCurrentSession();
+
     public List<PedidoDto> buscarListagemPedidos() {
 
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
@@ -95,23 +96,24 @@ public class PedidoRepository {
                 joinCabecote.get(CabecoteModel_.MODELO),
                 root.get(PedidoModel_.DAT_ENTREGA),
                 root.get(PedidoModel_.TOTAL_GERAL),
-        root.get(PedidoModel_.FECHADO));
+                root.get(PedidoModel_.FECHADO));
 
         criteriaQuery.where(criteriaBuilder.equal(root.get(PedidoModel_.fechado), true));
+
 
         Query query = em.createQuery(criteriaQuery);
         List<PedidoDto> resultList = query.getResultList();
         return resultList;
     }
 
-    public void fecharPedido (PedidoModel pedidoModel){
+    public void fecharPedido(PedidoModel pedidoModel) {
 
         em.getTransaction().begin();
         pedidoModel.setFechado(true);
         em.getTransaction().commit();
     }
 
-    public void reabrirPedido (PedidoModel pedidoModel){
+    public void reabrirPedido(PedidoModel pedidoModel) {
 
         em.getTransaction().begin();
         pedidoModel.setFechado(false);

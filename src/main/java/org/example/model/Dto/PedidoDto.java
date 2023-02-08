@@ -21,6 +21,7 @@ public class PedidoDto {
     List<String> servicos;
     BigDecimal valor;
     Boolean fechado;
+    String div;
 
 
     public PedidoDto(Long id, String observacao, String nomeCabecote, String nomeCliente, LocalDate dataEntrega, BigDecimal valor,Boolean fechado) {

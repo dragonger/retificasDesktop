@@ -220,7 +220,6 @@ public class CadastroPedidoController implements Initializable {
         pedidoModel.setDatEntrega(datePicker.getValue());
         pedidoModel.setObservacao(obsText.getText());
         pedidoModel.setFechado(false);
-
         pedidoRepository.salvarPedido(pedidoModel);
         voltarListagemPedido();
     }

@@ -115,6 +115,7 @@ public class PedidoController implements Initializable {
         PedidoDto pedidoDto = tblPedidos.getSelectionModel().getSelectedItem();
         PedidoModel pedidoModel = pedidoRepository.buscarPedido(pedidoDto.getId());
         pedidoRepository.fecharPedido(pedidoModel);
+        populaTabela();
     }
 
 }

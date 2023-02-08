@@ -6,6 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class TelaRelatorioController implements Initializable {
+    public DatePicker dateRlt;
     @FXML
     private BorderPane TelaRelatorio;
     @FXML
@@ -92,6 +94,7 @@ public class TelaRelatorioController implements Initializable {
         PedidoDto pedidoDto = tblRelatorio.getSelectionModel().getSelectedItem();
         PedidoModel pedidoModel = pedidoRepository.buscarPedido(pedidoDto.getId());
         pedidoRepository.reabrirPedido(pedidoModel);
+        populaTabela();
     }
 
 

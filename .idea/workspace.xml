@@ -4,13 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Buscar pedidodos fechados, popula tabela relatorio, fechar pedidos">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Reabrir pedido adicionado">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Utils/PdfUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Utils/PdfUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaRelatorioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaRelatorioController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/Dto/PedidoDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/Dto/PedidoDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/CabecoteRespository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/CabecoteRespository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/ServicoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/ServicoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/PedidoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/PedidoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/testedb.mv.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db/testedb.mv.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaRelatorio.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaRelatorio.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,7 +44,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectId" id="2EwggjexLWiIiQUqBJl1g2SdwXD" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -53,20 +55,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "last_opened_file_path": "C:/Users/Flávio/Downloads/agendalive-master/agendalive-master/pom.xml",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "Errors"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Flávio/Downloads/agendalive-master/agendalive-master/pom.xml&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;Errors&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Maven.retificasDeskt [clean,javafx:run,-e,-X]">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.example.Main" />
@@ -395,7 +397,14 @@
       <option name="project" value="LOCAL" />
       <updated>1675695602340</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="Reabrir pedido adicionado">
+      <created>1675700646781</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1675700646781</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -415,7 +424,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Tela CadastroPedido.fxml transformada em scrollPane" />
     <MESSAGE value="Tela de cadrastro e gerenciamento de cabeçotes registrados" />
     <MESSAGE value="Alterações cliente modelo e tela cliente" />
     <MESSAGE value="Alterações modelo cabecote" />
@@ -440,6 +448,7 @@
     <MESSAGE value="Adicionado botão &quot;Ver relatorio&quot; e funcionalidade" />
     <MESSAGE value="RelatorioRepository, adicionado elemontos fsx" />
     <MESSAGE value="Buscar pedidodos fechados, popula tabela relatorio, fechar pedidos" />
-    <option name="LAST_COMMIT_MESSAGE" value="Buscar pedidodos fechados, popula tabela relatorio, fechar pedidos" />
+    <MESSAGE value="Reabrir pedido adicionado" />
+    <option name="LAST_COMMIT_MESSAGE" value="Reabrir pedido adicionado" />
   </component>
 </project>

@@ -35,4 +35,6 @@ public class PedidoModel {
     ClienteModel cliente;
     @OneToOne(cascade = CascadeType.ALL)
     CabecoteModel cabecote;
+
+
 }
