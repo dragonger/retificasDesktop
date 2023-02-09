@@ -43,10 +43,10 @@ public class TelaRelatorioController implements Initializable {
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        populaTabela();
+
     }
 
-    private void populaTabela() {
+    private void populaTabela( ) {
 
         rltId.setCellValueFactory(new PropertyValueFactory<>("id"));
         rltCabecote.setCellValueFactory(new PropertyValueFactory<>("nomeCabecote"));
@@ -55,7 +55,7 @@ public class TelaRelatorioController implements Initializable {
         rltValor.setCellValueFactory(new PropertyValueFactory<>("valor"));
 
         ObservableList<PedidoDto> pedidoModelObservableList = FXCollections.observableArrayList();
-        List<PedidoDto> pedidoModelList = pedidoRepository.buscarListagemPedidosf();
+        List<PedidoDto> pedidoModelList = pedidoRepository.buscarListagemPedidosf(dateRlt);
         pedidoModelObservableList.addAll(pedidoModelList);
 
         tblRelatorio.setItems(pedidoModelObservableList);
@@ -94,6 +94,10 @@ public class TelaRelatorioController implements Initializable {
         PedidoDto pedidoDto = tblRelatorio.getSelectionModel().getSelectedItem();
         PedidoModel pedidoModel = pedidoRepository.buscarPedido(pedidoDto.getId());
         pedidoRepository.reabrirPedido(pedidoModel);
+        populaTabela();
+    }
+
+    public void visualizar(){
         populaTabela();
     }
 

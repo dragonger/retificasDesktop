@@ -13,23 +13,6 @@ import java.util.List;
 
 public class RelatorioRepository {
 
-    EntityManager em = HibernateUtil.getCurrentSession();
-
-    public List<PedidoDto> buscarRelatorios() {
-        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-        CriteriaQuery<PedidoDto> criteriaQuery = criteriaBuilder.createQuery(PedidoDto.class);
-        Root<PedidoDto> root = criteriaQuery.from(PedidoDto.class);
-
-        criteriaQuery.multiselect(
-                root.get(PedidoModel_.ID),
-                root.get(PedidoModel_.CLIENTE),
-                root.get(PedidoModel_.CABECOTE),
-                root.get(PedidoModel_.DAT_ENTREGA),
-                root.get(PedidoModel_.TOTAL_GERAL));
-
-        Query query = em.createQuery(criteriaQuery);
-        List<PedidoDto> resultList = query.getResultList();
-        return resultList;
 
     }
-}
+

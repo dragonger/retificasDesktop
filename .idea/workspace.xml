@@ -4,13 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Reabrir pedido adicionado">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Tabela atualiza a cada operação">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CadastroPedidoController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaRelatorioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaRelatorioController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/Dto/PedidoDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/Dto/PedidoDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/model/PedidoModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/PedidoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/PedidoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/RelatorioRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/RelatorioRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/db/testedb.mv.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db/testedb.mv.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaRelatorio.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaRelatorio.fxml" afterDir="false" />
     </list>

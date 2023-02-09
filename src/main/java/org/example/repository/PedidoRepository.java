@@ -1,15 +1,16 @@
 package org.example.repository;
 
+import javafx.scene.control.DatePicker;
 import org.example.Utils.HibernateUtil;
 import org.example.model.*;
 import org.example.model.Dto.PedidoDto;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class PedidoRepository {
@@ -82,7 +83,7 @@ public class PedidoRepository {
         return resultList;
     }
 
-    public List<PedidoDto> buscarListagemPedidosf() {
+    public List<PedidoDto> buscarListagemPedidosf( DatePicker dateRlt) {
 
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaQuery<PedidoDto> criteriaQuery = criteriaBuilder.createQuery(PedidoDto.class);
@@ -98,11 +99,16 @@ public class PedidoRepository {
                 root.get(PedidoModel_.TOTAL_GERAL),
                 root.get(PedidoModel_.FECHADO));
 
-        criteriaQuery.where(criteriaBuilder.equal(root.get(PedidoModel_.fechado), true));
+        Month selectedDate = dateRlt.getValue().getMonth();
+        Expression<Integer> monthExpression = criteriaBuilder.function("month", Integer.class, root.get(PedidoModel_.DAT_ENTREGA));
+        Predicate predicate = criteriaBuilder.equal(monthExpression, selectedDate.getValue());
 
+        criteriaQuery.where(criteriaBuilder.equal(root.get(PedidoModel_.fechado), true));
+        criteriaQuery.where(predicate);
 
         Query query = em.createQuery(criteriaQuery);
         List<PedidoDto> resultList = query.getResultList();
+        System.out.println(selectedDate);
         return resultList;
     }
 
