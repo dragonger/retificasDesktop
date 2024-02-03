@@ -1,21 +1,32 @@
 package org.example.model;
 
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import java.math.BigDecimal;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Table(name = "SERVICO")
+import javax.persistence.*;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Getter
+@Setter
+@EqualsAndHashCode
+@Entity
+@Table(name = "TBL_SERVICO")
+@NoArgsConstructor
 public class ServicoModel {
 
     @Id
+    @GeneratedValue
     Long id;
+    String nome;
+    String tipoServico;
     String descricao;
-    Integer quantidade;
     BigDecimal valorUnitario;
 
-    @ManyToOne
-    @JoinColumn(name = "pedido_id")
-    private PedidoModel pedido;
+    @OneToMany()
+    List<PedidoServicoModel> pedidoServicoList;
+
+
 }

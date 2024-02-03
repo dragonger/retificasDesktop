@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="">
+    <list default="true" id="b95ca9f9-90d7-43a0-ac1d-58a1352dfc51" name="Changes" comment="Tabela atualiza a cada operação">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/views/VisualizarPedido.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/VisualizarPedido.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaRelatorioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/TelaRelatorioController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/PedidoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/PedidoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/RelatorioRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/RelatorioRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/testedb.mv.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db/testedb.mv.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/views/TelaRelatorio.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/views/TelaRelatorio.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,19 +21,32 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="JavaFXApplication" />
-        <option value="Class" />
         <option value="FxmlFile" />
+        <option value="Class" />
+        <option value="Class" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$APPLICATION_HOME_DIR$/plugins/maven/lib/maven3/lib/maven-model-builder-3.8.1.jar!/org/apache/maven/model/pom-4.0.0.xml" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="JpbToolWindowState">
+    <option name="isToolWindowVisible" value="false" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
   <component name="ProjectId" id="2EwggjexLWiIiQUqBJl1g2SdwXD" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <OptionsSetting value="false" id="Update" />
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
@@ -38,13 +55,16 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Flávio/Downloads/agendalive-master/agendalive-master/pom.xml&quot;,
     &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;Errors&quot;
   }
 }</component>
   <component name="RunManager" selected="Maven.retificasDeskt [clean,javafx:run,-e,-X]">
@@ -103,14 +123,14 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Application.Main" />
       <item itemvalue="Application.MainFx" />
+      <item itemvalue="Application.Main" />
       <item itemvalue="Maven.retificasDeskt [clean,javafx:run,-e,-X]" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.MainFx" />
         <item itemvalue="Application.Main" />
+        <item itemvalue="Application.MainFx" />
       </list>
     </recent_temporary>
   </component>
@@ -123,6 +143,266 @@
       <option name="presentableId" value="Default" />
       <updated>1663512176112</updated>
     </task>
+    <task id="LOCAL-00001" summary="Retirada VendedorModel.java&#10;Adicionado colunna tela inicial Valor">
+      <created>1663639169296</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1663639169296</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Redimensionamento da tela inicial">
+      <created>1663640458769</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1663640458769</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Design cadastro do pedido de cabeçote finalizado">
+      <created>1663732272732</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1663732272732</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Desing da aba clientes concluido.">
+      <created>1663794500000</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1663794500000</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Desing tela pedido">
+      <created>1663893470756</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1663893470756</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Tela Cabeçotes criada e botões tela inicial atalizada">
+      <created>1664376358204</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1664376358204</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Tela ver clientes criada">
+      <created>1664376434606</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1664376434606</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Tela cadrasto pedido atalizada, remoção de não relacionados">
+      <created>1664376576657</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1664376576658</updated>
+    </task>
+    <task id="LOCAL-00009" summary="PedidoController mudado de Border para Scroll pane">
+      <created>1664393304137</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393304137</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Mudado o tamanho da resolução e adaptação">
+      <created>1664393415222</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393415222</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Tela clientes criada">
+      <created>1664393519655</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393519655</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Tela clientes criada">
+      <created>1664393532308</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393532309</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Tela CadastroPedido.fxml transformada em scrollPane">
+      <created>1664393670422</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393670422</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Tela de cadrastro e gerenciamento de cabeçotes registrados">
+      <created>1664393926587</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1664393926587</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Alterações cliente modelo e tela cliente">
+      <created>1664421284119</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1664421284120</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Alterações modelo cabecote">
+      <created>1664421640291</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1664421640291</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Retirada email dos clientes">
+      <created>1664422296186</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1664422296186</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Alterações de modelos&#10;Alteração banco de dados">
+      <created>1664423643036</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1664423643036</updated>
+    </task>
+    <task id="LOCAL-00019" summary="botões de entrar e sair da tela cliente">
+      <created>1664424262240</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1664424262240</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Listagem de clientes">
+      <created>1664427910475</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1664427910475</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Cadastro de cliente&#10;Metodo de atualizar a tabela&#10;Metodo de limpar formulario">
+      <created>1664433961688</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1664433961688</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Refatoração cadastro pedido">
+      <created>1665057463094</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1665057463094</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Ações tabela de serviços">
+      <created>1665100866621</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1665100866621</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Dropdown cliente populado">
+      <created>1665174324926</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1665174324926</updated>
+    </task>
+    <task id="LOCAL-00025" summary="spinner de quantidade de serviço">
+      <created>1665177134268</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1665177134268</updated>
+    </task>
+    <task id="LOCAL-00026" summary="checkbox na tabela e spinner de quantidade">
+      <created>1667322634020</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1667322634020</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Adicionado JPA para controle automatico de tabelas">
+      <created>1667526447279</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1667526447279</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Alteração nos modelos">
+      <created>1667529056046</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1667529056046</updated>
+    </task>
+    <task id="LOCAL-00029" summary="Base da utilização de repositorys e criteria query">
+      <created>1667533994973</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1667533994973</updated>
+    </task>
+    <task id="LOCAL-00030" summary="Adicionado jpa metaModel">
+      <created>1667535178125</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1667535178125</updated>
+    </task>
+    <task id="LOCAL-00031" summary="Cadrastro serviços">
+      <created>1667864917586</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1667864917586</updated>
+    </task>
+    <task id="LOCAL-00032" summary="Criação da tela relatorio">
+      <created>1668080075923</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1668080075923</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Controller Tela relatorio">
+      <created>1668080132320</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1668080132320</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Adicionado botão &quot;Ver relatorio&quot; e funcionalidade">
+      <created>1668080237038</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1668080237038</updated>
+    </task>
+    <task id="LOCAL-00035" summary="RelatorioRepository, adicionado elemontos fsx">
+      <created>1675170043335</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1675170043335</updated>
+    </task>
+    <task id="LOCAL-00036" summary="Buscar pedidodos fechados, popula tabela relatorio, fechar pedidos">
+      <created>1675695602340</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1675695602340</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Reabrir pedido adicionado">
+      <created>1675700646781</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1675700646781</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -139,5 +419,34 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="Tela de cadrastro e gerenciamento de cabeçotes registrados" />
+    <MESSAGE value="Alterações cliente modelo e tela cliente" />
+    <MESSAGE value="Alterações modelo cabecote" />
+    <MESSAGE value="Retirada observações dos clientes" />
+    <MESSAGE value="Retirada email dos clientes" />
+    <MESSAGE value="Alterações de modelos&#10;Alteração banco de dados" />
+    <MESSAGE value="botões de entrar e sair da tela cliente" />
+    <MESSAGE value="Listagem de clientes" />
+    <MESSAGE value="Cadastro de cliente&#10;Metodo de atualizar a tabela&#10;Metodo de limpar formulario" />
+    <MESSAGE value="Refatoração cadastro pedido" />
+    <MESSAGE value="Ações tabela de serviços" />
+    <MESSAGE value="Dropdown cliente populado" />
+    <MESSAGE value="spinner de quantidade de serviço" />
+    <MESSAGE value="checkbox na tabela e spinner de quantidade" />
+    <MESSAGE value="Adicionado JPA para controle automatico de tabelas" />
+    <MESSAGE value="Alteração nos modelos" />
+    <MESSAGE value="Base da utilização de repositorys e criteria query" />
+    <MESSAGE value="Adicionado jpa metaModel" />
+    <MESSAGE value="Cadrastro serviços" />
+    <MESSAGE value="Criação da tela relatorio" />
+    <MESSAGE value="Controller Tela relatorio" />
+    <MESSAGE value="Adicionado botão &quot;Ver relatorio&quot; e funcionalidade" />
+    <MESSAGE value="RelatorioRepository, adicionado elemontos fsx" />
+    <MESSAGE value="Buscar pedidodos fechados, popula tabela relatorio, fechar pedidos" />
+    <MESSAGE value="Reabrir pedido adicionado" />
+    <option name="LAST_COMMIT_MESSAGE" value="Reabrir pedido adicionado" />
   </component>
 </project>

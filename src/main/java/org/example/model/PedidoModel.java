@@ -1,33 +1,40 @@
 package org.example.model;
 
+
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
 @Setter
-@Table(name = "PEDIDO")
+@EqualsAndHashCode
+@Entity
+@Table(name = "TBL_PEDIDO")
 public class PedidoModel {
 
     @Id
+    @GeneratedValue()
     Long id;
-    String pedido;
     String observacao;
-    BigDecimal valor;
-    /*BigDecimal totalPecas;
-    BigDecimal totalServicos;*/
     BigDecimal totalGeral;
-    LocalDateTime datCriacao;
-    LocalDateTime datOrcamento;
-    VendedorModel vendedor;
+    LocalDate datCriacao;
+    LocalDate datEntrega;
+    Boolean fechado = false;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "operator")
-    List<ServicoModel> servicoList;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn
+    List<PedidoServicoModel> pedidoServicoList;
+
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cliente_id", referencedColumnName = "id")
     ClienteModel cliente;
+    @OneToOne(cascade = CascadeType.ALL)
+    CabecoteModel cabecote;
+
+
 }
