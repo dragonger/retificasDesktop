@@ -79,8 +79,6 @@ public class PedidoController {
     @GetMapping("/encerrados")
     public List<MesEncerradosDTO> encerrados() {
         Long empresaId = SecurityUtils.empresaAtual();
-        Map<Long, List<ServicoModel>> servicosPorPedido = pedidoRepository.listarItensServicoEncerrados(empresaId).stream()
-                .collect(Collectors.groupingBy(s -> s.getPedido().getId()));
 
         Map<YearMonth, List<PedidoModel>> porMes = new LinkedHashMap<>();
         for (PedidoModel pedido : pedidoRepository.listarEncerrados(empresaId)) {
@@ -95,7 +93,7 @@ public class PedidoController {
             grupo.pedidos = new ArrayList<>();
             BigDecimal total = BigDecimal.ZERO;
             Map<String, BigDecimal> porCliente = new LinkedHashMap<>();
-            Map<String, BigDecimal> porServico = new LinkedHashMap<>();
+            Map<String, BigDecimal> porCategoria = new LinkedHashMap<>();
             for (PedidoModel p : entrada.getValue()) {
                 grupo.pedidos.add(toResumo(p));
                 BigDecimal valorPedido = p.getTotalGeral() != null ? p.getTotalGeral() : BigDecimal.ZERO;
@@ -104,14 +102,15 @@ public class PedidoController {
                 String nomeCliente = p.getCliente() != null ? p.getCliente().getNome() : "-";
                 porCliente.merge(nomeCliente, valorPedido, BigDecimal::add);
 
-                for (ServicoModel s : servicosPorPedido.getOrDefault(p.getId(), List.of())) {
-                    porServico.merge(s.getDescricao(), s.getValorTotal(), BigDecimal::add);
+                for (PedidoCategoriaModel cv : p.getCategoriaValores()) {
+                    String rotulo = cv.getCategoria() != null ? cv.getCategoria().getRotulo() : "-";
+                    porCategoria.merge(rotulo, cv.getValorTotal(), BigDecimal::add);
                 }
             }
             grupo.quantidade = grupo.pedidos.size();
             grupo.total = total;
             grupo.porCliente = paraLista(porCliente);
-            grupo.porServico = paraLista(porServico);
+            grupo.porCategoria = paraLista(porCategoria);
             grupos.add(grupo);
         }
         return grupos;
@@ -221,7 +220,11 @@ public class PedidoController {
         }
         pedido.setComponentes(componentes);
         pedido.setCliente(clienteRepository.buscarPorId(request.clienteId, empresaId));
-        pedido.setCategorias(parseCategorias(request.categorias));
+
+        pedido.getCategoriaValores().clear();
+        for (PedidoCategoriaModel categoriaValor : parseCategoriaValores(request.categoriaValores)) {
+            pedido.addCategoriaValor(categoriaValor);
+        }
 
         pedido.getServicoList().clear();
         if (request.servicos != null) {
@@ -231,8 +234,6 @@ public class PedidoController {
                 }
                 ServicoModel linha = new ServicoModel();
                 linha.setDescricao(item.descricao);
-                linha.setValorUnitario(item.valorUnitario);
-                linha.setQuantidade(item.quantidade != null ? item.quantidade : 1);
                 pedido.addServico(linha);
             }
         }
@@ -245,7 +246,6 @@ public class PedidoController {
                 }
                 PecaModel linha = new PecaModel();
                 linha.setDescricao(item.descricao);
-                linha.setValorUnitario(item.valorUnitario);
                 linha.setQuantidade(item.quantidade != null ? item.quantidade : 1);
                 pedido.addPeca(linha);
             }
@@ -267,17 +267,26 @@ public class PedidoController {
         }
     }
 
-    private Set<CategoriaProduto> parseCategorias(List<String> nomes) {
-        Set<CategoriaProduto> resultado = new HashSet<>();
-        if (nomes == null) {
+    private List<PedidoCategoriaModel> parseCategoriaValores(List<CategoriaValorRequestDTO> dtos) {
+        List<PedidoCategoriaModel> resultado = new ArrayList<>();
+        if (dtos == null) {
             return resultado;
         }
-        for (String nome : nomes) {
-            try {
-                resultado.add(CategoriaProduto.valueOf(nome));
-            } catch (IllegalArgumentException | NullPointerException ignored) {
-                // ignora valor inválido
+        for (CategoriaValorRequestDTO dto : dtos) {
+            if (dto == null || dto.categoria == null) {
+                continue;
             }
+            CategoriaProduto categoria;
+            try {
+                categoria = CategoriaProduto.valueOf(dto.categoria);
+            } catch (IllegalArgumentException ignored) {
+                continue;
+            }
+            PedidoCategoriaModel categoriaValor = new PedidoCategoriaModel();
+            categoriaValor.setCategoria(categoria);
+            categoriaValor.setValorServicos(dto.valorServicos);
+            categoriaValor.setValorPecas(dto.valorPecas);
+            resultado.add(categoriaValor);
         }
         return resultado;
     }
@@ -367,9 +376,15 @@ public class PedidoController {
             dto.componentes.add(c);
         }
 
-        dto.categorias = new ArrayList<>();
-        for (CategoriaProduto categoria : pedido.getCategorias()) {
-            dto.categorias.add(categoria.name());
+        dto.categoriaValores = new ArrayList<>();
+        for (PedidoCategoriaModel cv : pedido.getCategoriaValores()) {
+            CategoriaValorDTO categoriaValor = new CategoriaValorDTO();
+            categoriaValor.categoria = cv.getCategoria() != null ? cv.getCategoria().name() : null;
+            categoriaValor.categoriaRotulo = cv.getCategoria() != null ? cv.getCategoria().getRotulo() : null;
+            categoriaValor.valorServicos = cv.getValorServicos();
+            categoriaValor.valorPecas = cv.getValorPecas();
+            categoriaValor.valorTotal = cv.getValorTotal();
+            dto.categoriaValores.add(categoriaValor);
         }
 
         if (pedido.getCliente() != null) {
@@ -391,9 +406,6 @@ public class PedidoController {
             ItemDTO item = new ItemDTO();
             item.id = s.getId();
             item.descricao = s.getDescricao();
-            item.quantidade = s.getQuantidade();
-            item.valorUnitario = s.getValorUnitario();
-            item.valorTotal = s.getValorTotal();
             dto.servicos.add(item);
         }
 
@@ -403,8 +415,6 @@ public class PedidoController {
             item.id = p.getId();
             item.descricao = p.getDescricao();
             item.quantidade = p.getQuantidade();
-            item.valorUnitario = p.getValorUnitario();
-            item.valorTotal = p.getValorTotal();
             dto.pecas.add(item);
         }
 

@@ -1,7 +1,6 @@
 package org.example.repository;
 
 import org.example.model.PedidoModel;
-import org.example.model.ServicoModel;
 import org.example.persistence.JPAUtil;
 
 import jakarta.persistence.EntityManager;
@@ -115,27 +114,6 @@ public class PedidoRepository {
                             "LEFT JOIN FETCH p.componentes " +
                             "WHERE p.datEntrega IS NOT NULL AND p.empresa.id = :empresaId " +
                             "ORDER BY p.datEntrega DESC", PedidoModel.class)
-                    .setParameter("empresaId", empresaId)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
-    }
-
-    /**
-     * Itens de serviço de todos os pedidos encerrados, com o pedido já
-     * carregado (relação ManyToOne, sem risco de MultipleBagFetchException),
-     * para agregar valores por serviço sem tocar na coleção lazy
-     * {@code PedidoModel.servicoList} fora da sessão. Escopado por empresa via
-     * o pedido pai — ServicoModel não tem coluna própria de empresa.
-     */
-    public List<ServicoModel> listarItensServicoEncerrados(Long empresaId) {
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            return em.createQuery(
-                    "SELECT s FROM ServicoModel s " +
-                            "LEFT JOIN FETCH s.pedido p " +
-                            "WHERE p.datEntrega IS NOT NULL AND p.empresa.id = :empresaId", ServicoModel.class)
                     .setParameter("empresaId", empresaId)
                     .getResultList();
         } finally {

@@ -18,6 +18,7 @@
         <class>org.example.model.PecaCatalogoModel</class>
         <class>org.example.model.EmpresaModel</class>
         <class>org.example.model.UsuarioModel</class>
+        <class>org.example.model.PedidoCategoriaModel</class>
 
         <properties>
             <!-- Valores default aqui batem com o Postgres local do docker-compose.yml

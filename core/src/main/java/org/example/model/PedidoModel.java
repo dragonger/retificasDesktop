@@ -6,9 +6,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "PEDIDO")
@@ -78,12 +76,9 @@ public class PedidoModel {
     @JoinColumn(name = "cliente_id")
     private ClienteModel cliente;
 
-    /** Categorias/componentes do motor envolvidos neste pedido (Cabeçote, Bloco, etc.). */
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "PEDIDO_CATEGORIA", joinColumns = @JoinColumn(name = "pedido_id"))
-    @Column(name = "categoria")
-    @Enumerated(EnumType.STRING)
-    private Set<CategoriaProduto> categorias = new HashSet<>();
+    /** Categorias envolvidas neste pedido, cada uma com seu valor final de serviços e de peças. */
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<PedidoCategoriaModel> categoriaValores = new ArrayList<>();
 
     public PedidoModel() {
     }
@@ -102,6 +97,14 @@ public class PedidoModel {
     public void addPeca(PecaModel peca) {
         pecaList.add(peca);
         peca.setPedido(this);
+    }
+
+    /**
+     * Adiciona um valor de categoria mantendo os dois lados do relacionamento sincronizados.
+     */
+    public void addCategoriaValor(PedidoCategoriaModel categoriaValor) {
+        categoriaValores.add(categoriaValor);
+        categoriaValor.setPedido(this);
     }
 
     public Long getId() {
@@ -160,15 +163,12 @@ public class PedidoModel {
         this.descontoValor = descontoValor;
     }
 
-    /** Soma dos serviços e peças, antes do desconto. */
+    /** Soma do valor de serviços e peças de cada categoria envolvida, antes do desconto. */
     @Transient
     public BigDecimal getSubtotal() {
         BigDecimal total = BigDecimal.ZERO;
-        for (ServicoModel s : servicoList) {
-            total = total.add(s.getValorTotal());
-        }
-        for (PecaModel p : pecaList) {
-            total = total.add(p.getValorTotal());
+        for (PedidoCategoriaModel cv : categoriaValores) {
+            total = total.add(cv.getValorTotal());
         }
         return total;
     }
@@ -286,11 +286,11 @@ public class PedidoModel {
         this.cliente = cliente;
     }
 
-    public Set<CategoriaProduto> getCategorias() {
-        return categorias;
+    public List<PedidoCategoriaModel> getCategoriaValores() {
+        return categoriaValores;
     }
 
-    public void setCategorias(Set<CategoriaProduto> categorias) {
-        this.categorias = categorias != null ? categorias : new HashSet<>();
+    public void setCategoriaValores(List<PedidoCategoriaModel> categoriaValores) {
+        this.categoriaValores = categoriaValores != null ? categoriaValores : new ArrayList<>();
     }
 }
