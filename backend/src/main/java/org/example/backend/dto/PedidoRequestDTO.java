@@ -7,7 +7,7 @@ import java.util.List;
 public class PedidoRequestDTO {
     public List<Long> componenteIds;  // cabeçote(s)/bloco(s)/biela(s)/virabrequim(ns) — pode ter mais de um
     public Long clienteId;            // cliente já cadastrado (obrigatório)
-    public List<String> categorias;   // nomes do enum CategoriaProduto, ex.: ["CABECOTE","BLOCO"]
+    public List<CategoriaValorRequestDTO> categoriaValores; // categorias envolvidas + valor de serviços/peças de cada uma
     public String status;             // "ABERTO" | "EM_ANDAMENTO" | "PRONTO" — default ABERTO se ausente
     public String pedidoDescricao;
     public String observacao;

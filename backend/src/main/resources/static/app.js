@@ -451,10 +451,13 @@
     ));
 
     conteudo.appendChild(el('h2', { class: 'secao' }, 'Serviços'));
-    conteudo.appendChild(tabelaItens(p.servicos, 'Nenhum serviço.'));
+    conteudo.appendChild(tabelaItens(p.servicos, 'Nenhum serviço.', false));
 
     conteudo.appendChild(el('h2', { class: 'secao' }, 'Peças'));
-    conteudo.appendChild(tabelaItens(p.pecas, 'Nenhuma peça utilizada.'));
+    conteudo.appendChild(tabelaItens(p.pecas, 'Nenhuma peça utilizada.', true));
+
+    conteudo.appendChild(el('h2', { class: 'secao' }, 'Valores por categoria'));
+    conteudo.appendChild(tabelaValoresPorCategoria(p.categoriaValores));
 
     if (p.observacao) {
       conteudo.appendChild(el('div', { style: 'font-size:12px;opacity:.75;background:var(--color-surface);padding:10px;margin-top:16px' }, p.observacao));
@@ -554,18 +557,34 @@
       el('span', { style: 'opacity:.55' }, rotulo), tagSituacao(situacao));
   }
 
-  function tabelaItens(itens, vazio) {
+  function tabelaItens(itens, vazio, comQuantidade) {
     if (!itens || !itens.length) {
       return el('div', { class: 'empty', style: 'padding:16px 0' }, vazio);
     }
     const box = el('div', {});
     itens.forEach(i => {
       box.appendChild(el('div', { class: 'item-linha' },
-        el('div', null,
-          el('div', null, i.descricao),
-          el('div', { style: 'opacity:.55;font-size:11px;margin-top:2px' }, i.quantidade + ' × ' + moeda(i.valorUnitario))
+        el('span', null, comQuantidade ? i.descricao + ' ×' + i.quantidade : i.descricao)
+      ));
+    });
+    return box;
+  }
+
+  function tabelaValoresPorCategoria(categoriaValores) {
+    if (!categoriaValores || !categoriaValores.length) {
+      return el('div', { class: 'empty', style: 'padding:16px 0' }, 'Nenhuma categoria com valor definido.');
+    }
+    const box = el('div', {});
+    categoriaValores.forEach(cv => {
+      box.appendChild(el('div', { class: 'linha' },
+        el('div', { class: 'linha-topo' },
+          el('span', { class: 'linha-titulo' }, cv.categoriaRotulo || '-'),
+          el('span', { style: 'font-weight:600' }, moeda(cv.valorTotal))
         ),
-        el('div', { style: 'font-weight:600' }, moeda(i.valorTotal))
+        el('div', { style: 'display:flex;gap:18px;font-size:12px' },
+          el('div', null, el('span', { style: 'opacity:.55' }, 'Serviços '), el('strong', null, moeda(cv.valorServicos))),
+          el('div', null, el('span', { style: 'opacity:.55' }, 'Peças '), el('strong', null, moeda(cv.valorPecas))),
+        )
       ));
     });
     return box;
@@ -592,12 +611,19 @@
     const linhasComponentes = pedido && pedido.componentes
       ? pedido.componentes.map(c => ({ id: c.id, nome: c.nome }))
       : [];
-    const categoriasSelecionadas = new Set(pedido && pedido.categorias ? pedido.categorias : []);
+    const categoriaValores = new Map();
+    if (pedido && pedido.categoriaValores) {
+      pedido.categoriaValores.forEach(cv => {
+        categoriaValores.set(cv.categoria, { valorServicos: cv.valorServicos || 0, valorPecas: cv.valorPecas || 0 });
+      });
+    }
     linhasComponentes.forEach(item => {
       // Compatibilidade: garante que a categoria de cada componente já
       // vinculado apareça marcada, senão o campo ficaria oculto ao editar.
       const catalogo = catalogoCache.cabecotes.find(c => c.id === item.id);
-      if (catalogo) categoriasSelecionadas.add(catalogo.categoria);
+      if (catalogo && !categoriaValores.has(catalogo.categoria)) {
+        categoriaValores.set(catalogo.categoria, { valorServicos: 0, valorPecas: 0 });
+      }
     });
     let clienteSelecionado = pedido && pedido.cliente
       ? { id: pedido.cliente.id, nome: pedido.cliente.nome, telefone: pedido.cliente.telefone }
@@ -648,7 +674,7 @@
     const campoComponente = el('div', {}, msgSemCategoriaComponente, camposComponenteAtivos);
 
     function atualizarOpcoesComponente() {
-      const relevantes = CATEGORIAS_COMPONENTE.filter(cat => categoriasSelecionadas.has(cat));
+      const relevantes = CATEGORIAS_COMPONENTE.filter(cat => categoriaValores.has(cat));
       selComponente.innerHTML = '';
       const temCategoria = relevantes.length > 0;
       msgSemCategoriaComponente.hidden = temCategoria;
@@ -690,19 +716,40 @@
     const chipsCategoria = catalogoCache.categorias.filter(cat => CATEGORIAS_COMPONENTE.includes(cat.nome)).map(cat => {
       const btn = el('button', {
         type: 'button',
-        class: 'chip' + (categoriasSelecionadas.has(cat.nome) ? ' active' : ''),
+        class: 'chip' + (categoriaValores.has(cat.nome) ? ' active' : ''),
         onclick: () => {
-          if (categoriasSelecionadas.has(cat.nome)) categoriasSelecionadas.delete(cat.nome);
-          else categoriasSelecionadas.add(cat.nome);
+          if (categoriaValores.has(cat.nome)) categoriaValores.delete(cat.nome);
+          else categoriaValores.set(cat.nome, { valorServicos: 0, valorPecas: 0 });
           btn.classList.toggle('active');
           atualizarOpcoesServico();
           atualizarOpcoesPeca();
           atualizarOpcoesComponente();
+          atualizarCardsPreco();
+          recalcularResumo();
         }
       }, cat.rotulo);
       return btn;
     });
     const painelCategorias = el('div', { class: 'chip-group' }, ...chipsCategoria);
+
+    // — cards de valor por categoria marcada: um valor de serviços + um de
+    // peças por categoria, em vez de preço por item —
+    const cardsPrecoEl = el('div', { style: 'display:flex;flex-direction:column;gap:12px' });
+    function atualizarCardsPreco() {
+      cardsPrecoEl.innerHTML = '';
+      CATEGORIAS_COMPONENTE.filter(cat => categoriaValores.has(cat)).forEach(cat => {
+        const catInfo = catalogoCache.categorias.find(c => c.nome === cat);
+        const valores = categoriaValores.get(cat);
+        const fldServicos = el('input', { class: 'input', type: 'number', min: '0', step: '0.01', placeholder: '0,00', value: valores.valorServicos || '' });
+        const fldPecas = el('input', { class: 'input', type: 'number', min: '0', step: '0.01', placeholder: '0,00', value: valores.valorPecas || '' });
+        fldServicos.addEventListener('input', () => { valores.valorServicos = fldServicos.value !== '' ? Number(fldServicos.value) : 0; recalcularResumo(); });
+        fldPecas.addEventListener('input', () => { valores.valorPecas = fldPecas.value !== '' ? Number(fldPecas.value) : 0; recalcularResumo(); });
+        cardsPrecoEl.appendChild(blueprintBox('div', { style: 'padding:12px' },
+          el('div', { style: 'font-weight:600;margin-bottom:8px' }, catInfo ? catInfo.rotulo : cat),
+          el('div', { class: 'row' }, campo('Valor serviços', fldServicos), campo('Valor peças', fldPecas))
+        ));
+      });
+    }
 
     // — Cliente: box do selecionado + busca/seleção + cadastro rápido —
     const clienteBoxSelecionado = el('div', { hidden: true });
@@ -787,7 +834,7 @@
     const listaServicosEl = el('div', {});
     const listaPecasEl = el('div', {});
 
-    function redesenharItens(container, lista, redesenhar) {
+    function redesenharItens(container, lista, redesenhar, comQuantidade) {
       container.innerHTML = '';
       if (!lista.length) {
         container.appendChild(el('div', { style: 'text-align:center;font-size:13px;opacity:.55;padding:20px 0' }, 'Nenhum item adicionado ainda'));
@@ -795,70 +842,92 @@
       }
       lista.forEach((item, idx) => {
         container.appendChild(el('div', { class: 'item-linha' },
-          el('span', null, item.descricao + ' ×' + item.quantidade),
-          el('span', { class: 'valor' }, moeda(item.valorUnitario * item.quantidade)),
+          el('span', null, comQuantidade ? item.descricao + ' ×' + item.quantidade : item.descricao),
           el('button', { onclick: () => { lista.splice(idx, 1); redesenhar(); } }, '✕')
         ));
       });
     }
-    const redesenharServicos = () => { redesenharItens(listaServicosEl, linhasServicos, redesenharServicos); recalcularResumo(); };
-    const redesenharPecas = () => { redesenharItens(listaPecasEl, linhasPecas, redesenharPecas); recalcularResumo(); };
+    const redesenharServicos = () => { redesenharItens(listaServicosEl, linhasServicos, redesenharServicos, false); atualizarOpcoesServico(); recalcularResumo(); };
+    const redesenharPecas = () => { redesenharItens(listaPecasEl, linhasPecas, redesenharPecas, true); atualizarOpcoesPeca(); recalcularResumo(); };
 
     function catalogoFiltrado(catalogo) {
-      if (categoriasSelecionadas.size === 0) return catalogo;
-      return catalogo.filter(item => categoriasSelecionadas.has(item.categoria));
+      if (categoriaValores.size === 0) return catalogo;
+      return catalogo.filter(item => categoriaValores.has(item.categoria));
     }
 
-    function construirOpcoes(sel, catalogo) {
-      sel.innerHTML = '';
-      sel.appendChild(el('option', { value: '' }, 'Selecione'));
-      const filtrado = catalogoFiltrado(catalogo);
-      if (!filtrado.length) {
-        sel.appendChild(el('option', { value: '', disabled: 'disabled' }, 'Nenhum item nessa(s) categoria(s)'));
+    // Seleção em lote: como itens não carregam mais preço, marca-se vários de
+    // uma vez (em vez de adicionar um-a-um com campo de preço).
+    function criarPickerBatch(catalogo, lista, redesenhar, comQuantidade) {
+      const corpo = el('div', { style: 'display:flex;flex-direction:column;gap:14px' });
+      const checkboxes = new Map();
+      const qtdInputs = new Map();
+
+      function construir() {
+        corpo.innerHTML = '';
+        checkboxes.clear();
+        qtdInputs.clear();
+        const jaAdicionados = new Set(lista.map(i => i.descricao));
+        const filtrado = catalogoFiltrado(catalogo).filter(item => !jaAdicionados.has(item.nome));
+        if (!filtrado.length) {
+          corpo.appendChild(el('div', { class: 'empty', style: 'padding:12px 0' }, 'Nenhum item disponível pra adicionar.'));
+          return;
+        }
+        agruparPorCategoria(filtrado).forEach(grupo => {
+          corpo.appendChild(el('div', { class: 'grupo-categoria' },
+            el('h3', null, grupo.rotulo),
+            ...grupo.itens.map(item => {
+              const chk = el('input', { type: 'checkbox' });
+              checkboxes.set(item.id, chk);
+              let qtd = null;
+              if (comQuantidade) {
+                qtd = el('input', { class: 'input', type: 'number', min: '1', step: '1', value: '1', style: 'width:56px;display:none' });
+                qtdInputs.set(item.id, qtd);
+                chk.addEventListener('change', () => { qtd.style.display = chk.checked ? '' : 'none'; });
+              }
+              return el('label', { class: 'item-linha', style: 'cursor:pointer' },
+                el('div', { style: 'display:flex;align-items:center;gap:10px' }, chk, el('span', null, item.nome)),
+                qtd
+              );
+            })
+          ));
+        });
       }
-      agruparPorCategoria(filtrado).forEach(grupo => {
-        sel.appendChild(el('optgroup', { label: grupo.rotulo },
-          ...grupo.itens.map(i => el('option', { value: i.id }, i.nome + ' (' + moeda(i.valor) + ')'))
-        ));
+      construir();
+
+      const btnAdicionar = btnBlueprint('Adicionar selecionados', 'btn-secondary btn-block', {
+        onclick: () => {
+          let algum = false;
+          checkboxes.forEach((chk, id) => {
+            if (!chk.checked) return;
+            const item = catalogo.find(c => c.id === id);
+            if (!item) return;
+            const entrada = { descricao: item.nome };
+            if (comQuantidade) {
+              const qtdEl = qtdInputs.get(id);
+              entrada.quantidade = Math.max(1, parseInt((qtdEl && qtdEl.value) || '1', 10));
+            }
+            lista.push(entrada);
+            algum = true;
+          });
+          if (!algum) { toast('Selecione pelo menos um item.', true); return; }
+          construir();
+          redesenhar();
+        }
       });
+
+      const elemento = el('div', { style: 'display:flex;flex-direction:column;gap:12px' }, corpo, btnAdicionar);
+      return { elemento, atualizarOpcoes: construir };
     }
 
-    function seletorAdicionar(catalogo, lista, redesenhar) {
-      const sel = el('select', { class: 'input' });
-      construirOpcoes(sel, catalogo);
-      const qtd = el('input', { class: 'input', type: 'number', min: '1', step: '1', value: '1', placeholder: 'Qtd', style: 'width:56px' });
-      // Preço vem sugerido do catálogo ao escolher o item, mas sempre editável
-      // aqui — o valor real do pedido é definido na hora, não travado no catálogo.
-      const preco = el('input', { class: 'input', type: 'number', min: '0', step: '0.01', placeholder: 'Valor (R$)', style: 'width:100px' });
-      sel.addEventListener('change', () => {
-        const item = catalogo.find(c => String(c.id) === sel.value);
-        preco.value = item ? item.valor : '';
-      });
-      const elemento = el('div', { style: 'display:flex;flex-direction:column;gap:12px' },
-        el('div', { style: 'display:flex;gap:8px' }, sel, qtd, preco),
-        btnBlueprint('Adicionar', 'btn-secondary btn-block', {
-          onclick: () => {
-            const item = catalogo.find(c => String(c.id) === sel.value);
-            if (!item) { toast('Selecione um item.', true); return; }
-            const quantidade = Math.max(1, parseInt(qtd.value || '1', 10));
-            const valorUnitario = preco.value !== '' ? Number(preco.value) : item.valor;
-            lista.push({ descricao: item.nome, valorUnitario, quantidade });
-            sel.value = ''; qtd.value = '1'; preco.value = '';
-            redesenhar();
-          }
-        })
-      );
-      return { elemento, atualizarOpcoes: () => construirOpcoes(sel, catalogo) };
-    }
-
-    const seletorServico = seletorAdicionar(catalogoCache.servicos, linhasServicos, redesenharServicos);
-    const seletorPeca = seletorAdicionar(catalogoCache.pecas, linhasPecas, redesenharPecas);
-    const atualizarOpcoesServico = seletorServico.atualizarOpcoes;
-    const atualizarOpcoesPeca = seletorPeca.atualizarOpcoes;
+    const pickerServico = criarPickerBatch(catalogoCache.servicos, linhasServicos, redesenharServicos, false);
+    const pickerPeca = criarPickerBatch(catalogoCache.pecas, linhasPecas, redesenharPecas, true);
+    const atualizarOpcoesServico = pickerServico.atualizarOpcoes;
+    const atualizarOpcoesPeca = pickerPeca.atualizarOpcoes;
 
     // Categorias podem já vir marcadas (edição/compatibilidade) — monta as
-    // opções do componente já filtradas antes de exibir o formulário.
+    // opções do componente e os cards de preço já filtrados antes de exibir o formulário.
     atualizarOpcoesComponente();
+    atualizarCardsPreco();
 
     // — barra de total fixa (aba Itens): subtotal/desconto/total recalculados
     // ao vivo, espelhando a mesma fórmula do backend (PedidoModel.getSubtotal/
@@ -869,7 +938,8 @@
     const totalFinalEl = el('span', { class: 'valor' }, moeda(0));
 
     function recalcularResumo() {
-      const subtotal = [...linhasServicos, ...linhasPecas].reduce((s, i) => s + i.valorUnitario * i.quantidade, 0);
+      let subtotal = 0;
+      categoriaValores.forEach(v => { subtotal += (v.valorServicos || 0) + (v.valorPecas || 0); });
       const tipo = fldDescontoTipo.value;
       const valorDigitado = fldDescontoValor.value !== '' ? Number(fldDescontoValor.value) : 0;
       let desconto = 0;
@@ -899,10 +969,10 @@
     function redesenharItemConteudo() {
       itemConteudoBox.innerHTML = '';
       if (tipoItemAtual === 'servico') {
-        itemConteudoBox.appendChild(seletorServico.elemento);
+        itemConteudoBox.appendChild(pickerServico.elemento);
         itemConteudoBox.appendChild(listaServicosEl);
       } else {
-        itemConteudoBox.appendChild(seletorPeca.elemento);
+        itemConteudoBox.appendChild(pickerPeca.elemento);
         itemConteudoBox.appendChild(listaPecasEl);
       }
     }
@@ -930,6 +1000,7 @@
       clienteBoxSelecionado, buscaClienteBox, btnNovoCliente, novoClienteBox);
     const painelComponentes = el('div', { style: 'display:flex;flex-direction:column;gap:14px' },
       el('div', { class: 'field' }, el('label', null, 'Categorias envolvidas'), painelCategorias),
+      cardsPrecoEl,
       campoComponente);
     const painelItens = el('div', { style: 'display:flex;flex-direction:column;gap:14px' },
       subSeg, itemConteudoBox, barraTotal);
@@ -963,7 +1034,11 @@
         const body = {
           componenteIds: linhasComponentes.map(c => c.id),
           clienteId: clienteSelecionado.id,
-          categorias: Array.from(categoriasSelecionadas),
+          categoriaValores: Array.from(categoriaValores.entries()).map(([categoria, v]) => ({
+            categoria,
+            valorServicos: v.valorServicos || 0,
+            valorPecas: v.valorPecas || 0,
+          })),
           status: fldStatus.value,
           pedidoDescricao: fldDescricao.value.trim() || null,
           observacao: fldObservacao.value.trim() || null,
@@ -994,7 +1069,7 @@
   }
 
   function clonarItem(i) {
-    return { descricao: i.descricao, valorUnitario: i.valorUnitario, quantidade: i.quantidade };
+    return { descricao: i.descricao, quantidade: i.quantidade };
   }
 
   function campo(rotulo, inputEl) {
@@ -1371,7 +1446,7 @@
     conteudo.innerHTML = '';
 
     conteudo.appendChild(el('h2', { class: 'titulo' }, 'Dashboard'));
-    conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Pedidos encerrados, valores por cliente e por serviço'));
+    conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Pedidos encerrados, valores por cliente e por categoria'));
 
     if (!grupos.length) {
       conteudo.appendChild(el('div', { class: 'empty' }, 'Nenhum pedido encerrado ainda.'));
@@ -1409,7 +1484,7 @@
 
       const segButtons = {};
       const segAgregado = el('div', { class: 'seg', style: 'margin-top:8px' },
-        ...[['cliente', 'Por cliente'], ['servico', 'Por serviço']].map(([k, rotulo]) => {
+        ...[['cliente', 'Por cliente'], ['categoria', 'Por categoria']].map(([k, rotulo]) => {
           const b = el('button', { type: 'button', onclick: () => { tipoAgregado = k; redesenhar(); } }, rotulo);
           segButtons[k] = b;
           return b;
@@ -1418,8 +1493,8 @@
       Object.keys(segButtons).forEach(k => segButtons[k].classList.toggle('active', k === tipoAgregado));
       corpo.appendChild(segAgregado);
 
-      const itens = tipoAgregado === 'cliente' ? grupo.porCliente : grupo.porServico;
-      const tituloTotal = tipoAgregado === 'cliente' ? 'Total (cliente)' : 'Total (serviço)';
+      const itens = tipoAgregado === 'cliente' ? grupo.porCliente : grupo.porCategoria;
+      const tituloTotal = tipoAgregado === 'cliente' ? 'Total (cliente)' : 'Total (categoria)';
       corpo.appendChild(blocoAgregado(itens, grupo.total, tituloTotal));
     }
 

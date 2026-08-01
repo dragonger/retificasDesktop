@@ -9,8 +9,8 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfPageEventHelper;
 import com.lowagie.text.pdf.PdfWriter;
 import org.example.model.CabecoteModel;
-import org.example.model.CategoriaProduto;
 import org.example.model.PecaModel;
+import org.example.model.PedidoCategoriaModel;
 import org.example.model.PedidoModel;
 import org.example.model.ServicoModel;
 import org.example.model.TipoDesconto;
@@ -68,8 +68,6 @@ public class PedidoPdfService {
     private static final Font FONTE_TH;
     private static final Font FONTE_TD;
     private static final Font FONTE_TD_CINZA;
-    private static final Font FONTE_SUBTOTAL_LABEL;
-    private static final Font FONTE_SUBTOTAL_VALOR;
     private static final Font FONTE_TOTAIS_LABEL;
     private static final Font FONTE_TOTAIS_VALOR;
     private static final Font FONTE_TOTAL_LABEL;
@@ -95,8 +93,6 @@ public class PedidoPdfService {
         FONTE_TH = new Font(barlow, 8.5f, Font.NORMAL, COR_TEXTO_60);
         FONTE_TD = new Font(barlow, 10, Font.NORMAL, COR_TEXTO);
         FONTE_TD_CINZA = new Font(barlow, 10, Font.NORMAL, COR_TEXTO_60);
-        FONTE_SUBTOTAL_LABEL = new Font(barlow, 9.5f, Font.NORMAL, COR_TEXTO_60);
-        FONTE_SUBTOTAL_VALOR = new Font(barlowMedium, 9.5f, Font.NORMAL, COR_TEXTO);
         FONTE_TOTAIS_LABEL = new Font(barlow, 10.5f, Font.NORMAL, COR_TEXTO_60);
         FONTE_TOTAIS_VALOR = new Font(barlow, 10.5f, Font.NORMAL, COR_TEXTO);
         FONTE_TOTAL_LABEL = new Font(barlowCondensedSemiBold, 11, Font.NORMAL, COR_TEXTO);
@@ -160,12 +156,17 @@ public class PedidoPdfService {
 
             if (!pedido.getServicoList().isEmpty()) {
                 adicionarSecaoItens(documento, "Serviços", linhasServicos(pedido.getServicoList()),
-                        "Subtotal serviços", somaServicos(pedido.getServicoList()));
+                        new String[]{"Descrição"}, new float[]{1f}, new int[]{Element.ALIGN_LEFT});
                 documento.add(espaco(10));
             }
             if (!pedido.getPecaList().isEmpty()) {
                 adicionarSecaoItens(documento, "Peças", linhasPecas(pedido.getPecaList()),
-                        "Subtotal peças", somaPecas(pedido.getPecaList()));
+                        new String[]{"Descrição", "Qtd"}, new float[]{5f, 1.2f},
+                        new int[]{Element.ALIGN_LEFT, Element.ALIGN_CENTER});
+                documento.add(espaco(10));
+            }
+            if (!pedido.getCategoriaValores().isEmpty()) {
+                secaoValoresPorCategoria(documento, pedido);
                 documento.add(espaco(10));
             }
 
@@ -339,16 +340,14 @@ public class PedidoPdfService {
     // ---------- tabelas de serviços/peças ----------
 
     private void adicionarSecaoItens(Document documento, String titulo, List<String[]> linhas,
-                                      String rotuloSubtotal, BigDecimal subtotalCategoria) throws DocumentException {
+                                      String[] cabecalhos, float[] larguras, int[] alinhamentos) throws DocumentException {
         Paragraph tituloP = new Paragraph(letterSpaced(titulo.toUpperCase(Locale.forLanguageTag("pt-BR")), FONTE_SECAO, 0.8f));
         tituloP.setSpacingAfter(3f);
         documento.add(tituloP);
 
-        PdfPTable tabela = new PdfPTable(new float[]{5f, 1.2f, 1.8f, 1.8f});
+        PdfPTable tabela = new PdfPTable(larguras);
         tabela.setWidthPercentage(100);
 
-        String[] cabecalhos = {"Descrição", "Qtd", "Valor unit.", "Total"};
-        int[] alinhamentos = {Element.ALIGN_LEFT, Element.ALIGN_CENTER, Element.ALIGN_RIGHT, Element.ALIGN_RIGHT};
         for (int i = 0; i < cabecalhos.length; i++) {
             PdfPCell th = new PdfPCell(new Phrase(letterSpaced(cabecalhos[i].toUpperCase(Locale.forLanguageTag("pt-BR")), FONTE_TH, 0.7f)));
             th.setHorizontalAlignment(alinhamentos[i]);
@@ -362,7 +361,7 @@ public class PedidoPdfService {
         for (int i = 0; i < linhas.size(); i++) {
             String[] linha = linhas.get(i);
             boolean ultima = i == linhas.size() - 1;
-            for (int col = 0; col < 4; col++) {
+            for (int col = 0; col < cabecalhos.length; col++) {
                 PdfPCell td = new PdfPCell(new Phrase(linha[col], FONTE_TD));
                 td.setHorizontalAlignment(alinhamentos[col]);
                 td.setPadding(4f);
@@ -376,13 +375,52 @@ public class PedidoPdfService {
             }
         }
         documento.add(tabela);
+    }
 
-        Paragraph subtotalP = new Paragraph();
-        subtotalP.add(new Chunk(rotuloSubtotal + ": ", FONTE_SUBTOTAL_LABEL));
-        subtotalP.add(new Chunk(moeda(subtotalCategoria), FONTE_SUBTOTAL_VALOR));
-        subtotalP.setAlignment(Element.ALIGN_RIGHT);
-        subtotalP.setSpacingBefore(3f);
-        documento.add(subtotalP);
+    private void secaoValoresPorCategoria(Document documento, PedidoModel pedido) throws DocumentException {
+        Paragraph tituloP = new Paragraph(letterSpaced("VALORES POR CATEGORIA", FONTE_SECAO, 0.8f));
+        tituloP.setSpacingAfter(3f);
+        documento.add(tituloP);
+
+        PdfPTable tabela = new PdfPTable(new float[]{3f, 1.6f, 1.6f, 1.6f});
+        tabela.setWidthPercentage(100);
+
+        String[] cabecalhos = {"Categoria", "Valor serviços", "Valor peças", "Subtotal"};
+        int[] alinhamentos = {Element.ALIGN_LEFT, Element.ALIGN_RIGHT, Element.ALIGN_RIGHT, Element.ALIGN_RIGHT};
+        for (int i = 0; i < cabecalhos.length; i++) {
+            PdfPCell th = new PdfPCell(new Phrase(letterSpaced(cabecalhos[i].toUpperCase(Locale.forLanguageTag("pt-BR")), FONTE_TH, 0.7f)));
+            th.setHorizontalAlignment(alinhamentos[i]);
+            th.setBorder(Rectangle.BOTTOM);
+            th.setBorderColor(COR_DIVIDER);
+            th.setBorderWidth(0.75f);
+            th.setPaddingBottom(4f);
+            tabela.addCell(th);
+        }
+
+        List<PedidoCategoriaModel> categoriaValores = pedido.getCategoriaValores();
+        for (int i = 0; i < categoriaValores.size(); i++) {
+            PedidoCategoriaModel cv = categoriaValores.get(i);
+            boolean ultima = i == categoriaValores.size() - 1;
+            String[] linha = {
+                    valor(cv.getCategoria() != null ? cv.getCategoria().getRotulo() : "-"),
+                    moeda(cv.getValorServicos()),
+                    moeda(cv.getValorPecas()),
+                    moeda(cv.getValorTotal())
+            };
+            for (int col = 0; col < cabecalhos.length; col++) {
+                PdfPCell td = new PdfPCell(new Phrase(linha[col], FONTE_TD));
+                td.setHorizontalAlignment(alinhamentos[col]);
+                td.setPadding(4f);
+                if (!ultima) {
+                    td.setBorder(Rectangle.BOTTOM);
+                    td.setBorderColor(COR_ROW_DIVIDER);
+                } else {
+                    td.setBorder(Rectangle.NO_BORDER);
+                }
+                tabela.addCell(td);
+            }
+        }
+        documento.add(tabela);
     }
 
     // ---------- totais ----------
@@ -533,21 +571,18 @@ public class PedidoPdfService {
     }
 
     private String categoriasTexto(PedidoModel pedido) {
-        if (pedido.getCategorias().isEmpty()) {
+        if (pedido.getCategoriaValores().isEmpty()) {
             return "-";
         }
-        return pedido.getCategorias().stream().map(CategoriaProduto::getRotulo).collect(Collectors.joining(", "));
+        return pedido.getCategoriaValores().stream()
+                .map(cv -> cv.getCategoria() != null ? cv.getCategoria().getRotulo() : "-")
+                .collect(Collectors.joining(", "));
     }
 
     private List<String[]> linhasServicos(List<ServicoModel> servicos) {
         List<String[]> linhas = new ArrayList<>();
         for (ServicoModel s : servicos) {
-            linhas.add(new String[]{
-                    valor(s.getDescricao()),
-                    s.getQuantidade() != null ? s.getQuantidade().toString() : "-",
-                    moeda(s.getValorUnitario()),
-                    moeda(s.getValorTotal())
-            });
+            linhas.add(new String[]{valor(s.getDescricao())});
         }
         return linhas;
     }
@@ -557,28 +592,10 @@ public class PedidoPdfService {
         for (PecaModel p : pecas) {
             linhas.add(new String[]{
                     valor(p.getDescricao()),
-                    p.getQuantidade() != null ? p.getQuantidade().toString() : "-",
-                    moeda(p.getValorUnitario()),
-                    moeda(p.getValorTotal())
+                    p.getQuantidade() != null ? p.getQuantidade().toString() : "-"
             });
         }
         return linhas;
-    }
-
-    private BigDecimal somaServicos(List<ServicoModel> servicos) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (ServicoModel s : servicos) {
-            total = total.add(s.getValorTotal());
-        }
-        return total;
-    }
-
-    private BigDecimal somaPecas(List<PecaModel> pecas) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (PecaModel p : pecas) {
-            total = total.add(p.getValorTotal());
-        }
-        return total;
     }
 
     private String valor(String texto) {

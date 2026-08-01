@@ -10,5 +10,5 @@ public class MesEncerradosDTO {
     public BigDecimal total;
     public List<PedidoResumoDTO> pedidos;
     public List<AgregadoValorDTO> porCliente;
-    public List<AgregadoValorDTO> porServico;
+    public List<AgregadoValorDTO> porCategoria;
 }
