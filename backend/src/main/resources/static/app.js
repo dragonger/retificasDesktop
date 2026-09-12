@@ -34,6 +34,22 @@
     localStorage.removeItem('retifica_auth');
   }
 
+  // Tela de login desativada temporariamente (a pedido do usuário): sem
+  // auth salvo, autentica sozinho via /api/auth/auto-login em vez de
+  // mostrar #/login. TODO: remover isso e voltar a exigir login normal
+  // quando a tela for reativada — ver AuthController.autoLogin().
+  async function garantirAutoLogin() {
+    if (getAuth()) return;
+    try {
+      const resp = await fetch('/api/auth/auto-login', { method: 'POST' });
+      if (!resp.ok) return;
+      const dados = await resp.json();
+      localStorage.setItem('retifica_auth', JSON.stringify(dados));
+    } catch (e) {
+      // sem conexão — rotear() vai tentar de novo do zero no próximo load
+    }
+  }
+
   // ---------- utilidades ----------
 
   function toast(msg, erro) {
@@ -272,10 +288,12 @@
   function rotear() {
     const hash = location.hash || '#/inicio';
 
-    if (hash !== '#/login' && !getAuth()) { location.hash = '#/login'; return; }
-    if (hash === '#/login' && getAuth()) { location.hash = '#/inicio'; return; }
+    // Tela de login desativada: sem auth (ex.: auto-login falhou por falta
+    // de conexão), tenta de novo em vez de mostrar #/login.
+    if (!getAuth()) { garantirAutoLogin().then(rotear); return; }
+    if (hash === '#/login') { location.hash = '#/inicio'; return; }
 
-    const logado = hash !== '#/login';
+    const logado = true;
     tabBarEl.hidden = !logado;
     btnCatalogo.hidden = !logado;
     btnSair.hidden = !logado;
@@ -1612,7 +1630,7 @@
 
   // ---------- boot ----------
 
-  rotear();
+  garantirAutoLogin().then(rotear);
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
