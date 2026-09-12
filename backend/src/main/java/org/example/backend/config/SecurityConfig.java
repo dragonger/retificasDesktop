@@ -9,12 +9,23 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpStatus;
 
 /**
  * Sessão stateless com JWT (sem cookie, sem CSRF). Endpoints fora de
  * /api/** (o PWA estático) e /api/auth/** ficam liberados; o resto de
  * /api/** exige um token válido, verificado pelo {@link JwtAuthFilter}.
+ *
+ * Sem um AuthenticationEntryPoint explícito, o Spring Security usa
+ * Http403ForbiddenEntryPoint por padrão — token ausente/expirado/inválido
+ * vira 403 em vez de 401. O app.js só faz logout automático (limparAuth +
+ * redireciona pro login) em cima de 401, então token vencido ficava preso
+ * num 403 mostrando só um toast de erro pra sempre. Por isso forçamos 401
+ * aqui: não existe checagem de papel/role nessa app, então todo "acesso
+ * negado" a /api/** hoje é sempre falta de autenticação válida, nunca
+ * autorização insuficiente.
  */
 @Configuration
 @EnableWebSecurity
@@ -36,6 +47,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(eh -> eh.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
