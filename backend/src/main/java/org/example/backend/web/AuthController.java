@@ -34,10 +34,30 @@ public class AuthController {
         if (usuario == null || !passwordEncoder.matches(request.senha, usuario.getSenhaHash())) {
             return ResponseEntity.status(401).build();
         }
+        return ResponseEntity.ok(paraResposta(usuario));
+    }
+
+    /**
+     * Login automático temporário (tela de login desativada a pedido do
+     * usuário) — sempre autentica como o usuário 1 (bootstrap/empresa real),
+     * sem senha. TODO: remover e voltar pro /login normal quando a tela de
+     * login for reativada; enquanto isso, qualquer um com a URL pública
+     * entra sem senha.
+     */
+    @PostMapping("/auto-login")
+    public ResponseEntity<LoginResponseDTO> autoLogin() {
+        UsuarioModel usuario = usuarioRepository.buscarPorId(1L);
+        if (usuario == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(paraResposta(usuario));
+    }
+
+    private LoginResponseDTO paraResposta(UsuarioModel usuario) {
         LoginResponseDTO dto = new LoginResponseDTO();
         dto.token = jwtUtil.gerar(usuario);
         dto.nome = usuario.getNome();
         dto.empresaNome = usuario.getEmpresa() != null ? usuario.getEmpresa().getNome() : null;
-        return ResponseEntity.ok(dto);
+        return dto;
     }
 }
