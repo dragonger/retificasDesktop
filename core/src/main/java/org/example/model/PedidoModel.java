@@ -1,6 +1,7 @@
 package org.example.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -76,8 +77,18 @@ public class PedidoModel {
     @JoinColumn(name = "cliente_id")
     private ClienteModel cliente;
 
-    /** Categorias envolvidas neste pedido, cada uma com seu valor final de serviços e de peças. */
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    /**
+     * Categorias envolvidas neste pedido, cada uma com seu valor final de
+     * serviços e de peças. LAZY + BatchSize (em vez de EAGER): fetch=EAGER
+     * numa @OneToMany faz o Hibernate disparar uma query separada por pedido
+     * sempre que qualquer pedido é carregado (não dá pra otimizar via JOIN
+     * FETCH na consulta) — em listagens isso virava um N+1 real (cada tela
+     * de pedidos abria dezenas de SELECTs em PEDIDO_CATEGORIA_VALOR).
+     * BatchSize agrupa os lazy-loads de vários pedidos numa única query
+     * "WHERE pedido_id IN (...)" quando o dado é realmente acessado.
+     */
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 30)
     private List<PedidoCategoriaModel> categoriaValores = new ArrayList<>();
 
     public PedidoModel() {

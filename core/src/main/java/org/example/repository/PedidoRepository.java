@@ -71,9 +71,11 @@ public class PedidoRepository {
                 return null;
             }
             PedidoModel pedido = resultado.get(0);
-            // Inicializa peças e componentes ainda dentro da sessão.
+            // Inicializa peças, componentes e valores por categoria ainda
+            // dentro da sessão (categoriaValores é LAZY — ver PedidoModel).
             pedido.getPecaList().size();
             pedido.getComponentes().size();
+            pedido.getCategoriaValores().size();
             return pedido;
         } finally {
             em.close();
@@ -108,7 +110,7 @@ public class PedidoRepository {
     public List<PedidoModel> listarEncerrados(Long empresaId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.createQuery(
+            List<PedidoModel> resultado = em.createQuery(
                     "SELECT DISTINCT p FROM PedidoModel p " +
                             "LEFT JOIN FETCH p.cliente " +
                             "LEFT JOIN FETCH p.componentes " +
@@ -116,6 +118,14 @@ public class PedidoRepository {
                             "ORDER BY p.datEntrega DESC", PedidoModel.class)
                     .setParameter("empresaId", empresaId)
                     .getResultList();
+            // O chamador (relatório de encerrados) soma categoriaValores por
+            // pedido — inicializa ainda dentro da sessão (categoriaValores é
+            // LAZY + BatchSize, então isso vira poucas queries em lote, não
+            // uma por pedido).
+            for (PedidoModel p : resultado) {
+                p.getCategoriaValores().size();
+            }
+            return resultado;
         } finally {
             em.close();
         }
