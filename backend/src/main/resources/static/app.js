@@ -111,6 +111,40 @@
     return ct.includes('application/json') ? resp.json() : resp;
   }
 
+  // ---------- cache leve das telas (Início/Pedidos/Encerrados/Dashboard) ----------
+  // Troca de aba nessas telas fazia uma chamada de API nova toda vez (fetch
+  // real ao servidor, ~0,3-1s cada). Guarda a última resposta de cada GET:
+  // ao reabrir a tela mostra o que já tem na hora (sem "Carregando..." nem
+  // esperar rede) e busca de novo por trás; só redesenha com o dado fresco
+  // se ele realmente mudou, senão a tela fica quieta (sem piscar).
+  const respostaCache = new Map();
+  let renderGen = 0;
+
+  function cacheInvalidar(...paths) {
+    paths.forEach(p => respostaCache.delete(p));
+  }
+
+  /**
+   * Busca `path` com cache: chama render(dado) na hora se já tiver algo
+   * guardado, sempre busca de novo em segundo plano, e chama render(fresco)
+   * de novo só se o dado mudou e o usuário ainda estiver nessa tela (evita
+   * uma resposta atrasada sobrescrever uma tela pra onde ele já navegou).
+   */
+  async function comCache(path, render) {
+    const meuGen = renderGen;
+    const cache = respostaCache.get(path);
+    if (cache !== undefined) {
+      render(cache);
+    } else {
+      conteudo.innerHTML = '';
+      conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
+    }
+    const fresco = await api('GET', path);
+    const mudou = JSON.stringify(fresco) !== JSON.stringify(cache);
+    respostaCache.set(path, fresco);
+    if (renderGen === meuGen && (cache === undefined || mudou)) render(fresco);
+  }
+
   // Busca o PDF do orçamento em segundo plano (chamar assim que a tela abre,
   // bem antes do usuário tocar em "Gerar orçamento"). No iOS/Safari o
   // navigator.share() com arquivo só funciona se for chamado bem perto do
@@ -309,6 +343,7 @@
     if (!getAuth()) { garantirAutoLogin().then(rotear); return; }
     if (hash === '#/login') { location.hash = '#/inicio'; return; }
 
+    renderGen++; // invalida qualquer revalidação de cache pendente de uma tela anterior
     const logado = true;
     tabBarEl.hidden = !logado;
     btnCatalogo.hidden = !logado;
@@ -350,32 +385,33 @@
 
   async function telaInicio() {
     tituloTopo.textContent = 'Retífica';
-    conteudo.innerHTML = '';
-    const dash = await api('GET', '/api/pedidos/dashboard');
-    conteudo.innerHTML = '';
+    function render(dash) {
+      conteudo.innerHTML = '';
 
-    const hoje = new Date();
-    conteudo.appendChild(el('h2', { class: 'titulo' }, 'Retífica'));
-    conteudo.appendChild(el('div', { class: 'subtitulo' }, hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })));
+      const hoje = new Date();
+      conteudo.appendChild(el('h2', { class: 'titulo' }, 'Retífica'));
+      conteudo.appendChild(el('div', { class: 'subtitulo' }, hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })));
 
-    conteudo.appendChild(el('div', { class: 'stat-grid' },
-      statCard('Em aberto', dash.abertos, 'pedidos', () => { location.hash = '#/pedidos?filtro=abertos'; }),
-      statCard('Entregas hoje', dash.hoje, 'pedidos', () => { location.hash = '#/pedidos?filtro=hoje'; }),
-      statCard('Prontos', dash.prontos, 'p/ retirada', () => { location.hash = '#/pedidos?filtro=prontos'; }),
-      statCard('Atrasados', dash.atrasados, 'pedidos', () => { location.hash = '#/pedidos?filtro=atrasados'; }),
-    ));
+      conteudo.appendChild(el('div', { class: 'stat-grid' },
+        statCard('Em aberto', dash.abertos, 'pedidos', () => { location.hash = '#/pedidos?filtro=abertos'; }),
+        statCard('Entregas hoje', dash.hoje, 'pedidos', () => { location.hash = '#/pedidos?filtro=hoje'; }),
+        statCard('Prontos', dash.prontos, 'p/ retirada', () => { location.hash = '#/pedidos?filtro=prontos'; }),
+        statCard('Atrasados', dash.atrasados, 'pedidos', () => { location.hash = '#/pedidos?filtro=atrasados'; }),
+      ));
 
-    conteudo.appendChild(el('div', { class: 'btn-group', style: 'margin-top:0;margin-bottom:24px' },
-      btnBlueprint('Novo pedido', 'btn-primary', { onclick: () => { location.hash = '#/pedidos/novo'; } }),
-      btnBlueprint('Ver pedidos', 'btn-secondary', { onclick: () => { location.hash = '#/pedidos'; } }),
-    ));
+      conteudo.appendChild(el('div', { class: 'btn-group', style: 'margin-top:0;margin-bottom:24px' },
+        btnBlueprint('Novo pedido', 'btn-primary', { onclick: () => { location.hash = '#/pedidos/novo'; } }),
+        btnBlueprint('Ver pedidos', 'btn-secondary', { onclick: () => { location.hash = '#/pedidos'; } }),
+      ));
 
-    conteudo.appendChild(el('h2', { class: 'secao' }, 'Entregas de hoje'));
-    if (!dash.entregasHoje.length) {
-      conteudo.appendChild(el('div', { class: 'empty' }, 'Nenhuma entrega prevista para hoje.'));
-    } else {
-      dash.entregasHoje.forEach(p => conteudo.appendChild(linhaPedido(p)));
+      conteudo.appendChild(el('h2', { class: 'secao' }, 'Entregas de hoje'));
+      if (!dash.entregasHoje.length) {
+        conteudo.appendChild(el('div', { class: 'empty' }, 'Nenhuma entrega prevista para hoje.'));
+      } else {
+        dash.entregasHoje.forEach(p => conteudo.appendChild(linhaPedido(p)));
+      }
     }
+    await comCache('/api/pedidos/dashboard', render);
   }
 
   function statCard(kicker, valor, sub, onclick) {
@@ -402,33 +438,32 @@
 
   async function telaPedidos(filtroChave) {
     tituloTopo.textContent = 'Pedidos';
-    conteudo.innerHTML = '';
-    conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
+    function render(todos) {
+      const filtro = FILTROS_PEDIDOS[filtroChave];
+      const pedidos = filtro ? todos.filter(filtro.fn) : todos;
+      conteudo.innerHTML = '';
 
-    const todos = await api('GET', '/api/pedidos');
-    const filtro = FILTROS_PEDIDOS[filtroChave];
-    const pedidos = filtro ? todos.filter(filtro.fn) : todos;
-    conteudo.innerHTML = '';
+      conteudo.appendChild(el('h2', { class: 'titulo' }, 'Pedidos'));
+      conteudo.appendChild(el('div', { class: 'subtitulo' },
+        filtro ? filtro.rotulo + ' — ' + pedidos.length : pedidos.filter(p => !p.finalizado).length + ' em aberto'));
 
-    conteudo.appendChild(el('h2', { class: 'titulo' }, 'Pedidos'));
-    conteudo.appendChild(el('div', { class: 'subtitulo' },
-      filtro ? filtro.rotulo + ' — ' + pedidos.length : pedidos.filter(p => !p.finalizado).length + ' em aberto'));
+      if (filtro) {
+        conteudo.appendChild(btnBlueprint('Ver todos os pedidos', 'btn-secondary btn-block', {
+          style: 'margin-bottom:16px', onclick: () => { location.hash = '#/pedidos'; }
+        }));
+      }
 
-    if (filtro) {
-      conteudo.appendChild(btnBlueprint('Ver todos os pedidos', 'btn-secondary btn-block', {
-        style: 'margin-bottom:16px', onclick: () => { location.hash = '#/pedidos'; }
+      if (!pedidos.length) {
+        conteudo.appendChild(el('div', { class: 'empty' }, filtro ? 'Nenhum pedido nessa situação.' : 'Nenhum pedido cadastrado ainda.'));
+      } else {
+        pedidos.forEach(p => conteudo.appendChild(linhaPedido(p)));
+      }
+
+      conteudo.appendChild(btnBlueprint('+', 'btn-primary btn-fab', {
+        'aria-label': 'Novo pedido', onclick: () => { location.hash = '#/pedidos/novo'; }
       }));
     }
-
-    if (!pedidos.length) {
-      conteudo.appendChild(el('div', { class: 'empty' }, filtro ? 'Nenhum pedido nessa situação.' : 'Nenhum pedido cadastrado ainda.'));
-    } else {
-      pedidos.forEach(p => conteudo.appendChild(linhaPedido(p)));
-    }
-
-    conteudo.appendChild(btnBlueprint('+', 'btn-primary btn-fab', {
-      'aria-label': 'Novo pedido', onclick: () => { location.hash = '#/pedidos/novo'; }
-    }));
+    await comCache('/api/pedidos', render);
   }
 
   function linhaPedido(p) {
@@ -531,6 +566,7 @@
         menuPedidoPopover.hidden = true;
         if (!confirm('Deletar o pedido #' + id + '? Essa ação não pode ser desfeita.')) return;
         await api('DELETE', '/api/pedidos/' + id);
+        cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
         toast('Pedido deletado.');
         location.hash = '#/pedidos';
       }
@@ -563,6 +599,7 @@
           style: 'flex:1', onclick: async () => {
             if (!confirm('Finalizar o pedido #' + id + '? A data de entrega será registrada agora.')) return;
             await api('POST', '/api/pedidos/' + id + '/finalizar');
+            cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
             toast('Pedido finalizado.');
             telaVisualizarPedido(id);
           }
@@ -1132,6 +1169,7 @@
         const salvo = id
           ? await api('PUT', '/api/pedidos/' + id, body)
           : await api('POST', '/api/pedidos', body);
+        cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
         registrarClienteRecente(clienteSelecionado.id);
         toast('Pedido salvo.');
         location.hash = '#/pedidos/' + salvo.id;
@@ -1171,9 +1209,28 @@
 
   async function telaCabecotes() {
     tituloTopo.textContent = 'Produtos';
-    conteudo.innerHTML = '';
-    conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
-    const [lista, categorias] = await Promise.all([api('GET', '/api/cabecotes'), api('GET', '/api/categorias')]);
+
+    // Essa tela mistura lista + formulário de edição no mesmo estado
+    // (emEdicaoId) — diferente das outras, não redesenha sozinha se o dado
+    // mudar enquanto o usuário está nela (arriscaria descartar uma edição
+    // em andamento). Só usa o cache pra pintar na hora quando tem, e
+    // atualiza o cache em segundo plano pra próxima visita vir fresca.
+    const cacheLista = respostaCache.get('/api/cabecotes');
+    const cacheCategorias = respostaCache.get('/api/categorias');
+    let lista = cacheLista;
+    let categorias = cacheCategorias;
+    if (!lista || !categorias) {
+      conteudo.innerHTML = '';
+      conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
+      [lista, categorias] = await Promise.all([api('GET', '/api/cabecotes'), api('GET', '/api/categorias')]);
+      respostaCache.set('/api/cabecotes', lista);
+      respostaCache.set('/api/categorias', categorias);
+    } else {
+      Promise.all([api('GET', '/api/cabecotes'), api('GET', '/api/categorias')]).then(([l, c]) => {
+        respostaCache.set('/api/cabecotes', l);
+        respostaCache.set('/api/categorias', c);
+      }).catch(() => {});
+    }
     conteudo.innerHTML = '';
 
     conteudo.appendChild(el('h2', { class: 'titulo' }, 'Produtos'));
@@ -1233,6 +1290,7 @@
           if (emEdicaoId) await api('PUT', '/api/cabecotes/' + emEdicaoId, body);
           else await api('POST', '/api/cabecotes', body);
         } catch (e) { return; }
+        cacheInvalidar('/api/cabecotes');
         toast('Salvo.');
         limpar();
         telaCabecotes();
@@ -1250,6 +1308,7 @@
             if (!emEdicaoId) { toast('Selecione um item na lista para remover.', true); return; }
             if (!confirm('Remover este item?')) return;
             await api('DELETE', '/api/cabecotes/' + emEdicaoId);
+            cacheInvalidar('/api/cabecotes');
             toast('Removido.');
             limpar();
             telaCabecotes();
@@ -1492,94 +1551,102 @@
 
   async function telaEncerrados() {
     tituloTopo.textContent = 'Encerrados';
-    conteudo.innerHTML = '';
-    conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
-    const grupos = await api('GET', '/api/pedidos/encerrados');
-    conteudo.innerHTML = '';
+    function render(grupos) {
+      conteudo.innerHTML = '';
 
-    conteudo.appendChild(el('h2', { class: 'titulo' }, 'Encerrados'));
-    const totalPedidos = grupos.reduce((a, g) => a + g.quantidade, 0);
-    conteudo.appendChild(el('div', { class: 'subtitulo' }, totalPedidos + ' pedidos concluídos'));
+      conteudo.appendChild(el('h2', { class: 'titulo' }, 'Encerrados'));
+      const totalPedidos = grupos.reduce((a, g) => a + g.quantidade, 0);
+      conteudo.appendChild(el('div', { class: 'subtitulo' }, totalPedidos + ' pedidos concluídos'));
 
-    if (!grupos.length) {
-      conteudo.appendChild(el('div', { class: 'empty' }, 'Nenhum pedido encerrado ainda.'));
-      return;
+      if (!grupos.length) {
+        conteudo.appendChild(el('div', { class: 'empty' }, 'Nenhum pedido encerrado ainda.'));
+        return;
+      }
+
+      grupos.forEach(grupo => {
+        const corpo = el('div', { class: 'accordion-body' }, ...grupo.pedidos.map(linhaPedido));
+        const cab = el('div', { class: 'accordion-cab' },
+          el('span', { class: 'linha-titulo' }, grupo.mes),
+          el('span', { style: 'font-size:12px;opacity:.6' }, grupo.quantidade + ' · ' + moeda(grupo.total))
+        );
+        cab.addEventListener('click', () => { corpo.hidden = !corpo.hidden; });
+        conteudo.appendChild(el('div', { style: 'margin-bottom:12px' }, cab, corpo));
+      });
     }
-
-    grupos.forEach(grupo => {
-      const corpo = el('div', { class: 'accordion-body' }, ...grupo.pedidos.map(linhaPedido));
-      const cab = el('div', { class: 'accordion-cab' },
-        el('span', { class: 'linha-titulo' }, grupo.mes),
-        el('span', { style: 'font-size:12px;opacity:.6' }, grupo.quantidade + ' · ' + moeda(grupo.total))
-      );
-      cab.addEventListener('click', () => { corpo.hidden = !corpo.hidden; });
-      conteudo.appendChild(el('div', { style: 'margin-bottom:12px' }, cab, corpo));
-    });
+    await comCache('/api/pedidos/encerrados', render);
   }
 
   // ---------- Dashboard de encerrados ----------
 
   async function telaDashboardEncerrados() {
     tituloTopo.textContent = 'Dashboard';
-    conteudo.innerHTML = '';
-    conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
-    const grupos = await api('GET', '/api/pedidos/encerrados');
-    conteudo.innerHTML = '';
 
-    conteudo.appendChild(el('h2', { class: 'titulo' }, 'Dashboard'));
-    conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Pedidos encerrados, valores por cliente e por categoria'));
-
-    if (!grupos.length) {
-      conteudo.appendChild(el('div', { class: 'empty' }, 'Nenhum pedido encerrado ainda.'));
-      return;
-    }
-
-    let mesSelecionado = grupos[0].mes;
-
-    const selMes = el('select', { class: 'input' },
-      ...grupos.map(g => el('option', { value: g.mes }, g.mes))
-    );
-    selMes.addEventListener('change', () => {
-      mesSelecionado = selMes.value;
-      redesenhar();
-    });
-    conteudo.appendChild(el('div', { class: 'field' }, selMes));
-
-    const corpo = el('div', {});
-    conteudo.appendChild(corpo);
-
+    // Ficam fora do render() (não são resetados por uma revalidação
+    // silenciosa em segundo plano) pra não perder a seleção do usuário
+    // se os dados mudarem enquanto ele olha essa tela.
+    let mesSelecionado = null;
     let tipoAgregado = 'cliente';
 
-    function redesenhar() {
-      const grupo = grupos.find(g => g.mes === mesSelecionado);
-      corpo.innerHTML = '';
-      if (!grupo) return;
+    function render(grupos) {
+      conteudo.innerHTML = '';
 
-      corpo.appendChild(el('div', { class: 'stat-grid' },
-        statCard('Total do mês', moeda(grupo.total), grupo.quantidade + (grupo.quantidade === 1 ? ' pedido' : ' pedidos')),
-        statCard('Pedidos encerrados', String(grupo.quantidade), grupo.mes),
-      ));
+      conteudo.appendChild(el('h2', { class: 'titulo' }, 'Dashboard'));
+      conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Pedidos encerrados, valores por cliente e por categoria'));
 
-      corpo.appendChild(el('h2', { class: 'secao' }, 'Pedidos do mês'));
-      grupo.pedidos.forEach(p => corpo.appendChild(linhaPedido(p)));
+      if (!grupos.length) {
+        conteudo.appendChild(el('div', { class: 'empty' }, 'Nenhum pedido encerrado ainda.'));
+        return;
+      }
 
-      const segButtons = {};
-      const segAgregado = el('div', { class: 'seg', style: 'margin-top:8px' },
-        ...[['cliente', 'Por cliente'], ['categoria', 'Por categoria']].map(([k, rotulo]) => {
-          const b = el('button', { type: 'button', onclick: () => { tipoAgregado = k; redesenhar(); } }, rotulo);
-          segButtons[k] = b;
-          return b;
-        })
+      if (mesSelecionado === null || !grupos.some(g => g.mes === mesSelecionado)) {
+        mesSelecionado = grupos[0].mes;
+      }
+
+      const selMes = el('select', { class: 'input' },
+        ...grupos.map(g => el('option', { value: g.mes }, g.mes))
       );
-      Object.keys(segButtons).forEach(k => segButtons[k].classList.toggle('active', k === tipoAgregado));
-      corpo.appendChild(segAgregado);
+      selMes.value = mesSelecionado;
+      selMes.addEventListener('change', () => {
+        mesSelecionado = selMes.value;
+        redesenhar();
+      });
+      conteudo.appendChild(el('div', { class: 'field' }, selMes));
 
-      const itens = tipoAgregado === 'cliente' ? grupo.porCliente : grupo.porCategoria;
-      const tituloTotal = tipoAgregado === 'cliente' ? 'Total (cliente)' : 'Total (categoria)';
-      corpo.appendChild(blocoAgregado(itens, grupo.total, tituloTotal));
+      const corpo = el('div', {});
+      conteudo.appendChild(corpo);
+
+      function redesenhar() {
+        const grupo = grupos.find(g => g.mes === mesSelecionado);
+        corpo.innerHTML = '';
+        if (!grupo) return;
+
+        corpo.appendChild(el('div', { class: 'stat-grid' },
+          statCard('Total do mês', moeda(grupo.total), grupo.quantidade + (grupo.quantidade === 1 ? ' pedido' : ' pedidos')),
+          statCard('Pedidos encerrados', String(grupo.quantidade), grupo.mes),
+        ));
+
+        corpo.appendChild(el('h2', { class: 'secao' }, 'Pedidos do mês'));
+        grupo.pedidos.forEach(p => corpo.appendChild(linhaPedido(p)));
+
+        const segButtons = {};
+        const segAgregado = el('div', { class: 'seg', style: 'margin-top:8px' },
+          ...[['cliente', 'Por cliente'], ['categoria', 'Por categoria']].map(([k, rotulo]) => {
+            const b = el('button', { type: 'button', onclick: () => { tipoAgregado = k; redesenhar(); } }, rotulo);
+            segButtons[k] = b;
+            return b;
+          })
+        );
+        Object.keys(segButtons).forEach(k => segButtons[k].classList.toggle('active', k === tipoAgregado));
+        corpo.appendChild(segAgregado);
+
+        const itens = tipoAgregado === 'cliente' ? grupo.porCliente : grupo.porCategoria;
+        const tituloTotal = tipoAgregado === 'cliente' ? 'Total (cliente)' : 'Total (categoria)';
+        corpo.appendChild(blocoAgregado(itens, grupo.total, tituloTotal));
+      }
+
+      redesenhar();
     }
-
-    redesenhar();
+    await comCache('/api/pedidos/encerrados', render);
   }
 
   // Bloco reaproveitado pra "valor por cliente" e "valor por serviço": gráfico
