@@ -1076,7 +1076,13 @@
       subSeg, itemConteudoBox, barraTotal);
 
     const paineis = { cliente: painelCliente, pedido: painelPedido, componentes: painelComponentes, itens: painelItens };
-    const painelBox = el('div', { style: 'padding-top:16px' }, painelCliente);
+    // Os 4 painéis ficam montados no DOM o tempo todo, só alternando "hidden"
+    // — trocar de aba destruindo/reconstruindo o painel (innerHTML='' +
+    // appendChild) forçava o navegador a recalcular o layout inteiro a cada
+    // clique, e a aba Itens sozinha já tem o catálogo inteiro de checkboxes;
+    // isso deixava a troca de aba visivelmente lenta.
+    Object.keys(paineis).forEach(k => { paineis[k].hidden = (k !== 'cliente'); });
+    const painelBox = el('div', { style: 'padding-top:16px' }, painelCliente, painelPedido, painelComponentes, painelItens);
 
     const segButtons = {};
     const seg = el('div', { class: 'seg' },
@@ -1091,8 +1097,7 @@
     function selecionarAba(k) {
       abaAtual = k;
       Object.keys(segButtons).forEach(key => segButtons[key].classList.toggle('active', key === k));
-      painelBox.innerHTML = '';
-      painelBox.appendChild(paineis[k]);
+      Object.keys(paineis).forEach(key => { paineis[key].hidden = (key !== k); });
     }
     selecionarAba('cliente');
     indicadoresProntos = true;
