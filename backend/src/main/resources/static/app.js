@@ -346,12 +346,16 @@
     renderGen++; // invalida qualquer revalidação de cache pendente de uma tela anterior
     const logado = true;
     tabBarEl.hidden = !logado;
-    btnCatalogo.hidden = !logado;
-    btnSair.hidden = !logado;
-    btnSenha.hidden = !logado;
 
     const caminhoBase = hash.split('?')[0];
     const raiz = '#/' + (caminhoBase.split('/')[1] || 'inicio');
+    // Ícones de topo (catálogo/trocar senha/sair) só aparecem nas telas
+    // raiz — nas telas internas (ver/editar pedido, catálogo, clientes...)
+    // só o botão de voltar faz sentido, deixando o topo mais limpo.
+    const telaRaiz = ['#/inicio', '#/pedidos', '#/cabecotes', '#/encerrados', '#/dashboard'].includes(caminhoBase);
+    btnCatalogo.hidden = !telaRaiz;
+    btnSair.hidden = !telaRaiz;
+    btnSenha.hidden = !telaRaiz;
     tabs.forEach(t => t.classList.toggle('active', ('#/' + t.dataset.tab) === raiz));
     btnVoltar.hidden = ROOTS.includes(caminhoBase);
     conteudo.scrollTop = 0;
@@ -393,10 +397,10 @@
       conteudo.appendChild(el('div', { class: 'subtitulo' }, hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })));
 
       conteudo.appendChild(el('div', { class: 'stat-grid' },
-        statCard('Em aberto', dash.abertos, 'pedidos', () => { location.hash = '#/pedidos?filtro=abertos'; }),
-        statCard('Entregas hoje', dash.hoje, 'pedidos', () => { location.hash = '#/pedidos?filtro=hoje'; }),
-        statCard('Prontos', dash.prontos, 'p/ retirada', () => { location.hash = '#/pedidos?filtro=prontos'; }),
-        statCard('Atrasados', dash.atrasados, 'pedidos', () => { location.hash = '#/pedidos?filtro=atrasados'; }),
+        statCard('Em aberto', dash.abertos, 'pedidos', () => { location.hash = '#/pedidos?filtro=abertos'; }, 'accent', svgCaixa('var(--color-accent-700)')),
+        statCard('Entregas hoje', dash.hoje, 'pedidos', () => { location.hash = '#/pedidos?filtro=hoje'; }, 'neutral', svgCalendario2('var(--color-neutral-700)')),
+        statCard('Prontos', dash.prontos, 'p/ retirada', () => { location.hash = '#/pedidos?filtro=prontos'; }, 'accent-2', svgCheckStat('var(--color-accent-2-700)')),
+        statCard('Atrasados', dash.atrasados, 'pedidos', () => { location.hash = '#/pedidos?filtro=atrasados'; }, 'danger', svgAlertaStat('var(--color-danger)')),
       ));
 
       conteudo.appendChild(el('div', { class: 'btn-group', style: 'margin-top:0;margin-bottom:24px' },
@@ -414,12 +418,49 @@
     await comCache('/api/pedidos/dashboard', render);
   }
 
-  function statCard(kicker, valor, sub, onclick) {
-    return blueprintBox('div', { class: 'stat-card' + (onclick ? ' stat-card-clicavel' : ''), onclick },
-      el('div', { class: 'stat-kicker' }, kicker),
+  function statCard(kicker, valor, sub, onclick, variante, iconSvg) {
+    const classe = 'stat-card elev-md' + (variante ? ' stat-card-' + variante : ' stat-card-accent') + (onclick ? ' stat-card-clicavel' : '');
+    return blueprintBox('div', { class: classe, onclick },
+      el('div', { class: 'stat-card-topo' },
+        el('div', { class: 'stat-kicker' }, kicker),
+        iconSvg || null,
+      ),
       el('div', { class: 'stat-value' }, String(valor)),
       el('div', { class: 'stat-sub' }, sub),
     );
+  }
+
+  function svgCaixa(cor) {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', '17'); s.setAttribute('height', '17'); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', cor); s.setAttribute('stroke-width', '1.5');
+    s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
+    s.innerHTML = '<rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>';
+    return s;
+  }
+  function svgCalendario2(cor) {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', '17'); s.setAttribute('height', '17'); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', cor); s.setAttribute('stroke-width', '1.5');
+    s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
+    s.innerHTML = '<rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path>';
+    return s;
+  }
+  function svgCheckStat(cor) {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', '17'); s.setAttribute('height', '17'); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', cor); s.setAttribute('stroke-width', '1.5');
+    s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
+    s.innerHTML = '<path d="M20 6 9 17l-5-5"></path>';
+    return s;
+  }
+  function svgAlertaStat(cor) {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', '17'); s.setAttribute('height', '17'); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', cor); s.setAttribute('stroke-width', '1.5');
+    s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
+    s.innerHTML = '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>';
+    return s;
   }
 
   // ---------- Pedidos: lista ----------
@@ -1443,18 +1484,53 @@
 
   // ---------- Catálogo (menu Serviços/Peças) ----------
 
+  function svgSeta() {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', '16'); s.setAttribute('height', '16'); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '1.5');
+    s.innerHTML = '<path d="M9 18l6-6-6-6"></path>';
+    return s;
+  }
+  function svgPessoa() {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', '16'); s.setAttribute('height', '16'); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '1.5');
+    s.innerHTML = '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>';
+    return s;
+  }
+  function svgChave() {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', '16'); s.setAttribute('height', '16'); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '1.5');
+    s.innerHTML = '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"></path>';
+    return s;
+  }
+  function svgPeca() {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', '16'); s.setAttribute('height', '16'); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '1.5');
+    s.innerHTML = '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"></path><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"></path>';
+    return s;
+  }
+  function menuCard(nome, variante, icone, hash) {
+    return blueprintBox('div', { class: 'menu-card elev-md menu-card-' + variante, onclick: () => { location.hash = hash; } },
+      el('div', { class: 'menu-card-esq' },
+        el('div', { class: 'menu-card-icone' }, icone),
+        el('span', { class: 'menu-card-titulo' }, nome),
+      ),
+      svgSeta(),
+    );
+  }
+
   function telaCatalogoMenu() {
     tituloTopo.textContent = 'Catálogo';
     conteudo.innerHTML = '';
     conteudo.appendChild(el('h2', { class: 'titulo' }, 'Catálogo'));
     conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Clientes, serviços e peças usados nos orçamentos'));
     conteudo.appendChild(el('div', { class: 'catalogo-menu' },
-      el('div', { class: 'linha', onclick: () => { location.hash = '#/clientes'; } },
-        el('span', { class: 'linha-titulo' }, 'Clientes'), el('span', null, '→')),
-      el('div', { class: 'linha', onclick: () => { location.hash = '#/servicos'; } },
-        el('span', { class: 'linha-titulo' }, 'Serviços'), el('span', null, '→')),
-      el('div', { class: 'linha', onclick: () => { location.hash = '#/pecas'; } },
-        el('span', { class: 'linha-titulo' }, 'Peças'), el('span', null, '→')),
+      menuCard('Clientes', 'accent', svgPessoa(), '#/clientes'),
+      menuCard('Serviços', 'neutral', svgChave(), '#/servicos'),
+      menuCard('Peças', 'accent-2', svgPeca(), '#/pecas'),
     ));
   }
 
@@ -1621,8 +1697,8 @@
         if (!grupo) return;
 
         corpo.appendChild(el('div', { class: 'stat-grid' },
-          statCard('Total do mês', moeda(grupo.total), grupo.quantidade + (grupo.quantidade === 1 ? ' pedido' : ' pedidos')),
-          statCard('Pedidos encerrados', String(grupo.quantidade), grupo.mes),
+          statCard('Total do mês', moeda(grupo.total), grupo.quantidade + (grupo.quantidade === 1 ? ' pedido' : ' pedidos'), null, 'accent'),
+          statCard('Pedidos encerrados', String(grupo.quantidade), grupo.mes, null, 'neutral'),
         ));
 
         corpo.appendChild(el('h2', { class: 'secao' }, 'Pedidos do mês'));
