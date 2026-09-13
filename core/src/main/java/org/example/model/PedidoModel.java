@@ -50,8 +50,15 @@ public class PedidoModel {
     @JoinColumn(name = "vendedor_id")
     private VendedorModel vendedor;
 
-    /** Empresa (tenant) dona deste pedido. */
-    @ManyToOne
+    /**
+     * Empresa (tenant) dona deste pedido. LAZY: @ManyToOne é EAGER por
+     * padrão no JPA, o que disparava mais uma query (SELECT em EMPRESA) toda
+     * vez que qualquer pedido era carregado, mesmo em listagens que nunca
+     * leem esse campo (só usam empresa.id, já disponível no próprio pedido
+     * via WHERE, sem precisar carregar a entidade). Ver PedidoRepository
+     * .buscarComItens(), que inicializa isso quando de fato é usado (PDF).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
     private EmpresaModel empresa;
 
     /** Componentes técnicos envolvidos (cabeçote, bloco, biela, virabrequim) — um pedido pode ter mais de um. */

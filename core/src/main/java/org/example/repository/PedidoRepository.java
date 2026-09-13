@@ -71,11 +71,15 @@ public class PedidoRepository {
                 return null;
             }
             PedidoModel pedido = resultado.get(0);
-            // Inicializa peças, componentes e valores por categoria ainda
-            // dentro da sessão (categoriaValores é LAZY — ver PedidoModel).
+            // Inicializa peças, componentes, valores por categoria e empresa
+            // ainda dentro da sessão (todos LAZY — ver PedidoModel). Empresa
+            // só é lida pelo PDF (nome da empresa no cabeçalho).
             pedido.getPecaList().size();
             pedido.getComponentes().size();
             pedido.getCategoriaValores().size();
+            if (pedido.getEmpresa() != null) {
+                pedido.getEmpresa().getNome();
+            }
             return pedido;
         } finally {
             em.close();
