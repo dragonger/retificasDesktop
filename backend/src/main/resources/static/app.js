@@ -50,6 +50,22 @@
     }
   }
 
+  // ---------- clientes recentes (agiliza escolher no cadastro de pedido) ----------
+
+  const CLIENTES_RECENTES_MAX = 6;
+  function getClientesRecentesIds() {
+    try {
+      return JSON.parse(localStorage.getItem('retifica_clientes_recentes') || '[]');
+    } catch (e) {
+      return [];
+    }
+  }
+  function registrarClienteRecente(id) {
+    const atuais = getClientesRecentesIds().filter(x => x !== id);
+    atuais.unshift(id);
+    localStorage.setItem('retifica_clientes_recentes', JSON.stringify(atuais.slice(0, CLIENTES_RECENTES_MAX)));
+  }
+
   // ---------- utilidades ----------
 
   function toast(msg, erro) {
@@ -620,6 +636,19 @@
     conteudo.innerHTML = '';
     conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
 
+    // Mostra em cada aba o que já foi preenchido (✓/contagem), pra dar pra
+    // ver de relance o que falta sem precisar clicar em cada uma. Só liga
+    // depois que os botões das abas existirem (mais abaixo) — as chamadas
+    // que acontecem antes disso (montagem inicial da tela) são no-op.
+    let indicadoresProntos = false;
+    function atualizarIndicadoresAbas() {
+      if (!indicadoresProntos) return;
+      segButtons.cliente.textContent = 'Cliente' + (clienteSelecionado ? ' ✓' : '');
+      segButtons.componentes.textContent = 'Componentes' + (linhasComponentes.length ? ' (' + linhasComponentes.length + ')' : '');
+      const totalItens = linhasServicos.length + linhasPecas.length;
+      segButtons.itens.textContent = 'Itens' + (totalItens ? ' (' + totalItens + ')' : '');
+    }
+
     await carregarCatalogos();
     let pedido = null;
     if (id) pedido = await api('GET', '/api/pedidos/' + id);
@@ -658,6 +687,7 @@
     const listaComponentesEl = el('div', {});
 
     function redesenharComponentes() {
+      atualizarIndicadoresAbas();
       listaComponentesEl.innerHTML = '';
       if (!linhasComponentes.length) {
         listaComponentesEl.appendChild(el('div', { style: 'text-align:center;font-size:13px;opacity:.55;padding:10px 0' }, 'Nenhum componente adicionado ainda'));
@@ -773,7 +803,28 @@
     const clienteBoxSelecionado = el('div', { hidden: true });
     const fldBuscaCliente = el('input', { class: 'input', type: 'search', placeholder: 'Buscar por nome ou telefone...' });
     const selCliente = el('select', { class: 'input', size: '6' });
-    const buscaClienteBox = el('div', {}, campo('Buscar cliente', fldBuscaCliente), selCliente);
+
+    // Clientes usados nos últimos pedidos criados neste aparelho, pra não
+    // precisar digitar busca pro caso comum de cliente recorrente.
+    const recentesBox = el('div', { style: 'display:flex;flex-wrap:wrap;gap:8px' });
+    const recentesField = el('div', { class: 'field', hidden: true }, el('label', null, 'Recentes'), recentesBox);
+    function atualizarRecentes() {
+      const recentes = getClientesRecentesIds()
+        .map(rid => catalogoCache.clientes.find(c => c.id === rid))
+        .filter(Boolean)
+        .slice(0, 5);
+      recentesField.hidden = !recentes.length;
+      recentesBox.innerHTML = '';
+      recentes.forEach(c => {
+        recentesBox.appendChild(el('button', {
+          type: 'button', class: 'chip',
+          onclick: () => { clienteSelecionado = { id: c.id, nome: c.nome, telefone: c.telefone }; atualizarClienteUI(); }
+        }, c.nome));
+      });
+    }
+    atualizarRecentes();
+
+    const buscaClienteBox = el('div', {}, recentesField, campo('Buscar cliente', fldBuscaCliente), selCliente);
 
     function atualizarClienteUI() {
       clienteBoxSelecionado.innerHTML = '';
@@ -796,6 +847,7 @@
         buscaClienteBox.hidden = false;
         btnNovoCliente.hidden = false;
       }
+      atualizarIndicadoresAbas();
     }
 
     function atualizarListaClientes() {
@@ -865,8 +917,8 @@
         ));
       });
     }
-    const redesenharServicos = () => { redesenharItens(listaServicosEl, linhasServicos, redesenharServicos, false); atualizarOpcoesServico(); recalcularResumo(); };
-    const redesenharPecas = () => { redesenharItens(listaPecasEl, linhasPecas, redesenharPecas, true); atualizarOpcoesPeca(); recalcularResumo(); };
+    const redesenharServicos = () => { redesenharItens(listaServicosEl, linhasServicos, redesenharServicos, false); atualizarOpcoesServico(); recalcularResumo(); atualizarIndicadoresAbas(); };
+    const redesenharPecas = () => { redesenharItens(listaPecasEl, linhasPecas, redesenharPecas, true); atualizarOpcoesPeca(); recalcularResumo(); atualizarIndicadoresAbas(); };
 
     function catalogoFiltrado(catalogo) {
       if (categoriaValores.size === 0) return catalogo;
@@ -1043,6 +1095,11 @@
       painelBox.appendChild(paineis[k]);
     }
     selecionarAba('cliente');
+    indicadoresProntos = true;
+    atualizarIndicadoresAbas();
+
+    const dicaSalvarMinimo = el('div', { style: 'font-size:12px;opacity:.6;padding:2px 2px 0' },
+      'Só o cliente é obrigatório — dá pra completar o resto depois.');
 
     const form = el('form', {
       onsubmit: async (ev) => {
@@ -1070,10 +1127,11 @@
         const salvo = id
           ? await api('PUT', '/api/pedidos/' + id, body)
           : await api('POST', '/api/pedidos', body);
+        registrarClienteRecente(clienteSelecionado.id);
         toast('Pedido salvo.');
         location.hash = '#/pedidos/' + salvo.id;
       }
-    }, seg, painelBox);
+    }, seg, dicaSalvarMinimo, painelBox);
 
     conteudo.appendChild(form);
 
