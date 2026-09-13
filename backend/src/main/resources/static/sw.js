@@ -1,7 +1,7 @@
 // Service worker mínimo: cacheia o "shell" do app para abrir rápido/offline;
 // nunca cacheia /api/* — os dados sempre vêm frescos do servidor.
-const CACHE = 'retifica-shell-v2';
-const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon.svg'];
+const CACHE = 'retifica-shell-v3';
+const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon.svg', 'assets/logo-dih.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));

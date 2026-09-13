@@ -12,20 +12,58 @@
   --color-accent-2: #728fab;
   --color-divider: color-mix(in srgb, #1d1f20 16%, transparent);
 
-  --color-accent-100: #eef6ff;
-  --color-accent-800: #2c455d;
-  --color-accent-2-100: #eef6ff;
-  --color-accent-2-800: #314457;
+  /* Rampas tonais completas — redesign "Industry" (claude.ai/design),
+     geradas em OKLCH numa escala de luminosidade compartilhada, então o
+     mesmo degrau de qualquer papel de cor bate visualmente com os outros.
+     Usadas nos cards de estatística coloridos (Início/Dashboard). */
   --color-neutral-100: #f5f5f8;
+  --color-neutral-200: #e7e7ea;
+  --color-neutral-300: #d4d4d7;
+  --color-neutral-400: #b7b7ba;
+  --color-neutral-500: #98989b;
+  --color-neutral-600: #7a7a7d;
+  --color-neutral-700: #5d5d60;
   --color-neutral-800: #424244;
+  --color-neutral-900: #2b2b2d;
+
+  --color-accent-100: #eef6ff;
+  --color-accent-200: #d6ebff;
+  --color-accent-300: #b5d9fd;
+  --color-accent-400: #94bce3;
+  --color-accent-500: #749dc4;
+  --color-accent-800: #2c455d;
+  --color-accent-900: #1d2d3d;
+
+  --color-accent-2-100: #eef6ff;
+  --color-accent-2-200: #d6ebff;
+  --color-accent-2-300: #bdd8f2;
+  --color-accent-2-400: #9ebbd8;
+  --color-accent-2-500: #7e9cb8;
+  --color-accent-2-600: #627d98;
+  --color-accent-2-700: #486077;
+  --color-accent-2-800: #314457;
+  --color-accent-2-900: #1f2d3a;
+
+  /* Vermelho de alerta/perigo — já usado solto em vários lugares
+     (#a4453f); tokenizado aqui pros cards de "Atrasados" e afins. */
+  --color-danger: #a4453f;
+  --color-danger-700: #7a332e;
 
   --font-heading: "Barlow Condensed", system-ui, sans-serif;
   --font-body: "Barlow", system-ui, sans-serif;
 
   --space-1: 3px; --space-2: 7px; --space-3: 10px; --space-4: 14px; --space-6: 20px; --space-8: 27px;
+  --radius-sm: 2px;
   --radius-md: 4px;
+  --radius-lg: 7px;
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2b2b2d 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2b2b2d 16%, transparent);
   --shadow-lg: 0 12px 32px color-mix(in srgb, #2b2b2d 22%, transparent);
 }
+
+.elev-sm { box-shadow: var(--shadow-sm); }
+.elev-md { box-shadow: var(--shadow-md); }
+.elev-lg { box-shadow: var(--shadow-lg); }
 
 * { box-sizing: border-box; }
 
@@ -66,6 +104,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; margin: 0; 
   border-bottom: 1px solid var(--color-divider);
 }
 .app-bar h1 { font-size: 19px; flex: 1; }
+.app-bar-logo { height: 40px; width: auto; flex: none; display: block; }
 .icon-btn {
   background: none; border: none; color: var(--color-text);
   font-size: 18px; padding: 6px 8px; cursor: pointer; border-radius: 0; line-height: 1;
@@ -94,14 +133,14 @@ main { flex: 1; overflow-y: auto; padding: var(--space-4) var(--space-4) 96px; m
   z-index: 10;
 }
 .tab {
-  flex: 1; background: none; border: none;
+  flex: 1; background: none; border: none; border-radius: 12px; margin: 0 3px;
   color: color-mix(in srgb, var(--color-text) 55%, transparent);
-  padding: 6px 2px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 2px 7px; display: flex; flex-direction: column; align-items: center; gap: 4px;
   font-family: var(--font-body); font-size: 11px; cursor: pointer;
 }
 .tab svg { display: block; }
-.tab.active { color: var(--color-accent); font-weight: 600; }
-.tab.active svg { stroke: var(--color-accent); }
+.tab.active { background: var(--color-accent); color: var(--color-bg); font-weight: 600; box-shadow: var(--shadow-sm); }
+.tab.active svg { stroke: var(--color-bg); }
 
 h2.secao {
   font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
@@ -113,14 +152,33 @@ h2.secao:first-child { margin-top: 0; }
 h2.titulo { font-size: 22px; margin-bottom: 2px; }
 .subtitulo { font-size: 12px; color: color-mix(in srgb, var(--color-text) 55%, transparent); margin-bottom: var(--space-4); }
 
-/* — stat cards (Início) — */
+/* — stat cards (Início/Dashboard) — */
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-bottom: var(--space-6); }
-.stat-card { padding: var(--space-3); }
+.stat-card { padding: var(--space-3); overflow: hidden; }
 .stat-card-clicavel { cursor: pointer; }
 .stat-card-clicavel:active { opacity: .7; }
-.stat-kicker { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--color-accent); margin-bottom: 6px; }
-.stat-value { font-family: var(--font-heading); font-size: 28px; font-weight: 600; line-height: 1; }
-.stat-sub { font-size: 11px; opacity: .7; margin-top: 2px; }
+.stat-card-topo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.stat-card::before {
+  content: ""; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+  background: var(--color-accent-600);
+}
+.stat-kicker { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--color-accent-700); font-weight: 600; }
+.stat-value { font-family: var(--font-heading); font-size: 36px; font-weight: 600; line-height: 1; color: var(--color-accent-800); }
+.stat-sub { font-size: 11px; opacity: .65; margin-top: 4px; }
+
+.stat-card-accent { background: var(--color-accent-100); }
+.stat-card-neutral::before { background: var(--color-neutral-600); }
+.stat-card-neutral .stat-kicker { color: var(--color-neutral-700); }
+.stat-card-neutral .stat-value { color: var(--color-neutral-900); }
+.stat-card-neutral { background: var(--color-neutral-100); }
+.stat-card-accent-2::before { background: var(--color-accent-2-600); }
+.stat-card-accent-2 .stat-kicker { color: var(--color-accent-2-700); }
+.stat-card-accent-2 .stat-value { color: var(--color-accent-2-800); }
+.stat-card-accent-2 { background: var(--color-accent-2-100); }
+.stat-card-danger::before { background: var(--color-danger); }
+.stat-card-danger .stat-kicker { color: var(--color-danger); }
+.stat-card-danger .stat-value { color: var(--color-danger-700); }
+.stat-card-danger { background: color-mix(in srgb, var(--color-danger) 10%, var(--color-bg)); }
 
 /* — linhas de lista (pedidos) — */
 .linha {
@@ -221,6 +279,32 @@ textarea.input { min-height: 90px; resize: vertical; }
 
 .catalogo-menu { display: flex; flex-direction: column; gap: var(--space-2); }
 .catalogo-menu .linha { flex-direction: row; align-items: center; justify-content: space-between; }
+
+/* — cards de menu (Catálogo: Clientes/Serviços/Peças) — mesmo tratamento
+   visual dos stat-card (tarja colorida + fundo tintado), em layout de linha —*/
+.menu-card {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 15px; cursor: pointer; overflow: hidden;
+}
+.menu-card:active { opacity: .8; }
+.menu-card::before {
+  content: ""; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+  background: var(--color-accent-600);
+}
+.menu-card-esq { display: flex; align-items: center; gap: 12px; }
+.menu-card-icone {
+  width: 32px; height: 32px; border-radius: 50%; flex: none;
+  background: var(--color-bg); display: flex; align-items: center; justify-content: center;
+  color: var(--color-accent-700);
+}
+.menu-card-titulo { font-family: var(--font-heading); font-weight: 600; font-size: 16px; }
+.menu-card-accent { background: var(--color-accent-100); }
+.menu-card-neutral { background: var(--color-neutral-100); }
+.menu-card-neutral::before { background: var(--color-neutral-600); }
+.menu-card-neutral .menu-card-icone { color: var(--color-neutral-700); }
+.menu-card-accent-2 { background: var(--color-accent-2-100); }
+.menu-card-accent-2::before { background: var(--color-accent-2-600); }
+.menu-card-accent-2 .menu-card-icone { color: var(--color-accent-2-700); }
 
 /* — chips: seleção múltipla (ex.: categorias do pedido) — */
 .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
