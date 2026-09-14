@@ -240,12 +240,16 @@ textarea.input { min-height: 90px; resize: vertical; }
 
 /* — seg control (abas do formulário) — */
 .seg { display: flex; border: 1px solid var(--color-divider); }
-.seg button {
+.seg > * {
   flex: 1; border: none; background: none; padding: 8px 6px; font-size: 13px;
   font-family: var(--font-body); color: var(--color-text); cursor: pointer;
+  text-align: center;
 }
-.seg button + button { border-left: 1px solid var(--color-divider); }
-.seg button.active { background: var(--color-accent); color: var(--color-bg); }
+.seg > * + * { border-left: 1px solid var(--color-divider); }
+.seg > *.active { background: var(--color-accent); color: var(--color-bg); }
+/* — indicador de passos (assistente): mesmo visual do .seg, mas não é
+   clicável — a navegação é só via Avançar/Voltar — */
+.seg-passo { cursor: default; }
 
 /* — itens de serviço/peça adicionados — */
 .item-linha {
