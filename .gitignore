@@ -39,3 +39,9 @@ build/
 
 ### Certificado local (autoassinado, gerado por keytool) ###
 backend/src/main/resources/keystore.p12
+
+### Chave de assinatura do APK Android (TWA/Bubblewrap) — NUNCA versionar:
+### e a chave privada que assina o app; perder ela obriga reinstalar em
+### todo mundo pra publicar qualquer atualizacao futura. Guardada so
+### localmente/backup manual, nunca no git. ###
+android-signing/
