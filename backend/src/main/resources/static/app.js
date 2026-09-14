@@ -714,18 +714,10 @@
     conteudo.innerHTML = '';
     conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
 
-    // Mostra em cada aba o que já foi preenchido (✓/contagem), pra dar pra
-    // ver de relance o que falta sem precisar clicar em cada uma. Só liga
-    // depois que os botões das abas existirem (mais abaixo) — as chamadas
-    // que acontecem antes disso (montagem inicial da tela) são no-op.
-    let indicadoresProntos = false;
-    function atualizarIndicadoresAbas() {
-      if (!indicadoresProntos) return;
-      passoLabels.cliente.textContent = 'Cliente' + (clienteSelecionado ? ' ✓' : '');
-      passoLabels.componentes.textContent = 'Componentes' + (linhasComponentes.length ? ' (' + linhasComponentes.length + ')' : '');
-      const totalItens = linhasServicos.length + linhasPecas.length;
-      passoLabels.itens.textContent = 'Itens' + (totalItens ? ' (' + totalItens + ')' : '');
-    }
+    // Sem indicador de abas em cima (a pedido do usuário — só o conteúdo da
+    // etapa atual + Avançar/Voltar). Mantido como no-op pra não precisar
+    // caçar cada ponto que ainda chama isso.
+    function atualizarIndicadoresAbas() {}
 
     await carregarCatalogos();
     let pedido = null;
@@ -1212,18 +1204,12 @@
 
     // — assistente passo a passo: em vez de abas clicáveis (dava pra pular
     // pra qualquer uma), navega só por Avançar/Voltar, uma etapa de cada
-    // vez. O indicador acima continua mostrando onde você está e o que já
-    // foi preenchido (✓/contagem), só não é mais clicável —
+    // vez, sem nenhum indicador clicável em cima —
     const ORDEM_PASSOS = ['cliente', 'pedido', 'componentes', 'itens'];
-    const passoLabels = {};
-    const seg = el('div', { class: 'seg' },
-      ...[['cliente', 'Cliente'], ['pedido', 'Pedido'], ['componentes', 'Componentes'], ['itens', 'Itens']].map(([k, rotulo]) => {
-        const d = el('div', { class: 'seg-passo' }, rotulo);
-        passoLabels[k] = d;
-        return d;
-      })
-    );
 
+    // Um único botão primário: "Avançar" nas 3 primeiras etapas, vira
+    // "Salvar" (e envia o formulário) na última — em vez de duas fileiras
+    // de botões (navegação + salvar/cancelar) disputando atenção.
     const btnVoltarPasso = el('button', {
       type: 'button', class: 'btn btn-secondary',
       onclick: () => {
@@ -1232,30 +1218,38 @@
       }
     }, 'Voltar');
     const btnAvancarPasso = el('button', {
-      type: 'button', class: 'btn btn-primary',
-      onclick: () => {
-        if (abaAtual === 'cliente' && !clienteSelecionado) { toast('Selecione ou cadastre um cliente.', true); return; }
+      type: 'submit', class: 'btn btn-primary',
+      onclick: (ev) => {
         const idx = ORDEM_PASSOS.indexOf(abaAtual);
-        if (idx < ORDEM_PASSOS.length - 1) selecionarAba(ORDEM_PASSOS[idx + 1]);
+        const ultimaEtapa = idx === ORDEM_PASSOS.length - 1;
+        if (ultimaEtapa) return; // deixa o form.onsubmit cuidar de salvar
+        ev.preventDefault();
+        if (abaAtual === 'cliente' && !clienteSelecionado) { toast('Selecione ou cadastre um cliente.', true); return; }
+        selecionarAba(ORDEM_PASSOS[idx + 1]);
       }
     }, 'Avançar');
-    const navegacaoPassos = el('div', { class: 'btn-group' }, btnVoltarPasso, btnAvancarPasso);
+    const btnCancelarPasso = el('button', {
+      type: 'button', class: 'btn btn-ghost',
+      onclick: () => { location.hash = id ? '#/pedidos/' + id : '#/pedidos'; }
+    }, 'Cancelar');
+    const navegacaoPassos = el('div', { style: 'display:flex;flex-direction:column;gap:8px;margin-top:var(--space-4)' },
+      el('div', { class: 'btn-group', style: 'margin:0' }, btnVoltarPasso, btnAvancarPasso),
+      btnCancelarPasso
+    );
 
     function selecionarAba(k) {
       abaAtual = k;
-      Object.keys(passoLabels).forEach(key => passoLabels[key].classList.toggle('active', key === k));
       Object.keys(paineis).forEach(key => { paineis[key].hidden = (key !== k); });
       const idx = ORDEM_PASSOS.indexOf(k);
+      const ultimaEtapa = idx === ORDEM_PASSOS.length - 1;
       btnVoltarPasso.hidden = idx === 0;
-      btnAvancarPasso.hidden = idx === ORDEM_PASSOS.length - 1;
+      btnAvancarPasso.textContent = ultimaEtapa ? 'Salvar' : 'Avançar';
       conteudo.scrollTop = 0;
     }
     selecionarAba('cliente');
-    indicadoresProntos = true;
-    atualizarIndicadoresAbas();
 
     const dicaSalvarMinimo = el('div', { style: 'font-size:12px;opacity:.6;padding:2px 2px 0' },
-      'Só o cliente é obrigatório — dá pra avançar e completar o resto depois, ou salvar a qualquer momento.');
+      'Só o cliente é obrigatório — dá pra completar o resto depois.');
 
     const form = el('form', {
       onsubmit: async (ev) => {
@@ -1288,17 +1282,9 @@
         toast('Pedido salvo.');
         location.hash = '#/pedidos/' + salvo.id;
       }
-    }, seg, dicaSalvarMinimo, painelBox, navegacaoPassos);
+    }, dicaSalvarMinimo, painelBox, navegacaoPassos);
 
     conteudo.appendChild(form);
-
-    conteudo.appendChild(el('div', { class: 'btn-group' },
-      el('button', { type: 'button', class: 'btn btn-primary', onclick: () => form.requestSubmit() }, 'Salvar'),
-      el('button', {
-        type: 'button', class: 'btn btn-secondary',
-        onclick: () => { location.hash = id ? '#/pedidos/' + id : '#/pedidos'; }
-      }, 'Cancelar')
-    ));
   }
 
   function clonarItem(i) {
