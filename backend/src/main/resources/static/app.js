@@ -780,6 +780,46 @@
     }
 
     const msgSemCategoriaComponente = el('div', { class: 'empty', style: 'padding:16px 0' }, 'Marque uma categoria acima pra ver os componentes disponíveis.');
+
+    // — novo componente inline: escondido por padrão, só expande quando o
+    // usuário clica em "Novo componente" (mesmo padrão do "Novo cliente"
+    // na aba Cliente) — evita poluir a tela de cadastro de pedido com um
+    // formulário completo de catálogo o tempo todo —
+    const fldNovoComponenteCategoria = el('select', { class: 'input' });
+    const fldNovoComponenteNome = el('input', { class: 'input', type: 'text', placeholder: 'Nome / Motor' });
+    const fldNovoComponenteMovel = el('input', { class: 'input', type: 'text', placeholder: 'Móvel (ex.: 25,045-27,070)' });
+    const fldNovoComponenteFixo = el('input', { class: 'input', type: 'text', placeholder: 'Fixo (ex.: 29,990-30,015)' });
+    const novoComponenteBox = el('div', { hidden: true, style: 'margin-top:10px;display:flex;flex-direction:column;gap:12px' },
+      campo('Categoria', fldNovoComponenteCategoria),
+      campo('Nome / Motor', fldNovoComponenteNome),
+      el('div', { class: 'row' }, campo('Móvel', fldNovoComponenteMovel), campo('Fixo', fldNovoComponenteFixo)),
+      btnBlueprint('Salvar componente', 'btn-secondary btn-block', {
+        onclick: async () => {
+          if (!fldNovoComponenteNome.value.trim()) { toast('Informe o nome.', true); return; }
+          let novo;
+          try {
+            novo = await api('POST', '/api/cabecotes', {
+              categoria: fldNovoComponenteCategoria.value,
+              nome: fldNovoComponenteNome.value.trim(),
+              movelFaixa: fldNovoComponenteMovel.value.trim() || null,
+              fixoFaixa: fldNovoComponenteFixo.value.trim() || null
+            });
+          } catch (e) { return; }
+          catalogoCache.cabecotes.push(novo);
+          linhasComponentes.push({ id: novo.id, nome: novo.nome });
+          fldNovoComponenteNome.value = ''; fldNovoComponenteMovel.value = ''; fldNovoComponenteFixo.value = '';
+          novoComponenteBox.hidden = true;
+          atualizarOpcoesComponente();
+          redesenharComponentes();
+          toast('Componente cadastrado.');
+        }
+      })
+    );
+    const btnNovoComponente = el('button', {
+      type: 'button', class: 'btn btn-secondary btn-block',
+      onclick: () => { novoComponenteBox.hidden = !novoComponenteBox.hidden; }
+    }, 'Novo componente');
+
     const camposComponenteAtivos = el('div', {},
       el('div', { class: 'field' },
         el('label', null, 'Adicionar componente'),
@@ -795,6 +835,8 @@
           redesenharComponentes();
         }
       }),
+      btnNovoComponente,
+      novoComponenteBox,
       listaComponentesEl
     );
     const campoComponente = el('div', {}, msgSemCategoriaComponente, camposComponenteAtivos);
@@ -802,6 +844,7 @@
     function atualizarOpcoesComponente() {
       const relevantes = CATEGORIAS_COMPONENTE.filter(cat => categoriaValores.has(cat));
       selComponente.innerHTML = '';
+      fldNovoComponenteCategoria.innerHTML = '';
       const temCategoria = relevantes.length > 0;
       msgSemCategoriaComponente.hidden = temCategoria;
       camposComponenteAtivos.hidden = !temCategoria;
@@ -812,6 +855,10 @@
         selComponente.appendChild(el('optgroup', { label: grupo.rotulo },
           ...grupo.itens.map(i => el('option', { value: i.id }, i.nome))
         ));
+      });
+      relevantes.forEach(cat => {
+        const info = catalogoCache.categorias.find(c => c.nome === cat);
+        fldNovoComponenteCategoria.appendChild(el('option', { value: cat }, info ? info.rotulo : cat));
       });
     }
     redesenharComponentes();
