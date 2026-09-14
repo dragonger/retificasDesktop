@@ -10,7 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "PEDIDO")
+@Table(name = "PEDIDO", indexes = {
+        @Index(name = "idx_pedido_empresa", columnList = "empresa_id"),
+        @Index(name = "idx_pedido_empresa_datentrega", columnList = "empresa_id, datentrega"),
+        @Index(name = "idx_pedido_cliente", columnList = "cliente_id")
+})
 public class PedidoModel {
 
     @Id

@@ -8,7 +8,9 @@ import java.math.BigDecimal;
  * organizadas por componente do motor ({@link CategoriaProduto}).
  */
 @Entity
-@Table(name = "PECA_CATALOGO")
+@Table(name = "PECA_CATALOGO", indexes = {
+        @Index(name = "idx_peca_catalogo_empresa", columnList = "empresa_id")
+})
 public class PecaCatalogoModel {
 
     @Id
