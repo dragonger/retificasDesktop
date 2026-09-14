@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.retificadih.retifica",
+      "sha256_cert_fingerprints": [
+        "C6:B0:7C:4A:EA:85:AA:45:EB:4D:BF:78:61:C3:C4:0E:0B:CF:07:D2:3B:11:AB:70:29:68:F6:96:D7:4C:56:45"
+      ]
+    }
+  }
+]
