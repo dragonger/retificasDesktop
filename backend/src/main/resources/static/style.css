@@ -1,6 +1,8 @@
 /* Tema "blueprint" (desenho técnico) — baseado no design compartilhado
-   (claude.ai/design, projeto "Protótipo app mobile pedidos"). */
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;700&family=Barlow+Condensed:wght@400;600&display=swap');
+   (claude.ai/design, projeto "Protótipo app mobile pedidos").
+   A fonte (Barlow) é carregada via <link> no index.html, não @import aqui
+   — @import bloquearia um round-trip serial extra (só é descoberto depois
+   que este arquivo inteiro já baixou e foi parseado). */
 
 :root {
   --color-bg: #f2f2f3;

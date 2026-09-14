@@ -10,7 +10,9 @@ import java.math.BigDecimal;
  * especificadas como tolerância (ex.: 29,990–30,015 mm).
  */
 @Entity
-@Table(name = "CABECOTE")
+@Table(name = "CABECOTE", indexes = {
+        @Index(name = "idx_cabecote_empresa", columnList = "empresa_id")
+})
 public class CabecoteModel {
 
     @Id

@@ -33,8 +33,11 @@
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <!-- Cria/atualiza o schema automaticamente a partir das entidades -->
             <property name="hibernate.hbm2ddl.auto" value="update"/>
-            <property name="hibernate.show_sql" value="true"/>
-            <property name="hibernate.format_sql" value="true"/>
+            <!-- show_sql/format_sql desligados: cada SQL logado formatado (multi-linha)
+                 tem custo real de I/O a cada requisição, inclusive em produção (Railway).
+                 Reative manualmente aqui pra depurar queries localmente. -->
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="false"/>
 
             <!-- HikariCP em vez do pool interno do Hibernate: o Neon (Postgres gerenciado
                  de produção) suspende o compute quando fica ocioso e derruba as conexões
