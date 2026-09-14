@@ -721,10 +721,10 @@
     let indicadoresProntos = false;
     function atualizarIndicadoresAbas() {
       if (!indicadoresProntos) return;
-      segButtons.cliente.textContent = 'Cliente' + (clienteSelecionado ? ' ✓' : '');
-      segButtons.componentes.textContent = 'Componentes' + (linhasComponentes.length ? ' (' + linhasComponentes.length + ')' : '');
+      passoLabels.cliente.textContent = 'Cliente' + (clienteSelecionado ? ' ✓' : '');
+      passoLabels.componentes.textContent = 'Componentes' + (linhasComponentes.length ? ' (' + linhasComponentes.length + ')' : '');
       const totalItens = linhasServicos.length + linhasPecas.length;
-      segButtons.itens.textContent = 'Itens' + (totalItens ? ' (' + totalItens + ')' : '');
+      passoLabels.itens.textContent = 'Itens' + (totalItens ? ' (' + totalItens + ')' : '');
     }
 
     await carregarCatalogos();
@@ -1186,9 +1186,10 @@
     }
     selecionarTipoItem('servico');
 
-    // — segmented control de abas —
+    // — pedido novo sempre começa "Aberto" — não faz sentido perguntar isso
+    // na criação; ao editar, o campo aparece normalmente pra poder mudar —
     const painelPedido = el('div', { style: 'display:flex;flex-direction:column;gap:14px' },
-      campo('Situação', fldStatus),
+      id ? campo('Situação', fldStatus) : null,
       campo('Descrição', fldDescricao),
       campo('Entrega estimada', fldEntrega), campo('Observação', fldObservacao));
     const painelCliente = el('div', { style: 'display:flex;flex-direction:column;gap:0' },
@@ -1209,27 +1210,52 @@
     Object.keys(paineis).forEach(k => { paineis[k].hidden = (k !== 'cliente'); });
     const painelBox = el('div', { style: 'padding-top:16px' }, painelCliente, painelPedido, painelComponentes, painelItens);
 
-    const segButtons = {};
+    // — assistente passo a passo: em vez de abas clicáveis (dava pra pular
+    // pra qualquer uma), navega só por Avançar/Voltar, uma etapa de cada
+    // vez. O indicador acima continua mostrando onde você está e o que já
+    // foi preenchido (✓/contagem), só não é mais clicável —
+    const ORDEM_PASSOS = ['cliente', 'pedido', 'componentes', 'itens'];
+    const passoLabels = {};
     const seg = el('div', { class: 'seg' },
       ...[['cliente', 'Cliente'], ['pedido', 'Pedido'], ['componentes', 'Componentes'], ['itens', 'Itens']].map(([k, rotulo]) => {
-        const b = el('button', {
-          type: 'button', onclick: () => selecionarAba(k)
-        }, rotulo);
-        segButtons[k] = b;
-        return b;
+        const d = el('div', { class: 'seg-passo' }, rotulo);
+        passoLabels[k] = d;
+        return d;
       })
     );
+
+    const btnVoltarPasso = el('button', {
+      type: 'button', class: 'btn btn-secondary',
+      onclick: () => {
+        const idx = ORDEM_PASSOS.indexOf(abaAtual);
+        if (idx > 0) selecionarAba(ORDEM_PASSOS[idx - 1]);
+      }
+    }, 'Voltar');
+    const btnAvancarPasso = el('button', {
+      type: 'button', class: 'btn btn-primary',
+      onclick: () => {
+        if (abaAtual === 'cliente' && !clienteSelecionado) { toast('Selecione ou cadastre um cliente.', true); return; }
+        const idx = ORDEM_PASSOS.indexOf(abaAtual);
+        if (idx < ORDEM_PASSOS.length - 1) selecionarAba(ORDEM_PASSOS[idx + 1]);
+      }
+    }, 'Avançar');
+    const navegacaoPassos = el('div', { class: 'btn-group' }, btnVoltarPasso, btnAvancarPasso);
+
     function selecionarAba(k) {
       abaAtual = k;
-      Object.keys(segButtons).forEach(key => segButtons[key].classList.toggle('active', key === k));
+      Object.keys(passoLabels).forEach(key => passoLabels[key].classList.toggle('active', key === k));
       Object.keys(paineis).forEach(key => { paineis[key].hidden = (key !== k); });
+      const idx = ORDEM_PASSOS.indexOf(k);
+      btnVoltarPasso.hidden = idx === 0;
+      btnAvancarPasso.hidden = idx === ORDEM_PASSOS.length - 1;
+      conteudo.scrollTop = 0;
     }
     selecionarAba('cliente');
     indicadoresProntos = true;
     atualizarIndicadoresAbas();
 
     const dicaSalvarMinimo = el('div', { style: 'font-size:12px;opacity:.6;padding:2px 2px 0' },
-      'Só o cliente é obrigatório — dá pra completar o resto depois.');
+      'Só o cliente é obrigatório — dá pra avançar e completar o resto depois, ou salvar a qualquer momento.');
 
     const form = el('form', {
       onsubmit: async (ev) => {
@@ -1262,7 +1288,7 @@
         toast('Pedido salvo.');
         location.hash = '#/pedidos/' + salvo.id;
       }
-    }, seg, dicaSalvarMinimo, painelBox);
+    }, seg, dicaSalvarMinimo, painelBox, navegacaoPassos);
 
     conteudo.appendChild(form);
 
