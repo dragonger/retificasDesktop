@@ -49,8 +49,11 @@
                  já mortas. -->
             <property name="hibernate.connection.provider_class"
                       value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider"/>
+            <!-- maximumPoolSize baixo de propósito: cada conexão do pool consome memória
+                 (client + o que o Postgres reserva do outro lado) e essa app é de uma
+                 oficina só, sem tráfego concorrente que justifique 10. -->
             <property name="hibernate.hikari.minimumIdle" value="1"/>
-            <property name="hibernate.hikari.maximumPoolSize" value="10"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="5"/>
             <property name="hibernate.hikari.idleTimeout" value="180000"/>
             <property name="hibernate.hikari.maxLifetime" value="240000"/>
         </properties>
