@@ -1,0 +1,54 @@
+Proxy "acorda sob demanda" (retifica-wake-proxy)
+====================================================
+
+O que é: um serviço leve (Node, sem dependências externas) sempre ligado
+no Railway, que hoje é quem responde pelo domínio público de verdade
+(retifica-backend-production.up.railway.app — o mesmo já gravado no APK
+Android). Ele:
+
+- Dentro do horário normal de funcionamento (mesmo horário do
+  railway-cron/: seg-sex 6h-20h, sábado 6h-14h) — só repassa a
+  requisição direto pro backend, sem nenhuma lógica extra.
+- Fora do horário normal: se alguém acessa e o backend está parado,
+  liga ele na hora (API do Railway) e segura a resposta até ficar
+  pronto (~8-10s na prática).
+- Se passar 30 minutos sem nenhum acesso (ainda fora do horário
+  normal), desliga o backend de novo sozinho.
+
+O railway-cron/ continua existindo e funcionando do mesmo jeito (liga às
+6h, desliga às 20h/14h) — esse proxy só cobre o que pode acontecer FORA
+desse horário, sem depender de ninguém acessar.
+
+Arquitetura (domínios):
+- retifica-backend-production.up.railway.app → aponta pro
+  retifica-wake-proxy (é ele quem responde primeiro).
+- retifica-backend-app.up.railway.app → aponta direto pro backend Spring
+  de verdade (retifica-backend), sem passar pelo proxy. Serve pra
+  debugar direto sem a camada de wake no meio.
+
+Variáveis de ambiente (service retifica-wake-proxy no Railway):
+- RAILWAY_ACCOUNT_TOKEN — referência pro token do "Railway Service Cron"
+  (${{Railway Service Cron.RAILWAY_ACCOUNT_TOKEN}}), nunca duplicado em
+  texto puro.
+- RAILWAY_PROJECT_ID, RAILWAY_ENVIRONMENT_ID, BACKEND_SERVICE_ID — ids
+  fixos do projeto/ambiente/serviço do backend.
+- BACKEND_HOST=retifica-backend-app.up.railway.app, BACKEND_PORT=443,
+  BACKEND_TLS=true — fala com o backend pelo domínio público dele (não
+  pela rede privada do Railway: por algum motivo não identificado essa
+  instância específica do retifica-backend não aceitava conexão pela
+  rede privada, mesmo com "private networking" mostrando "ready" — o
+  self-test do proxy pra ele mesmo via rede privada funcionou normal,
+  então não é um problema geral do projeto/conta, é algo específico
+  desse serviço. Se um dia quiser investigar e trocar pra rede privada
+  (mais eficiente, sem esse hop extra por HTTPS), o candidato óbvio é
+  begin: conferir se o Spring realmente está bindando na interface que a
+  rede privada do Railway usa.
+- IDLE_TIMEOUT_MINUTES (default 30), WAKE_TIMEOUT_SECONDS (default 45) —
+  ajustáveis se quiser mudar o tempo de espera.
+- FORCE_CLOSED=true/false — só pra teste manual (força o proxy a agir
+  como se estivesse fora do horário, ou sempre dentro). NUNCA deixar
+  setado em uso normal — remove a variável depois de testar.
+
+Pra atualizar o código: editar server.js e rodar (a partir da raiz do
+repo):
+  railway up ./railway-wake-proxy --path-as-root --service retifica-wake-proxy --ci
