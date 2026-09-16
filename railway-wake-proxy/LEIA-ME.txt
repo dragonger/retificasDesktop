@@ -32,17 +32,16 @@ Variáveis de ambiente (service retifica-wake-proxy no Railway):
   texto puro.
 - RAILWAY_PROJECT_ID, RAILWAY_ENVIRONMENT_ID, BACKEND_SERVICE_ID — ids
   fixos do projeto/ambiente/serviço do backend.
-- BACKEND_HOST=retifica-backend-app.up.railway.app, BACKEND_PORT=443,
-  BACKEND_TLS=true — fala com o backend pelo domínio público dele (não
-  pela rede privada do Railway: por algum motivo não identificado essa
-  instância específica do retifica-backend não aceitava conexão pela
-  rede privada, mesmo com "private networking" mostrando "ready" — o
-  self-test do proxy pra ele mesmo via rede privada funcionou normal,
-  então não é um problema geral do projeto/conta, é algo específico
-  desse serviço. Se um dia quiser investigar e trocar pra rede privada
-  (mais eficiente, sem esse hop extra por HTTPS), o candidato óbvio é
-  begin: conferir se o Spring realmente está bindando na interface que a
-  rede privada do Railway usa.
+- BACKEND_HOST=retifica-backend.railway.internal, BACKEND_PORT=8080,
+  BACKEND_TLS=false — fala com o backend pela rede privada do Railway
+  (sem sair pro domínio público, sem contar como egress). A porta é
+  8080, NÃO 8443: o Railway injeta sozinho uma variável PORT=8080 em
+  todo serviço (nem aparece em `railway variable list` por ser
+  reservada), e o Spring usa ela (`server.port=${PORT:8443}`) — 8443 só
+  vale quando não tem PORT nenhuma, o que nunca é o caso em produção no
+  Railway. (Zerei bastante tempo tentando debugar "rede privada não
+  funciona" quando na verdade era só a porta errada — a rede privada
+  sempre funcionou normal.)
 - IDLE_TIMEOUT_MINUTES (default 30), WAKE_TIMEOUT_SECONDS (default 45) —
   ajustáveis se quiser mudar o tempo de espera.
 - FORCE_CLOSED=true/false — só pra teste manual (força o proxy a agir
