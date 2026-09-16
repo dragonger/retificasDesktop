@@ -16,14 +16,13 @@ const RAILWAY_ACCOUNT_TOKEN = process.env.RAILWAY_ACCOUNT_TOKEN;
 const RAILWAY_PROJECT_ID = process.env.RAILWAY_PROJECT_ID;
 const RAILWAY_ENVIRONMENT_ID = process.env.RAILWAY_ENVIRONMENT_ID;
 const BACKEND_SERVICE_ID = process.env.BACKEND_SERVICE_ID;
-// BACKEND_HOST/PORT default pra rede privada do Railway; na pratica essa
-// instancia especifica do retifica-backend nao aceitou conexao pela rede
-// privada (motivo nao identificado - self-test da proxy pra ela mesma via
-// rede privada funcionou normalmente, entao nao e um problema geral do
-// projeto). Por enquanto fala com o backend pelo dominio publico dele
-// (BACKEND_TLS=true, porta 443) ate isso ser investigado com mais calma.
+// BACKEND_HOST/PORT: rede privada do Railway (nao conta como egress).
+// Porta 8080, nao 8443 - o Railway injeta uma variavel PORT=8080 propria
+// em todo servico (nem aparece em `railway variable list`, e reservada),
+// e o Spring usa ela (server.port=${PORT:8443}) - 8443 so vale quando
+// nao tem PORT nenhuma, o que nunca acontece em producao no Railway.
 const BACKEND_HOST = process.env.BACKEND_HOST || 'retifica-backend.railway.internal';
-const BACKEND_PORT = Number(process.env.BACKEND_PORT || 8443);
+const BACKEND_PORT = Number(process.env.BACKEND_PORT || 8080);
 const BACKEND_TLS = process.env.BACKEND_TLS === 'true';
 const upstreamModule = BACKEND_TLS ? https : http;
 const IDLE_TIMEOUT_MS = Number(process.env.IDLE_TIMEOUT_MINUTES || 30) * 60 * 1000;
