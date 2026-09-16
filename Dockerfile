@@ -15,4 +15,11 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/backend/target/retificas-backend.jar app.jar
 EXPOSE 8443
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Flags de memoria: sem elas a JVM usa heap ate 25% do limite do container
+# (bem mais do que a app realmente usa) e G1GC, que reserva mais memoria
+# de "contabilidade" interna do que vale a pena pra uma app desse porte
+# (uso real girava em torno de 300-400MB, com picos ocasionais). Xmx da um
+# teto explicito, SerialGC e mais enxuto pra heaps pequenos/trafego baixo,
+# e TieredStopAtLevel=1 poupa memoria do JIT (troca por menos pico de
+# performance, irrelevante nessa escala).
+ENTRYPOINT ["java", "-Xmx512m", "-XX:MaxMetaspaceSize=160m", "-XX:+UseSerialGC", "-XX:TieredStopAtLevel=1", "-jar", "app.jar"]
