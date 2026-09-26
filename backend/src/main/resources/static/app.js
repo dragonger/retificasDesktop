@@ -274,30 +274,49 @@
   }
 
   // Compartilha o PDF já pré-carregado pelo menu nativo do celular (WhatsApp,
-  // e-mail, etc.); sem suporte, abre o PDF numa aba. `foto`, se informada, vai
-  // junto como um segundo arquivo — não é salva em lugar nenhum, só passa
-  // direto pelo compartilhamento (o cliente recebe, o servidor nunca guarda).
-  async function compartilharOrcamento(pdfPromise, nomeArquivo, novaAba, foto) {
+  // e-mail, etc.); sem suporte, abre o PDF numa aba. Só o PDF, nunca junto
+  // com a foto: PDF + JPG no mesmo share() vira um envio múltiplo de tipos
+  // mistos, e o WhatsApp no Android descarta tudo e abre a conversa vazia.
+  // A foto vai num segundo compartilhamento (ver compartilharFoto).
+  // Retorna 'compartilhado' | 'cancelado' | 'fallback' | 'erro'.
+  async function compartilharOrcamento(pdfPromise, nomeArquivo, novaAba) {
     if (compartilhamentoEmAndamento) {
       if (novaAba) novaAba.close();
-      return; // já tem um compartilhamento em andamento (ex.: duplo toque) — ignora
+      return 'cancelado'; // já tem um compartilhamento em andamento (ex.: duplo toque) — ignora
     }
     compartilhamentoEmAndamento = true;
     try {
-      await compartilharOrcamentoInterno(pdfPromise, nomeArquivo, novaAba, foto);
+      return await compartilharOrcamentoInterno(pdfPromise, nomeArquivo, novaAba);
     } finally {
       compartilhamentoEmAndamento = false;
     }
   }
 
-  async function compartilharOrcamentoInterno(pdfPromise, nomeArquivo, novaAba, foto) {
+  // A foto nunca é enviada pro servidor nem salva: passa direto do celular
+  // pro app escolhido. Chamada direto no toque (sem await antes), senão o
+  // navegador recusa por falta de gesto do usuário.
+  async function compartilharFoto(foto) {
+    if (compartilhamentoEmAndamento) return false;
+    compartilhamentoEmAndamento = true;
+    try {
+      await navigator.share({ files: [foto] });
+      return true;
+    } catch (e) {
+      if (!(e && e.name === 'AbortError')) toast('Não foi possível compartilhar a foto (' + (e && e.name) + ').', true);
+      return false;
+    } finally {
+      compartilhamentoEmAndamento = false;
+    }
+  }
+
+  async function compartilharOrcamentoInterno(pdfPromise, nomeArquivo, novaAba) {
     let blob;
     try {
       blob = await pdfPromise;
     } catch (e) {
       if (novaAba) novaAba.close();
       toast('Não foi possível gerar o orçamento.', true);
-      return;
+      return 'erro';
     }
 
     let motivoFallback = null;
@@ -306,12 +325,8 @@
     } else if (!navigator.canShare) {
       motivoFallback = 'Este navegador não sabe verificar se pode compartilhar arquivos.';
     } else {
-      const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
-      let arquivos = foto ? [file, foto] : [file];
+      const arquivos = [new File([blob], nomeArquivo, { type: 'application/pdf' })];
       try {
-        if (foto && !navigator.canShare({ files: arquivos })) {
-          arquivos = [file]; // aparelho não suporta compartilhar vários arquivos — manda só o PDF
-        }
         if (navigator.canShare({ files: arquivos })) {
           if (novaAba) novaAba.close();
           const inicioShare = Date.now();
@@ -321,7 +336,7 @@
             // arquivo quando os dois vêm juntos no share() — só o arquivo
             // evita esse problema. O nome do arquivo já diz o que é.
             await navigator.share({ files: arquivos });
-            return;
+            return 'compartilhado';
           } catch (e) {
             const duracaoMs = Date.now() - inicioShare;
             // AbortError pode ser o usuário cancelando o menu de verdade
@@ -329,7 +344,7 @@
             // o compartilhamento antes de sequer mostrar o menu (instantâneo
             // - sinal de problema de "gesto"/timing, não de escolha do
             // usuário). Só trata como cancelamento de verdade se demorou.
-            if (e && e.name === 'AbortError' && duracaoMs > 400) return;
+            if (e && e.name === 'AbortError' && duracaoMs > 400) return 'cancelado';
             motivoFallback = (e && e.name === 'AbortError')
               ? 'O navegador recusou compartilhar antes de abrir o menu (' + duracaoMs + 'ms).'
               : 'Falha ao abrir o menu de compartilhar (' + (e && e.name) + ').';
@@ -348,6 +363,7 @@
     const url = URL.createObjectURL(blob);
     if (novaAba) novaAba.location.href = url;
     else window.open(url, '_blank');
+    return 'fallback';
   }
 
   function moeda(v) {
@@ -694,6 +710,9 @@
     // — foto do componente pra ir junto no orçamento: nunca é enviada pro
     // servidor nem salva em lugar nenhum, só passa direto no compartilhamento —
     let fotoSelecionada = null;
+    // true depois que o PDF foi compartilhado: aí aparece o botão da foto
+    // (vai num segundo compartilhamento — ver compartilharOrcamento).
+    let pdfJaEnviado = false;
     const fotoInput = el('input', {
       type: 'file', accept: 'image/*', capture: 'environment', hidden: true,
       onchange: (ev) => { fotoSelecionada = (ev.target.files && ev.target.files[0]) || null; atualizarFotoUI(); }
@@ -708,6 +727,18 @@
           el('span', null, '📷 ' + fotoSelecionada.name),
           el('button', { onclick: () => { fotoSelecionada = null; fotoInput.value = ''; atualizarFotoUI(); } }, '✕')
         ));
+        if (pdfJaEnviado) {
+          const foto = fotoSelecionada;
+          fotoPreview.appendChild(btnBlueprint('Enviar a foto também', 'btn-primary btn-block', {
+            style: 'margin-top:8px',
+            onclick: async () => {
+              if (await compartilharFoto(foto)) toast('Foto compartilhada.');
+            }
+          }));
+        } else {
+          fotoPreview.appendChild(el('div', { style: 'font-size:12px;opacity:.6;padding-top:6px' },
+            'A foto vai depois do orçamento, num segundo envio (o WhatsApp não aceita PDF e foto juntos).'));
+        }
       }
     }
     conteudo.appendChild(el('div', { style: 'margin-top:16px' }, fotoInput, btnFoto, fotoPreview));
@@ -752,7 +783,14 @@
             // ser tentado.
             const vaiTentarCompartilhar = temSuporteACompartilharArquivo();
             const novaAba = vaiTentarCompartilhar ? null : window.open('', '_blank');
-            compartilharOrcamento(pdfPromise || prepararOrcamento(id), 'orcamento-' + id + '.pdf', novaAba, fotoSelecionada);
+            compartilharOrcamento(pdfPromise || prepararOrcamento(id), 'orcamento-' + id + '.pdf', novaAba).then((r) => {
+              if (r === 'compartilhado' && fotoSelecionada) {
+                pdfJaEnviado = true;
+                atualizarFotoUI();
+                fotoPreview.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                toast('Orçamento enviado. Toque em "Enviar a foto também".');
+              }
+            });
           }
         }),
         p.finalizado ? null : btnBlueprint('Finalizar', 'btn-secondary', {
