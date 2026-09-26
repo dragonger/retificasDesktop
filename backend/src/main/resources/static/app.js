@@ -783,7 +783,7 @@
     if (!p.componentes || !p.componentes.length) return [];
     const porCategoria = new Map();
     p.componentes.forEach(c => {
-      const rotulo = c.categoriaRotulo || 'Componente';
+      const rotulo = c.categoriaRotulo || 'Modelo';
       if (!porCategoria.has(rotulo)) porCategoria.set(rotulo, []);
       porCategoria.get(rotulo).push(c.nome);
     });
@@ -893,7 +893,7 @@
       atualizarIndicadoresAbas();
       listaComponentesEl.innerHTML = '';
       if (!linhasComponentes.length) {
-        listaComponentesEl.appendChild(el('div', { style: 'text-align:center;font-size:13px;opacity:.55;padding:10px 0' }, 'Nenhum componente adicionado ainda'));
+        listaComponentesEl.appendChild(el('div', { style: 'text-align:center;font-size:13px;opacity:.55;padding:10px 0' }, 'Nenhum modelo adicionado ainda'));
         return;
       }
       linhasComponentes.forEach((item, idx) => {
@@ -904,7 +904,7 @@
       });
     }
 
-    const msgSemCategoriaComponente = el('div', { class: 'empty', style: 'padding:16px 0' }, 'Marque uma categoria acima pra ver os componentes disponíveis.');
+    const msgSemCategoriaComponente = el('div', { class: 'empty', style: 'padding:16px 0' }, 'Marque uma categoria acima pra ver os modelos disponíveis.');
 
     // — novo componente inline: escondido por padrão, só expande quando o
     // usuário clica em "Novo componente" (mesmo padrão do "Novo cliente"
@@ -918,7 +918,7 @@
       campo('Categoria', fldNovoComponenteCategoria),
       campo('Nome / Motor', fldNovoComponenteNome),
       el('div', { class: 'row' }, campo('Móvel', fldNovoComponenteMovel), campo('Fixo', fldNovoComponenteFixo)),
-      btnBlueprint('Salvar componente', 'btn-secondary btn-block', {
+      btnBlueprint('Salvar modelo', 'btn-secondary btn-block', {
         onclick: async (ev) => {
           if (!fldNovoComponenteNome.value.trim()) { toast('Informe o nome.', true); return; }
           const novo = await comBotaoOcupado(ev.currentTarget, 'Salvando…', () => api('POST', '/api/cabecotes', {
@@ -935,25 +935,25 @@
           novoComponenteBox.hidden = true;
           atualizarOpcoesComponente();
           redesenharComponentes();
-          toast('Componente cadastrado.');
+          toast('Modelo cadastrado.');
         }
       })
     );
     const btnNovoComponente = el('button', {
       type: 'button', class: 'btn btn-secondary btn-block',
       onclick: () => { novoComponenteBox.hidden = !novoComponenteBox.hidden; }
-    }, 'Novo componente');
+    }, 'Novo modelo');
 
     const camposComponenteAtivos = el('div', {},
       el('div', { class: 'field' },
-        el('label', null, 'Adicionar componente'),
+        el('label', null, 'Adicionar modelo'),
         el('div', { style: 'display:flex;gap:8px' }, selComponente)
       ),
-      btnBlueprint('Adicionar componente', 'btn-secondary btn-block', {
+      btnBlueprint('Adicionar modelo', 'btn-secondary btn-block', {
         onclick: () => {
           const item = catalogoCache.cabecotes.find(c => String(c.id) === selComponente.value);
-          if (!item) { toast('Selecione um componente.', true); return; }
-          if (linhasComponentes.some(c => c.id === item.id)) { toast('Esse componente já foi adicionado.', true); return; }
+          if (!item) { toast('Selecione um modelo.', true); return; }
+          if (linhasComponentes.some(c => c.id === item.id)) { toast('Esse modelo já foi adicionado.', true); return; }
           linhasComponentes.push({ id: item.id, nome: item.nome });
           selComponente.value = '';
           redesenharComponentes();
@@ -1176,7 +1176,7 @@
     // Seleção em lote: como itens não carregam mais preço, marca-se vários de
     // uma vez (em vez de adicionar um-a-um com campo de preço).
     // cadastroInline (opcional): { rotulo, singular, endpoint } — mostra um
-    // "Novo …" escondido (mesmo padrão do "Novo componente") que cadastra no
+    // "Novo …" escondido (mesmo padrão do "Novo modelo") que cadastra no
     // catálogo e já adiciona o item ao pedido.
     function criarPickerBatch(catalogo, lista, redesenhar, comQuantidade, cadastroInline) {
       const corpo = el('div', { style: 'display:flex;flex-direction:column;gap:14px' });
@@ -1239,8 +1239,13 @@
       const elemento = el('div', { style: 'display:flex;flex-direction:column;gap:12px' }, corpo, btnAdicionar);
 
       if (cadastroInline) {
+        const { singular, feminino } = cadastroInline;
+        const Singular = singular.charAt(0).toUpperCase() + singular.slice(1);
         const fldCategoria = el('select', { class: 'input' });
-        const fldNome = el('input', { class: 'input', type: 'text', placeholder: 'Nome do ' + cadastroInline.singular });
+        const fldNome = el('input', { class: 'input', type: 'text', placeholder: (feminino ? 'Nome da ' : 'Nome do ') + singular });
+        // Itens da lista do pedido não têm quantidade editável depois, então
+        // o cadastro rápido já pergunta.
+        const fldQtd = comQuantidade ? el('input', { class: 'input', type: 'number', min: '1', step: '1', value: '1' }) : null;
         // Categorias marcadas no pedido primeiro (é onde o item novo vai
         // aparecer no filtro); sem nenhuma marcada, oferece todas.
         function preencherCategorias() {
@@ -1252,12 +1257,13 @@
         const boxNovo = el('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:12px' },
           campo('Categoria', fldCategoria),
           campo('Nome', fldNome),
-          btnBlueprint('Salvar ' + cadastroInline.singular, 'btn-secondary btn-block', {
+          fldQtd ? campo('Quantidade', fldQtd) : null,
+          btnBlueprint('Salvar ' + singular, 'btn-secondary btn-block', {
             onclick: async (ev) => {
               const nome = fldNome.value.trim();
               if (!nome) { toast('Informe o nome.', true); return; }
               if (lista.some(i => i.descricao.toLowerCase() === nome.toLowerCase())) {
-                toast('Esse ' + cadastroInline.singular + ' já está no pedido.', true); return;
+                toast((feminino ? 'Essa ' : 'Esse ') + singular + ' já está no pedido.', true); return;
               }
               // Já existe no catálogo com esse nome: só adiciona, sem duplicar.
               let item = catalogo.find(c => c.nome.toLowerCase() === nome.toLowerCase());
@@ -1270,14 +1276,14 @@
                 cacheInvalidar(cadastroInline.endpoint);
               }
               const entrada = { descricao: item.nome };
-              if (comQuantidade) entrada.quantidade = 1;
+              if (fldQtd) entrada.quantidade = Math.max(1, parseInt(fldQtd.value || '1', 10) || 1);
               lista.push(entrada);
               fldNome.value = '';
+              if (fldQtd) fldQtd.value = '1';
               boxNovo.hidden = true;
               construir();
               redesenhar();
-              const singular = cadastroInline.singular;
-              toast(singular.charAt(0).toUpperCase() + singular.slice(1) + ' adicionado: ' + item.nome);
+              toast(Singular + (feminino ? ' adicionada: ' : ' adicionado: ') + item.nome);
             }
           })
         );
@@ -1297,7 +1303,8 @@
 
     const pickerServico = criarPickerBatch(catalogoCache.servicos, linhasServicos, redesenharServicos, false,
       { rotulo: 'Novo serviço', singular: 'serviço', endpoint: '/api/servicos-catalogo' });
-    const pickerPeca = criarPickerBatch(catalogoCache.pecas, linhasPecas, redesenharPecas, true);
+    const pickerPeca = criarPickerBatch(catalogoCache.pecas, linhasPecas, redesenharPecas, true,
+      { rotulo: 'Nova peça', singular: 'peça', feminino: true, endpoint: '/api/pecas-catalogo' });
     const atualizarOpcoesServico = pickerServico.atualizarOpcoes;
     const atualizarOpcoesPeca = pickerPeca.atualizarOpcoes;
 

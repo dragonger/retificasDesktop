@@ -275,7 +275,7 @@ public class PedidoPdfService {
         });
 
         PdfPTable pedidoCard = cartaoInfo("Pedido", new String[][]{
-                {"Componentes", componentesTexto(pedido)},
+                {"Modelos", componentesTexto(pedido)},
                 {"Categorias", categoriasTexto(pedido)},
                 {"Descrição", valor(pedido.getPedido())},
         });
