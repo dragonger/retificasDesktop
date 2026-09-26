@@ -3,7 +3,9 @@ package org.example.backend.web;
 import org.example.backend.dto.*;
 import org.example.backend.security.SecurityUtils;
 import org.example.model.*;
+import org.example.repository.PecaCatalogoRepository;
 import org.example.repository.PedidoRepository;
+import org.example.repository.ServicoCatalogoRepository;
 import org.example.service.PedidoPdfService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +38,8 @@ public class PedidoController {
 
     private final PedidoRepository pedidoRepository = new PedidoRepository();
     private final PedidoPdfService pdfService = new PedidoPdfService();
+    private final ServicoCatalogoRepository servicoCatalogoRepository = new ServicoCatalogoRepository();
+    private final PecaCatalogoRepository pecaCatalogoRepository = new PecaCatalogoRepository();
 
     @GetMapping
     public List<PedidoResumoDTO> listar(@RequestParam(name = "abertos", defaultValue = "false") boolean abertos) {
@@ -184,12 +189,30 @@ public class PedidoController {
 
     @GetMapping("/{id}/pdf")
     public ResponseEntity<byte[]> pdf(@PathVariable Long id) {
-        PedidoModel pedido = pedidoRepository.buscarParaPdf(id, SecurityUtils.empresaAtual());
+        Long empresaId = SecurityUtils.empresaAtual();
+        // O orçamento agrupa serviços/peças por componente usando a categoria
+        // do item de mesmo nome no catálogo. As duas consultas do catálogo
+        // correm em paralelo com a do pedido (cada ida ao banco custa caro
+        // em produção — app e banco em regiões diferentes).
+        CompletableFuture<Map<String, CategoriaProduto>> categorias = CompletableFuture.supplyAsync(() -> {
+            Map<String, CategoriaProduto> mapa = new HashMap<>();
+            for (PecaCatalogoModel p : pecaCatalogoRepository.listarTodos(empresaId)) {
+                mapa.putIfAbsent(PedidoPdfService.chaveItem(p.getNome()), p.getCategoria());
+            }
+            return mapa;
+        }).thenCombine(CompletableFuture.supplyAsync(() -> servicoCatalogoRepository.listarTodos(empresaId)), (mapa, servicos) -> {
+            // serviço com o mesmo nome de uma peça: vale a categoria do serviço
+            for (ServicoCatalogoModel s : servicos) {
+                mapa.put(PedidoPdfService.chaveItem(s.getNome()), s.getCategoria());
+            }
+            return mapa;
+        });
+        PedidoModel pedido = pedidoRepository.buscarParaPdf(id, empresaId);
         if (pedido == null) {
             return ResponseEntity.notFound().build();
         }
         ByteArrayOutputStream saida = new ByteArrayOutputStream();
-        pdfService.gerar(pedido, saida);
+        pdfService.gerar(pedido, categorias.join(), saida);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
