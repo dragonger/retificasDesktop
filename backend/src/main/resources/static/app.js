@@ -129,6 +129,11 @@
     });
   }
 
+  // Comparação de nomes de itens (serviço/peça) sem diferenciar maiúsculas/espaços.
+  function chaveNome(nome) {
+    return (nome || '').trim().toLowerCase();
+  }
+
   function cadastrados(n) {
     return n + (n === 1 ? ' cadastrado' : ' cadastrados');
   }
@@ -1334,8 +1339,8 @@
         corpo.innerHTML = '';
         checkboxes.clear();
         qtdInputs.clear();
-        const jaAdicionados = new Set(lista.map(i => i.descricao));
-        const filtrado = catalogoFiltrado(catalogo).filter(item => !jaAdicionados.has(item.nome));
+        const jaAdicionados = new Set(lista.map(i => chaveNome(i.descricao)));
+        const filtrado = catalogoFiltrado(catalogo).filter(item => !jaAdicionados.has(chaveNome(item.nome)));
         if (!filtrado.length) {
           corpo.appendChild(el('div', { class: 'empty', style: 'padding:12px 0' }, 'Nenhum item disponível pra adicionar.'));
           return;
@@ -1365,17 +1370,22 @@
       const btnAdicionar = btnBlueprint('Adicionar selecionados', 'btn-secondary btn-block', {
         onclick: () => {
           let algum = false;
+          // nomes já no pedido + os marcados agora: o catálogo pode ter o
+          // mesmo nome duas vezes, e marcar os dois repetia o item no pedido
+          const nomes = new Set(lista.map(i => chaveNome(i.descricao)));
           checkboxes.forEach((chk, id) => {
             if (!chk.checked) return;
             const item = catalogo.find(c => c.id === id);
             if (!item) return;
+            algum = true;
+            if (nomes.has(chaveNome(item.nome))) return;
+            nomes.add(chaveNome(item.nome));
             const entrada = { descricao: item.nome };
             if (comQuantidade) {
               const qtdEl = qtdInputs.get(id);
               entrada.quantidade = Math.max(1, parseInt((qtdEl && qtdEl.value) || '1', 10));
             }
             lista.push(entrada);
-            algum = true;
           });
           if (!algum) { toast('Selecione pelo menos um item.', true); return; }
           construir();
@@ -1596,9 +1606,22 @@
       'Só o cliente é obrigatório — dá pra completar o resto depois.');
 
     const form = el('form', {
+      novalidate: 'novalidate',
       onsubmit: async (ev) => {
         ev.preventDefault();
         if (!clienteSelecionado) { toast('Selecione ou cadastre um cliente.', true); selecionarAba('cliente'); return; }
+        // Validação feita aqui (novalidate acima): a do navegador trava o
+        // envio em silêncio quando o campo inválido está numa etapa escondida
+        // (ex.: valor negativo digitado na etapa de valores) — o Salvar não
+        // fazia nada e não dizia por quê.
+        const invalido = form.querySelector(':invalid');
+        if (invalido) {
+          const etapa = Object.keys(paineis).find(k => paineis[k].contains(invalido));
+          if (etapa) selecionarAba(etapa);
+          toast('Tem um campo com valor inválido (ex.: número negativo). Confira o campo destacado.', true);
+          setTimeout(() => { invalido.focus(); invalido.reportValidity && invalido.reportValidity(); }, 50);
+          return;
+        }
 
         const body = {
           componenteIds: linhasComponentes.map(c => c.id),
@@ -2057,6 +2080,12 @@
         if (!fldNome.value.trim()) { toast('Informe o nome.', true); return; }
         const body = { categoria: fldCategoria.value, nome: fldNome.value.trim(), valor: Number(fldValor.value || 0) };
         const alvo = emEdicaoId;
+        // mesmo nome na mesma categoria aparece duas vezes na hora de montar
+        // o pedido e acaba entrando repetido — bloqueia já no cadastro
+        if (lista.some(i => i.id !== alvo && i.categoria === body.categoria && chaveNome(i.nome) === chaveNome(body.nome))) {
+          toast((isServico ? 'Já existe um serviço' : 'Já existe uma peça') + ' com esse nome nessa categoria.', true);
+          return;
+        }
         comBotaoOcupado(btnSalvar, 'Salvando…', async () => {
           if (alvo) await api('PUT', base + '/' + alvo, body);
           else await api('POST', base, body);
