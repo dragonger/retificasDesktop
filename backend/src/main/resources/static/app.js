@@ -1175,7 +1175,10 @@
 
     // Seleção em lote: como itens não carregam mais preço, marca-se vários de
     // uma vez (em vez de adicionar um-a-um com campo de preço).
-    function criarPickerBatch(catalogo, lista, redesenhar, comQuantidade) {
+    // cadastroInline (opcional): { rotulo, singular, endpoint } — mostra um
+    // "Novo …" escondido (mesmo padrão do "Novo componente") que cadastra no
+    // catálogo e já adiciona o item ao pedido.
+    function criarPickerBatch(catalogo, lista, redesenhar, comQuantidade, cadastroInline) {
       const corpo = el('div', { style: 'display:flex;flex-direction:column;gap:14px' });
       const checkboxes = new Map();
       const qtdInputs = new Map();
@@ -1234,10 +1237,66 @@
       });
 
       const elemento = el('div', { style: 'display:flex;flex-direction:column;gap:12px' }, corpo, btnAdicionar);
+
+      if (cadastroInline) {
+        const fldCategoria = el('select', { class: 'input' });
+        const fldNome = el('input', { class: 'input', type: 'text', placeholder: 'Nome do ' + cadastroInline.singular });
+        // Categorias marcadas no pedido primeiro (é onde o item novo vai
+        // aparecer no filtro); sem nenhuma marcada, oferece todas.
+        function preencherCategorias() {
+          const marcadas = catalogoCache.categorias.filter(c => categoriaValores.has(c.nome));
+          const opcoes = marcadas.length ? marcadas : catalogoCache.categorias;
+          fldCategoria.innerHTML = '';
+          opcoes.forEach(c => fldCategoria.appendChild(el('option', { value: c.nome }, c.rotulo)));
+        }
+        const boxNovo = el('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:12px' },
+          campo('Categoria', fldCategoria),
+          campo('Nome', fldNome),
+          btnBlueprint('Salvar ' + cadastroInline.singular, 'btn-secondary btn-block', {
+            onclick: async (ev) => {
+              const nome = fldNome.value.trim();
+              if (!nome) { toast('Informe o nome.', true); return; }
+              if (lista.some(i => i.descricao.toLowerCase() === nome.toLowerCase())) {
+                toast('Esse ' + cadastroInline.singular + ' já está no pedido.', true); return;
+              }
+              // Já existe no catálogo com esse nome: só adiciona, sem duplicar.
+              let item = catalogo.find(c => c.nome.toLowerCase() === nome.toLowerCase());
+              if (!item) {
+                item = await comBotaoOcupado(ev.currentTarget, 'Salvando…', () => api('POST', cadastroInline.endpoint, {
+                  categoria: fldCategoria.value, nome, valor: 0
+                }));
+                if (!item) return;
+                catalogo.push(item);
+                cacheInvalidar(cadastroInline.endpoint);
+              }
+              const entrada = { descricao: item.nome };
+              if (comQuantidade) entrada.quantidade = 1;
+              lista.push(entrada);
+              fldNome.value = '';
+              boxNovo.hidden = true;
+              construir();
+              redesenhar();
+              const singular = cadastroInline.singular;
+              toast(singular.charAt(0).toUpperCase() + singular.slice(1) + ' adicionado: ' + item.nome);
+            }
+          })
+        );
+        const btnNovo = el('button', {
+          type: 'button', class: 'btn btn-secondary btn-block',
+          onclick: () => {
+            boxNovo.hidden = !boxNovo.hidden;
+            if (!boxNovo.hidden) { preencherCategorias(); fldNome.focus(); }
+          }
+        }, cadastroInline.rotulo);
+        elemento.appendChild(btnNovo);
+        elemento.appendChild(boxNovo);
+      }
+
       return { elemento, atualizarOpcoes: construir };
     }
 
-    const pickerServico = criarPickerBatch(catalogoCache.servicos, linhasServicos, redesenharServicos, false);
+    const pickerServico = criarPickerBatch(catalogoCache.servicos, linhasServicos, redesenharServicos, false,
+      { rotulo: 'Novo serviço', singular: 'serviço', endpoint: '/api/servicos-catalogo' });
     const pickerPeca = criarPickerBatch(catalogoCache.pecas, linhasPecas, redesenharPecas, true);
     const atualizarOpcoesServico = pickerServico.atualizarOpcoes;
     const atualizarOpcoesPeca = pickerPeca.atualizarOpcoes;
