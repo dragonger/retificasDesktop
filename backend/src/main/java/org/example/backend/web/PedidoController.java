@@ -3,9 +3,6 @@ package org.example.backend.web;
 import org.example.backend.dto.*;
 import org.example.backend.security.SecurityUtils;
 import org.example.model.*;
-import org.example.repository.CabecoteRepository;
-import org.example.repository.ClienteRepository;
-import org.example.repository.EmpresaRepository;
 import org.example.repository.PedidoRepository;
 import org.example.service.PedidoPdfService;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -36,9 +34,6 @@ public class PedidoController {
     private static final DateTimeFormatter MES_FORMAT = DateTimeFormatter.ofPattern("MMMM 'de' yyyy", PT_BR);
 
     private final PedidoRepository pedidoRepository = new PedidoRepository();
-    private final CabecoteRepository cabecoteRepository = new CabecoteRepository();
-    private final ClienteRepository clienteRepository = new ClienteRepository();
-    private final EmpresaRepository empresaRepository = new EmpresaRepository();
     private final PedidoPdfService pdfService = new PedidoPdfService();
 
     @GetMapping
@@ -142,13 +137,17 @@ public class PedidoController {
         if (request.clienteId == null) {
             return ResponseEntity.badRequest().build();
         }
-        Long empresaId = SecurityUtils.empresaAtual();
-        PedidoModel pedido = new PedidoModel();
-        pedido.setEmpresa(empresaRepository.buscarPorId(empresaId));
-        pedido.setDatCriacao(LocalDateTime.now());
-        aplicarRequest(pedido, request, empresaId);
-        PedidoModel salvo = pedidoRepository.salvar(pedido);
-        return ResponseEntity.ok(toDetalhe(pedidoRepository.buscarComItens(salvo.getId(), empresaId)));
+        // Tudo numa transação só (ver PedidoRepository.criar): antes eram
+        // vários EntityManagers separados (empresa, cada componente, cliente,
+        // salvar, reler) e cada um custava idas ao banco.
+        PedidoDetalheDTO dto = pedidoRepository.criar(
+                SecurityUtils.empresaAtual(), request.clienteId, request.componenteIds,
+                pedido -> {
+                    pedido.setDatCriacao(LocalDateTime.now());
+                    aplicarRequest(pedido, request);
+                },
+                this::toDetalhe);
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/{id}")
@@ -156,28 +155,24 @@ public class PedidoController {
         if (request.clienteId == null) {
             return ResponseEntity.badRequest().build();
         }
-        Long empresaId = SecurityUtils.empresaAtual();
-        PedidoModel pedido = pedidoRepository.buscarComItens(id, empresaId);
-        if (pedido == null) {
-            return ResponseEntity.notFound().build();
-        }
-        aplicarRequest(pedido, request, empresaId);
-        PedidoModel salvo = pedidoRepository.salvar(pedido);
-        return ResponseEntity.ok(toDetalhe(pedidoRepository.buscarComItens(salvo.getId(), empresaId)));
+        PedidoDetalheDTO dto = pedidoRepository.atualizar(
+                id, SecurityUtils.empresaAtual(), request.clienteId, request.componenteIds,
+                pedido -> aplicarRequest(pedido, request),
+                this::toDetalhe);
+        return dto == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(dto);
     }
 
     @PostMapping("/{id}/finalizar")
     public ResponseEntity<PedidoDetalheDTO> finalizar(@PathVariable Long id) {
-        Long empresaId = SecurityUtils.empresaAtual();
-        PedidoModel pedido = pedidoRepository.buscarComItens(id, empresaId);
-        if (pedido == null) {
-            return ResponseEntity.notFound().build();
-        }
-        if (!pedido.isFinalizado()) {
-            pedido.setDatEntrega(LocalDateTime.now());
-            pedidoRepository.salvar(pedido);
-        }
-        return ResponseEntity.ok(toDetalhe(pedidoRepository.buscarComItens(id, empresaId)));
+        PedidoDetalheDTO dto = pedidoRepository.alterar(
+                id, SecurityUtils.empresaAtual(),
+                pedido -> {
+                    if (!pedido.isFinalizado()) {
+                        pedido.setDatEntrega(LocalDateTime.now());
+                    }
+                },
+                this::toDetalhe);
+        return dto == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/{id}")
@@ -188,7 +183,7 @@ public class PedidoController {
 
     @GetMapping("/{id}/pdf")
     public ResponseEntity<byte[]> pdf(@PathVariable Long id) {
-        PedidoModel pedido = pedidoRepository.buscarComItens(id, SecurityUtils.empresaAtual());
+        PedidoModel pedido = pedidoRepository.buscarParaPdf(id, SecurityUtils.empresaAtual());
         if (pedido == null) {
             return ResponseEntity.notFound().build();
         }
@@ -201,7 +196,16 @@ public class PedidoController {
         return ResponseEntity.ok().headers(headers).body(saida.toByteArray());
     }
 
-    private void aplicarRequest(PedidoModel pedido, PedidoRequestDTO request, Long empresaId) {
+    /**
+     * Copia o request pro pedido gerenciado (cliente e componentes já foram
+     * resolvidos pelo repositório). Serviços, peças e valores por categoria
+     * são sincronizados por prefixo em vez de apagar e reinserir tudo: os
+     * itens iniciais que continuam iguais (na mesma posição) são mantidos, e
+     * só a partir da primeira diferença os antigos saem e os novos entram.
+     * O resultado final e a ordem são os mesmos de antes (ordem = id, ver
+     * @OrderBy em PedidoModel), com bem menos DELETE/INSERT.
+     */
+    private void aplicarRequest(PedidoModel pedido, PedidoRequestDTO request) {
         pedido.setPedido(request.pedidoDescricao);
         pedido.setObservacao(request.observacao);
         pedido.setStatus(parseStatus(request.status));
@@ -209,51 +213,109 @@ public class PedidoController {
                 request.datEntregaEstimada != null && !request.datEntregaEstimada.isBlank()
                         ? LocalDate.parse(request.datEntregaEstimada) : null);
 
-        List<CabecoteModel> componentes = new ArrayList<>();
-        if (request.componenteIds != null) {
-            for (Long componenteId : request.componenteIds) {
-                CabecoteModel componente = cabecoteRepository.buscarPorId(componenteId, empresaId);
-                if (componente != null) {
-                    componentes.add(componente);
-                }
-            }
-        }
-        pedido.setComponentes(componentes);
-        pedido.setCliente(clienteRepository.buscarPorId(request.clienteId, empresaId));
-
-        pedido.getCategoriaValores().clear();
-        for (PedidoCategoriaModel categoriaValor : parseCategoriaValores(request.categoriaValores)) {
-            pedido.addCategoriaValor(categoriaValor);
-        }
-
-        pedido.getServicoList().clear();
-        if (request.servicos != null) {
-            for (ItemRequestDTO item : request.servicos) {
-                if (item.descricao == null || item.descricao.isBlank()) {
-                    continue;
-                }
-                ServicoModel linha = new ServicoModel();
-                linha.setDescricao(item.descricao);
-                pedido.addServico(linha);
-            }
-        }
-
-        pedido.getPecaList().clear();
-        if (request.pecas != null) {
-            for (ItemRequestDTO item : request.pecas) {
-                if (item.descricao == null || item.descricao.isBlank()) {
-                    continue;
-                }
-                PecaModel linha = new PecaModel();
-                linha.setDescricao(item.descricao);
-                linha.setQuantidade(item.quantidade != null ? item.quantidade : 1);
-                pedido.addPeca(linha);
-            }
-        }
+        sincronizarCategorias(pedido, parseCategoriaValores(request.categoriaValores));
+        sincronizarServicos(pedido, request.servicos);
+        sincronizarPecas(pedido, request.pecas);
 
         pedido.setDescontoTipo(parseTipoDesconto(request.descontoTipo));
-        pedido.setDescontoValor(pedido.getDescontoTipo() != null ? request.descontoValor : null);
+        BigDecimal descontoValor = pedido.getDescontoTipo() != null ? escala2(request.descontoValor) : null;
+        if (!mesmoValor(pedido.getDescontoValor(), descontoValor)) {
+            pedido.setDescontoValor(descontoValor);
+        }
         pedido.recalcularTotal();
+    }
+
+    private void sincronizarCategorias(PedidoModel pedido, List<PedidoCategoriaModel> desejadas) {
+        List<PedidoCategoriaModel> atuais = pedido.getCategoriaValores();
+        int i = 0;
+        while (i < atuais.size() && i < desejadas.size()
+                && atuais.get(i).getCategoria() == desejadas.get(i).getCategoria()) {
+            PedidoCategoriaModel atual = atuais.get(i);
+            PedidoCategoriaModel nova = desejadas.get(i);
+            if (!mesmoValor(atual.getValorServicos(), nova.getValorServicos())) {
+                atual.setValorServicos(nova.getValorServicos());
+            }
+            if (!mesmoValor(atual.getValorPecas(), nova.getValorPecas())) {
+                atual.setValorPecas(nova.getValorPecas());
+            }
+            i++;
+        }
+        removerAPartirDe(atuais, i);
+        for (int j = i; j < desejadas.size(); j++) {
+            pedido.addCategoriaValor(desejadas.get(j));
+        }
+    }
+
+    private void sincronizarServicos(PedidoModel pedido, List<ItemRequestDTO> itens) {
+        List<String> desejados = new ArrayList<>();
+        if (itens != null) {
+            for (ItemRequestDTO item : itens) {
+                if (item.descricao != null && !item.descricao.isBlank()) {
+                    desejados.add(item.descricao);
+                }
+            }
+        }
+        List<ServicoModel> atuais = pedido.getServicoList();
+        int i = 0;
+        while (i < atuais.size() && i < desejados.size()
+                && Objects.equals(atuais.get(i).getDescricao(), desejados.get(i))) {
+            i++;
+        }
+        removerAPartirDe(atuais, i);
+        for (int j = i; j < desejados.size(); j++) {
+            ServicoModel linha = new ServicoModel();
+            linha.setDescricao(desejados.get(j));
+            pedido.addServico(linha);
+        }
+    }
+
+    private void sincronizarPecas(PedidoModel pedido, List<ItemRequestDTO> itens) {
+        List<ItemRequestDTO> desejadas = new ArrayList<>();
+        if (itens != null) {
+            for (ItemRequestDTO item : itens) {
+                if (item.descricao != null && !item.descricao.isBlank()) {
+                    desejadas.add(item);
+                }
+            }
+        }
+        List<PecaModel> atuais = pedido.getPecaList();
+        int i = 0;
+        while (i < atuais.size() && i < desejadas.size()
+                && Objects.equals(atuais.get(i).getDescricao(), desejadas.get(i).descricao)) {
+            Integer quantidade = desejadas.get(i).quantidade != null ? desejadas.get(i).quantidade : 1;
+            if (!quantidade.equals(atuais.get(i).getQuantidade())) {
+                atuais.get(i).setQuantidade(quantidade);
+            }
+            i++;
+        }
+        removerAPartirDe(atuais, i);
+        for (int j = i; j < desejadas.size(); j++) {
+            ItemRequestDTO item = desejadas.get(j);
+            PecaModel linha = new PecaModel();
+            linha.setDescricao(item.descricao);
+            linha.setQuantidade(item.quantidade != null ? item.quantidade : 1);
+            pedido.addPeca(linha);
+        }
+    }
+
+    /** Remove do fim da lista até sobrar {@code tamanho} itens (orphanRemoval apaga no banco). */
+    private static void removerAPartirDe(List<?> lista, int tamanho) {
+        while (lista.size() > tamanho) {
+            lista.remove(lista.size() - 1);
+        }
+    }
+
+    /**
+     * Normaliza pra 2 casas (mesma escala das colunas numeric(19,2)): o valor
+     * em memória fica igual ao que o banco gravaria, a resposta sai igual à
+     * releitura de antes, e a comparação abaixo não vê 10 ≠ 10.00.
+     */
+    private static BigDecimal escala2(BigDecimal valor) {
+        return valor != null ? valor.setScale(2, RoundingMode.HALF_UP) : null;
+    }
+
+    private static boolean mesmoValor(BigDecimal a, BigDecimal b) {
+        return a == null ? b == null : b != null && a.compareTo(b) == 0;
     }
 
     private TipoDesconto parseTipoDesconto(String nome) {
@@ -284,8 +346,8 @@ public class PedidoController {
             }
             PedidoCategoriaModel categoriaValor = new PedidoCategoriaModel();
             categoriaValor.setCategoria(categoria);
-            categoriaValor.setValorServicos(dto.valorServicos);
-            categoriaValor.setValorPecas(dto.valorPecas);
+            categoriaValor.setValorServicos(escala2(dto.valorServicos));
+            categoriaValor.setValorPecas(escala2(dto.valorPecas));
             resultado.add(categoriaValor);
         }
         return resultado;

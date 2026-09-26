@@ -1,11 +1,22 @@
 package org.example.repository;
 
+import org.example.model.CabecoteModel;
+import org.example.model.ClienteModel;
+import org.example.model.EmpresaModel;
 import org.example.model.PedidoModel;
 import org.example.persistence.JPAUtil;
+import org.hibernate.Hibernate;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Acesso a dados de {@link PedidoModel}.
@@ -50,40 +61,201 @@ public class PedidoRepository {
     }
 
     /**
-     * Busca um pedido já com cliente, serviços, peças e componentes carregados,
-     * para uso fora da transação (telas de visualização/edição). Faz fetch dos
-     * serviços via JOIN e inicializa peças/componentes na mesma sessão (evita
-     * MultipleBagFetchException — o Hibernate não permite fazer JOIN FETCH de
-     * duas coleções ao mesmo tempo na mesma query).
+     * Busca um pedido já com cliente, serviços, peças, componentes e valores
+     * por categoria carregados, para uso fora da transação (tela de
+     * visualização). Não carrega a empresa do pedido — só o PDF usa, ver
+     * {@link #buscarParaPdf}.
      */
     public PedidoModel buscarComItens(Long id, Long empresaId) {
+        return buscarComItens(id, empresaId, false);
+    }
+
+    /** Igual a {@link #buscarComItens(Long, Long)}, mas já com a empresa (nome no cabeçalho do PDF). */
+    public PedidoModel buscarParaPdf(Long id, Long empresaId) {
+        return buscarComItens(id, empresaId, true);
+    }
+
+    private PedidoModel buscarComItens(Long id, Long empresaId, boolean comEmpresa) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            List<PedidoModel> resultado = em.createQuery(
-                    "SELECT p FROM PedidoModel p " +
-                            "LEFT JOIN FETCH p.cliente " +
-                            "LEFT JOIN FETCH p.servicoList " +
-                            "WHERE p.id = :id AND p.empresa.id = :empresaId", PedidoModel.class)
-                    .setParameter("id", id)
-                    .setParameter("empresaId", empresaId)
-                    .getResultList();
-            if (resultado.isEmpty()) {
-                return null;
-            }
-            PedidoModel pedido = resultado.get(0);
-            // Inicializa peças, componentes, valores por categoria e empresa
-            // ainda dentro da sessão (todos LAZY — ver PedidoModel). Empresa
-            // só é lida pelo PDF (nome da empresa no cabeçalho).
-            pedido.getPecaList().size();
-            pedido.getComponentes().size();
-            pedido.getCategoriaValores().size();
-            if (pedido.getEmpresa() != null) {
-                pedido.getEmpresa().getNome();
-            }
-            return pedido;
+            return carregarComItens(em, id, empresaId, comEmpresa);
         } finally {
             em.close();
         }
+    }
+
+    /**
+     * Carrega o pedido e todas as coleções no EntityManager informado. Cada
+     * ida ao banco custa caro em produção (app e banco em regiões diferentes),
+     * então: serviços vêm no mesmo JOIN FETCH do pedido, e o cliente vem
+     * junto com a empresa dele (@ManyToOne EAGER em ClienteModel — sem o
+     * fetch aqui virava um SELECT a mais só pra EMPRESA). Peças, componentes
+     * e valores por categoria continuam em consultas próprias: o Hibernate
+     * não permite JOIN FETCH de mais de uma List (bag) na mesma query
+     * (MultipleBagFetchException).
+     */
+    private PedidoModel carregarComItens(EntityManager em, Long id, Long empresaId, boolean comEmpresa) {
+        List<PedidoModel> resultado = em.createQuery(
+                "SELECT p FROM PedidoModel p " +
+                        "LEFT JOIN FETCH p.cliente c " +
+                        "LEFT JOIN FETCH c.empresa " +
+                        (comEmpresa ? "LEFT JOIN FETCH p.empresa " : "") +
+                        "LEFT JOIN FETCH p.servicoList " +
+                        "WHERE p.id = :id AND p.empresa.id = :empresaId", PedidoModel.class)
+                .setParameter("id", id)
+                .setParameter("empresaId", empresaId)
+                .getResultList();
+        if (resultado.isEmpty()) {
+            return null;
+        }
+        PedidoModel pedido = resultado.get(0);
+        Hibernate.initialize(pedido.getPecaList());
+        Hibernate.initialize(pedido.getComponentes());
+        Hibernate.initialize(pedido.getCategoriaValores());
+        if (comEmpresa) {
+            Hibernate.initialize(pedido.getEmpresa());
+        }
+        return pedido;
+    }
+
+    /**
+     * Cria um pedido numa única transação/EntityManager: carrega empresa,
+     * cliente e componentes (validados pelo tenant), aplica os campos,
+     * persiste e devolve {@code mapear(pedido)} ainda com a sessão aberta —
+     * sem reler do banco depois de salvar.
+     */
+    public <R> R criar(Long empresaId, Long clienteId, List<Long> componenteIds,
+                       Consumer<PedidoModel> aplicar, Function<PedidoModel, R> mapear) {
+        return emTransacao(em -> {
+            PedidoModel pedido = new PedidoModel();
+            ClienteModel cliente = resolverCliente(em, pedido, clienteId, empresaId);
+            // O cliente já vem com a empresa (mesmo tenant, validado no WHERE) —
+            // evita um SELECT só pra EMPRESA no caso comum.
+            pedido.setEmpresa(cliente != null && cliente.getEmpresa() != null
+                    ? cliente.getEmpresa()
+                    : em.find(EmpresaModel.class, empresaId));
+            pedido.setCliente(cliente);
+            sincronizarComponentes(em, pedido, componenteIds, empresaId);
+            aplicar.accept(pedido);
+            em.persist(pedido);
+            em.flush();
+            return mapear.apply(pedido);
+        });
+    }
+
+    /**
+     * Atualiza um pedido existente numa única transação, sobre a entidade
+     * gerenciada (sem merge de objeto destacado — o merge recarregava o grafo
+     * inteiro). Cliente e componentes só são consultados se mudaram.
+     * Retorna {@code null} se o pedido não existe nessa empresa.
+     */
+    public <R> R atualizar(Long id, Long empresaId, Long clienteId, List<Long> componenteIds,
+                           Consumer<PedidoModel> aplicar, Function<PedidoModel, R> mapear) {
+        return emTransacao(em -> {
+            PedidoModel pedido = carregarComItens(em, id, empresaId, false);
+            if (pedido == null) {
+                return null;
+            }
+            pedido.setCliente(resolverCliente(em, pedido, clienteId, empresaId));
+            sincronizarComponentes(em, pedido, componenteIds, empresaId);
+            aplicar.accept(pedido);
+            em.flush();
+            return mapear.apply(pedido);
+        });
+    }
+
+    /**
+     * Aplica uma alteração simples (sem mexer em cliente/componentes) num
+     * pedido existente, numa única transação. Retorna {@code null} se o
+     * pedido não existe nessa empresa.
+     */
+    public <R> R alterar(Long id, Long empresaId, Consumer<PedidoModel> aplicar, Function<PedidoModel, R> mapear) {
+        return emTransacao(em -> {
+            PedidoModel pedido = carregarComItens(em, id, empresaId, false);
+            if (pedido == null) {
+                return null;
+            }
+            aplicar.accept(pedido);
+            em.flush();
+            return mapear.apply(pedido);
+        });
+    }
+
+    private <R> R emTransacao(Function<EntityManager, R> trabalho) {
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            R resultado = trabalho.apply(em);
+            tx.commit();
+            return resultado;
+        } catch (RuntimeException e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Mesmo cliente de antes (e do mesmo tenant) → reaproveita sem consultar.
+     * Outro cliente → busca validando a empresa; inexistente/de outra empresa
+     * vira {@code null}, igual ao comportamento anterior.
+     */
+    private ClienteModel resolverCliente(EntityManager em, PedidoModel pedido, Long clienteId, Long empresaId) {
+        if (clienteId == null) {
+            return null;
+        }
+        ClienteModel atual = pedido.getCliente();
+        if (atual != null && clienteId.equals(atual.getId())
+                && atual.getEmpresa() != null && empresaId.equals(atual.getEmpresa().getId())) {
+            return atual;
+        }
+        return em.createQuery(
+                "SELECT c FROM ClienteModel c JOIN FETCH c.empresa e WHERE c.id = :id AND e.id = :empresaId",
+                ClienteModel.class)
+                .setParameter("id", clienteId)
+                .setParameter("empresaId", empresaId)
+                .getResultStream().findFirst().orElse(null);
+    }
+
+    /**
+     * Deixa {@code pedido.componentes} igual aos ids pedidos (na ordem, e
+     * ignorando ids inexistentes ou de outra empresa, como antes). Busca todos
+     * numa consulta só (IN), e só mexe na coleção se o resultado mudou — a
+     * tabela de junção é uma bag, qualquer mudança nela apaga e regrava tudo.
+     */
+    private void sincronizarComponentes(EntityManager em, PedidoModel pedido, List<Long> componenteIds, Long empresaId) {
+        List<Long> desejados = componenteIds == null ? List.of()
+                : componenteIds.stream().filter(Objects::nonNull).toList();
+        List<Long> atuais = pedido.getComponentes().stream().map(CabecoteModel::getId).toList();
+        if (atuais.equals(desejados)) {
+            return;
+        }
+        Map<Long, CabecoteModel> porId = new HashMap<>();
+        if (!desejados.isEmpty()) {
+            em.createQuery(
+                    "SELECT c FROM CabecoteModel c JOIN FETCH c.empresa e WHERE c.id IN :ids AND e.id = :empresaId",
+                    CabecoteModel.class)
+                    .setParameter("ids", new HashSet<>(desejados))
+                    .setParameter("empresaId", empresaId)
+                    .getResultList()
+                    .forEach(c -> porId.put(c.getId(), c));
+        }
+        List<CabecoteModel> novos = new ArrayList<>();
+        for (Long componenteId : desejados) {
+            CabecoteModel componente = porId.get(componenteId);
+            if (componente != null) {
+                novos.add(componente);
+            }
+        }
+        if (novos.stream().map(CabecoteModel::getId).toList().equals(atuais)) {
+            return;
+        }
+        pedido.getComponentes().clear();
+        pedido.getComponentes().addAll(novos);
     }
 
     /**
@@ -96,7 +268,8 @@ public class PedidoRepository {
         try {
             return em.createQuery(
                     "SELECT DISTINCT p FROM PedidoModel p " +
-                            "LEFT JOIN FETCH p.cliente " +
+                            "LEFT JOIN FETCH p.cliente c " +
+                            "LEFT JOIN FETCH c.empresa " +
                             "LEFT JOIN FETCH p.componentes " +
                             "WHERE p.empresa.id = :empresaId",
                     PedidoModel.class)
@@ -116,7 +289,8 @@ public class PedidoRepository {
         try {
             List<PedidoModel> resultado = em.createQuery(
                     "SELECT DISTINCT p FROM PedidoModel p " +
-                            "LEFT JOIN FETCH p.cliente " +
+                            "LEFT JOIN FETCH p.cliente c " +
+                            "LEFT JOIN FETCH c.empresa " +
                             "LEFT JOIN FETCH p.componentes " +
                             "WHERE p.datEntrega IS NOT NULL AND p.empresa.id = :empresaId " +
                             "ORDER BY p.datEntrega DESC", PedidoModel.class)

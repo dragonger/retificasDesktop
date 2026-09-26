@@ -76,7 +76,30 @@
     toast._t = setTimeout(() => { toastEl.hidden = true; }, 3200);
   }
 
-  async function api(method, path, body) {
+  // Desabilita o botão e troca o texto enquanto `acao` roda. Com o servidor
+  // acordando (wake-proxy) ou longe do banco, salvar pode levar vários
+  // segundos — sem isso o usuário toca de novo e duplica o envio. Erros da
+  // `acao` são engolidos aqui: `api()` já mostrou o toast; quem precisa de
+  // mensagem específica trata dentro da própria `acao`.
+  async function comBotaoOcupado(botao, textoOcupado, acao) {
+    if (botao.disabled) return undefined;
+    const alvo = botao.lastChild && botao.lastChild.nodeType === Node.TEXT_NODE ? botao.lastChild : botao;
+    const textoOriginal = alvo.textContent;
+    botao.disabled = true;
+    alvo.textContent = textoOcupado;
+    try {
+      return await acao();
+    } catch (e) {
+      return undefined;
+    } finally {
+      botao.disabled = false;
+      alvo.textContent = textoOriginal;
+    }
+  }
+
+  // statusSemAviso: códigos que o chamador trata com mensagem própria (evita
+  // dois toasts seguidos, o genérico e o específico).
+  async function api(method, path, body, statusSemAviso) {
     const opts = { method, headers: {} };
     const auth = getAuth();
     if (auth && auth.token) {
@@ -104,7 +127,9 @@
     }
     if (resp.status === 204) return null;
     if (!resp.ok) {
-      toast('Erro ao acessar ' + path + ' (' + resp.status + ')', true);
+      if (!(statusSemAviso && statusSemAviso.includes(resp.status))) {
+        toast('Erro ao acessar ' + path + ' (' + resp.status + ')', true);
+      }
       throw new Error('HTTP ' + resp.status);
     }
     const ct = resp.headers.get('content-type') || '';
@@ -118,10 +143,39 @@
   // esperar rede) e busca de novo por trás; só redesenha com o dado fresco
   // se ele realmente mudou, senão a tela fica quieta (sem piscar).
   const respostaCache = new Map();
+  const cacheVersao = new Map();
   let renderGen = 0;
 
   function cacheInvalidar(...paths) {
-    paths.forEach(p => respostaCache.delete(p));
+    paths.forEach(p => {
+      respostaCache.delete(p);
+      cacheVersao.set(p, (cacheVersao.get(p) || 0) + 1);
+    });
+  }
+
+  // Busca `path` e guarda no cache — mas descarta o resultado se o path foi
+  // invalidado enquanto a requisição estava no ar (senão uma lista velha
+  // voltaria pro cache logo depois de um cadastro/edição).
+  async function buscarECachear(path) {
+    const versao = cacheVersao.get(path) || 0;
+    const dado = await api('GET', path);
+    if ((cacheVersao.get(path) || 0) === versao) respostaCache.set(path, dado);
+    return dado;
+  }
+
+  // Pra telas com formulário de edição acoplado: com tudo em cache, devolve
+  // na hora e só atualiza o cache em segundo plano (a tela não redesenha
+  // sozinha, pra não atropelar uma edição em andamento — a próxima visita
+  // já vem fresca). Sem cache, mostra "Carregando..." e espera a rede.
+  async function carregarComCache(paths) {
+    const emCache = paths.map(p => respostaCache.get(p));
+    if (emCache.every(d => d !== undefined)) {
+      Promise.all(paths.map(buscarECachear)).catch(() => {});
+      return emCache;
+    }
+    conteudo.innerHTML = '';
+    conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
+    return Promise.all(paths.map(buscarECachear));
   }
 
   /**
@@ -149,13 +203,24 @@
   // bem antes do usuário tocar em "Gerar orçamento"). No iOS/Safari o
   // navigator.share() com arquivo só funciona se for chamado bem perto do
   // toque — pré-carregar o PDF evita que o fetch "gaste" essa janela de gesto.
+  // Memorizado por pedido na sessão (~170KB cada): reabrir o mesmo pedido não
+  // baixa/gera o PDF de novo. Invalidado ao editar/finalizar/excluir.
+  const orcamentoCache = new Map();
+  function orcamentoInvalidar(id) {
+    orcamentoCache.delete(String(id));
+  }
   function prepararOrcamento(id) {
+    const chave = String(id);
+    if (orcamentoCache.has(chave)) return orcamentoCache.get(chave);
     const auth = getAuth();
     const promise = fetch('/api/pedidos/' + id + '/pdf', {
       headers: auth && auth.token ? { 'Authorization': 'Bearer ' + auth.token } : {}
     })
       .then(r => r.ok ? r.blob() : Promise.reject(new Error('HTTP ' + r.status)));
-    promise.catch(() => {}); // evita "unhandled rejection" antes do clique
+    orcamentoCache.set(chave, promise);
+    // falhou: tira do cache pra próxima abertura tentar de novo (e evita
+    // "unhandled rejection" antes do clique)
+    promise.catch(() => { if (orcamentoCache.get(chave) === promise) orcamentoCache.delete(chave); });
     return promise;
   }
 
@@ -305,14 +370,14 @@
     return s;
   }
 
+  const CATALOGO_PATHS = ['/api/cabecotes', '/api/servicos-catalogo', '/api/pecas-catalogo', '/api/categorias', '/api/clientes'];
+
+  // A atualização em segundo plano vai só pro cache (próxima visita), nunca
+  // pro catalogoCache do formulário já aberto — não troca opções no meio da edição.
   async function carregarCatalogos() {
-    const [cabecotes, servicos, pecas, categorias, clientes] = await Promise.all([
-      api('GET', '/api/cabecotes'),
-      api('GET', '/api/servicos-catalogo'),
-      api('GET', '/api/pecas-catalogo'),
-      api('GET', '/api/categorias'),
-      api('GET', '/api/clientes'),
-    ]);
+    const dados = await carregarComCache(CATALOGO_PATHS);
+    // cópias: os cadastros inline do formulário dão push aqui sem mexer no cache
+    const [cabecotes, servicos, pecas, categorias, clientes] = dados.map(d => d.slice());
     catalogoCache = { cabecotes, servicos, pecas, categorias, clientes };
   }
 
@@ -354,8 +419,11 @@
     // só o botão de voltar faz sentido, deixando o topo mais limpo.
     const telaRaiz = ['#/inicio', '#/pedidos', '#/cabecotes', '#/encerrados', '#/dashboard'].includes(caminhoBase);
     btnCatalogo.hidden = !telaRaiz;
-    btnSair.hidden = !telaRaiz;
-    btnSenha.hidden = !telaRaiz;
+    // Com o auto-login ativo (ver garantirAutoLogin), "Sair" desloga e entra
+    // de novo na hora e "Trocar senha" não protege nada — ficam escondidos.
+    // Ao reativar o login, voltar para `!telaRaiz`.
+    btnSair.hidden = true;
+    btnSenha.hidden = true;
     tabs.forEach(t => t.classList.toggle('active', ('#/' + t.dataset.tab) === raiz));
     btnVoltar.hidden = ROOTS.includes(caminhoBase);
     conteudo.scrollTop = 0;
@@ -536,10 +604,15 @@
   async function telaVisualizarPedido(id) {
     tituloTopo.textContent = 'Pedido #' + id;
     conteudo.innerHTML = '';
+    conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
+    const genTela = renderGen;
     const p = await api('GET', '/api/pedidos/' + id);
+    if (renderGen !== genTela) return; // usuário já saiu dessa tela
+    conteudo.innerHTML = '';
     if (!p) { conteudo.appendChild(el('div', { class: 'empty' }, 'Pedido não encontrado.')); return; }
 
-    const pdfPromise = prepararOrcamento(id);
+    // Preenchido no fim desta função, depois da tela desenhada (ver abaixo).
+    let pdfPromise = null;
 
     conteudo.appendChild(blueprintBox('div', { style: 'padding:14px;margin-bottom:16px' },
       el('div', { class: 'linha-titulo', style: 'margin-bottom:8px' }, p.cliente ? p.cliente.nome : '-'),
@@ -608,6 +681,7 @@
         if (!confirm('Deletar o pedido #' + id + '? Essa ação não pode ser desfeita.')) return;
         await api('DELETE', '/api/pedidos/' + id);
         cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
+        orcamentoInvalidar(id);
         toast('Pedido deletado.');
         location.hash = '#/pedidos';
       }
@@ -633,20 +707,31 @@
             // ser tentado.
             const vaiTentarCompartilhar = temSuporteACompartilharArquivo();
             const novaAba = vaiTentarCompartilhar ? null : window.open('', '_blank');
-            compartilharOrcamento(pdfPromise, 'orcamento-' + id + '.pdf', novaAba, fotoSelecionada);
+            compartilharOrcamento(pdfPromise || prepararOrcamento(id), 'orcamento-' + id + '.pdf', novaAba, fotoSelecionada);
           }
         }),
         p.finalizado ? null : btnBlueprint('Finalizar', 'btn-secondary', {
-          style: 'flex:1', onclick: async () => {
+          style: 'flex:1', onclick: (ev) => {
+            const botao = ev.currentTarget;
             if (!confirm('Finalizar o pedido #' + id + '? A data de entrega será registrada agora.')) return;
-            await api('POST', '/api/pedidos/' + id + '/finalizar');
-            cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
-            toast('Pedido finalizado.');
-            telaVisualizarPedido(id);
+            comBotaoOcupado(botao, 'Finalizando…', async () => {
+              await api('POST', '/api/pedidos/' + id + '/finalizar');
+              cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
+              orcamentoInvalidar(id);
+              toast('Pedido finalizado.');
+              telaVisualizarPedido(id);
+            });
           }
         }),
       ));
     conteudo.appendChild(barraTotal);
+
+    // Pré-carrega o PDF (ver prepararOrcamento — necessário pro share no iOS),
+    // mas só depois da tela pintada, e só se o usuário ainda estiver nela.
+    const meuGen = renderGen;
+    requestAnimationFrame(() => setTimeout(() => {
+      if (renderGen === meuGen && !pdfPromise) pdfPromise = prepararOrcamento(id);
+    }, 0));
   }
 
   function componentesPorCategoria(p) {
@@ -719,9 +804,12 @@
     // caçar cada ponto que ainda chama isso.
     function atualizarIndicadoresAbas() {}
 
-    await carregarCatalogos();
-    let pedido = null;
-    if (id) pedido = await api('GET', '/api/pedidos/' + id);
+    const genTela = renderGen;
+    const [, pedido] = await Promise.all([
+      carregarCatalogos(),
+      id ? api('GET', '/api/pedidos/' + id) : Promise.resolve(null),
+    ]);
+    if (renderGen !== genTela) return; // usuário já saiu dessa tela
 
     const linhasServicos = pedido ? pedido.servicos.map(clonarItem) : [];
     const linhasPecas = pedido ? pedido.pecas.map(clonarItem) : [];
@@ -786,18 +874,17 @@
       campo('Nome / Motor', fldNovoComponenteNome),
       el('div', { class: 'row' }, campo('Móvel', fldNovoComponenteMovel), campo('Fixo', fldNovoComponenteFixo)),
       btnBlueprint('Salvar componente', 'btn-secondary btn-block', {
-        onclick: async () => {
+        onclick: async (ev) => {
           if (!fldNovoComponenteNome.value.trim()) { toast('Informe o nome.', true); return; }
-          let novo;
-          try {
-            novo = await api('POST', '/api/cabecotes', {
-              categoria: fldNovoComponenteCategoria.value,
-              nome: fldNovoComponenteNome.value.trim(),
-              movelFaixa: fldNovoComponenteMovel.value.trim() || null,
-              fixoFaixa: fldNovoComponenteFixo.value.trim() || null
-            });
-          } catch (e) { return; }
+          const novo = await comBotaoOcupado(ev.currentTarget, 'Salvando…', () => api('POST', '/api/cabecotes', {
+            categoria: fldNovoComponenteCategoria.value,
+            nome: fldNovoComponenteNome.value.trim(),
+            movelFaixa: fldNovoComponenteMovel.value.trim() || null,
+            fixoFaixa: fldNovoComponenteFixo.value.trim() || null
+          }));
+          if (!novo) return;
           catalogoCache.cabecotes.push(novo);
+          cacheInvalidar('/api/cabecotes');
           linhasComponentes.push({ id: novo.id, nome: novo.nome });
           fldNovoComponenteNome.value = ''; fldNovoComponenteMovel.value = ''; fldNovoComponenteFixo.value = '';
           novoComponenteBox.hidden = true;
@@ -993,16 +1080,15 @@
       campo('Nome', fldNovoNome),
       campo('Telefone', fldNovoTelefone),
       btnBlueprint('Salvar cliente', 'btn-secondary btn-block', {
-        onclick: async () => {
+        onclick: async (ev) => {
           if (!fldNovoNome.value.trim()) { toast('Informe o nome.', true); return; }
-          let novo;
-          try {
-            novo = await api('POST', '/api/clientes', {
-              nome: fldNovoNome.value.trim(),
-              telefone: fldNovoTelefone.value.trim() || null
-            });
-          } catch (e) { return; }
+          const novo = await comBotaoOcupado(ev.currentTarget, 'Salvando…', () => api('POST', '/api/clientes', {
+            nome: fldNovoNome.value.trim(),
+            telefone: fldNovoTelefone.value.trim() || null
+          }));
+          if (!novo) return;
           catalogoCache.clientes.push(novo);
+          cacheInvalidar('/api/clientes');
           clienteSelecionado = { id: novo.id, nome: novo.nome, telefone: novo.telefone };
           fldNovoNome.value = ''; fldNovoTelefone.value = '';
           novoClienteBox.hidden = true;
@@ -1274,10 +1360,14 @@
           descontoValor: fldDescontoValor.value !== '' ? Number(fldDescontoValor.value) : null,
         };
 
-        const salvo = id
-          ? await api('PUT', '/api/pedidos/' + id, body)
-          : await api('POST', '/api/pedidos', body);
+        // Criar pedido pode levar vários segundos (servidor acordando / banco
+        // longe) — o botão trava pra um segundo toque não duplicar o pedido.
+        const salvo = await comBotaoOcupado(btnAvancarPasso, 'Salvando…', () => id
+          ? api('PUT', '/api/pedidos/' + id, body)
+          : api('POST', '/api/pedidos', body));
+        if (!salvo) return;
         cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
+        orcamentoInvalidar(salvo.id);
         registrarClienteRecente(clienteSelecionado.id);
         toast('Pedido salvo.');
         location.hash = '#/pedidos/' + salvo.id;
@@ -1305,36 +1395,52 @@
     return Array.from(mapa.entries()).map(([rotulo, itens]) => ({ rotulo, itens }));
   }
 
+  // ---------- cadastros (Produtos / Clientes / Serviços / Peças) ----------
+
+  // Lista primeiro; o formulário fica recolhido atrás de "Novo …". Tocar num
+  // item da lista abre o formulário já preenchido (modo edição) e rola até
+  // ele — quem rola é o <main>, não a janela, por isso scrollIntoView.
+  function formularioRecolhivel({ rotuloNovo, tituloNovo, tituloEditar, form, btnRemover, preencher, limpar }) {
+    const titulo = el('h2', { class: 'secao' }, tituloNovo);
+    const caixa = el('div', { hidden: true }, titulo, form);
+    const btnNovo = el('button', { type: 'button', class: 'btn btn-secondary btn-block', onclick: () => abrir(null) }, rotuloNovo);
+
+    function abrir(item) {
+      if (item) preencher(item); else limpar();
+      titulo.textContent = item ? tituloEditar : tituloNovo;
+      btnRemover.hidden = !item;
+      caixa.hidden = false;
+      btnNovo.hidden = true;
+      caixa.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+    function fechar() {
+      limpar();
+      caixa.hidden = true;
+      btnNovo.hidden = false;
+    }
+    return { elemento: el('div', { style: 'margin-bottom:8px' }, btnNovo, caixa), abrir, fechar };
+  }
+
+  function botoesCadastro(btnSalvar, btnRemover, cancelar) {
+    return el('div', { class: 'btn-group' },
+      btnSalvar,
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: cancelar }, 'Cancelar'),
+      btnRemover);
+  }
+
   // ---------- Cabeçotes ----------
 
   async function telaCabecotes() {
     tituloTopo.textContent = 'Produtos';
-
-    // Essa tela mistura lista + formulário de edição no mesmo estado
-    // (emEdicaoId) — diferente das outras, não redesenha sozinha se o dado
-    // mudar enquanto o usuário está nela (arriscaria descartar uma edição
-    // em andamento). Só usa o cache pra pintar na hora quando tem, e
-    // atualiza o cache em segundo plano pra próxima visita vir fresca.
-    const cacheLista = respostaCache.get('/api/cabecotes');
-    const cacheCategorias = respostaCache.get('/api/categorias');
-    let lista = cacheLista;
-    let categorias = cacheCategorias;
-    if (!lista || !categorias) {
-      conteudo.innerHTML = '';
-      conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
-      [lista, categorias] = await Promise.all([api('GET', '/api/cabecotes'), api('GET', '/api/categorias')]);
-      respostaCache.set('/api/cabecotes', lista);
-      respostaCache.set('/api/categorias', categorias);
-    } else {
-      Promise.all([api('GET', '/api/cabecotes'), api('GET', '/api/categorias')]).then(([l, c]) => {
-        respostaCache.set('/api/cabecotes', l);
-        respostaCache.set('/api/categorias', c);
-      }).catch(() => {});
-    }
+    const meuGen = renderGen;
+    const PATH = '/api/cabecotes';
+    let [lista, categorias] = await carregarComCache([PATH, '/api/categorias']);
+    if (renderGen !== meuGen) return;
     conteudo.innerHTML = '';
 
     conteudo.appendChild(el('h2', { class: 'titulo' }, 'Produtos'));
-    conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Cabeçotes, blocos, bielas e virabrequins — ' + lista.length + ' cadastrados'));
+    const subtitulo = el('div', { class: 'subtitulo' });
+    conteudo.appendChild(subtitulo);
 
     let emEdicaoId = null;
     const fldCategoria = el('select', { class: 'input' }, ...categorias.map(c => el('option', { value: c.nome }, c.rotulo)));
@@ -1344,23 +1450,17 @@
 
     const listaEl = el('div', {});
 
-    function redesenhar(items) {
+    function redesenhar() {
+      subtitulo.textContent = 'Cabeçotes, blocos, bielas e virabrequins — ' + lista.length + ' cadastrados';
       listaEl.innerHTML = '';
-      if (!items.length) {
+      if (!lista.length) {
         listaEl.appendChild(el('div', { class: 'empty' }, 'Nada cadastrado ainda.'));
         return;
       }
-      agruparPorCategoria(items).forEach(grupo => {
+      agruparPorCategoria(lista).forEach(grupo => {
         listaEl.appendChild(el('div', { class: 'grupo-categoria' },
           el('h3', null, grupo.rotulo),
-          ...grupo.itens.map(c => el('div', { class: 'linha', onclick: () => {
-            emEdicaoId = c.id;
-            fldCategoria.value = c.categoria;
-            fldNome.value = c.nome || '';
-            fldMovel.value = c.movelFaixa || '';
-            fldFixo.value = c.fixoFaixa || '';
-            window.scrollTo(0, 0);
-          } },
+          ...grupo.itens.map(c => el('div', { class: 'linha', onclick: () => cadastro.abrir(c) },
             el('div', { class: 'linha-titulo' }, c.nome),
             el('div', { style: 'display:flex;gap:18px;font-size:12px' },
               el('div', null, el('span', { style: 'opacity:.55' }, 'Móvel '), el('strong', null, (c.movelFaixa || '-') + ' mm')),
@@ -1370,14 +1470,31 @@
         ));
       });
     }
-    redesenhar(lista);
 
-    function limpar() {
-      emEdicaoId = null; fldCategoria.selectedIndex = 0; fldNome.value = ''; fldMovel.value = ''; fldFixo.value = '';
+    async function recarregarLista() {
+      cacheInvalidar(PATH);
+      try {
+        lista = await buscarECachear(PATH);
+        redesenhar();
+      } catch (e) { /* api() já avisou; a próxima visita busca de novo */ }
     }
 
+    const btnSalvar = el('button', { type: 'submit', class: 'btn btn-primary' }, 'Salvar');
+    const btnRemover = el('button', {
+      type: 'button', class: 'btn btn-danger', onclick: () => {
+        if (!emEdicaoId || !confirm('Remover este item?')) return;
+        const alvo = emEdicaoId;
+        comBotaoOcupado(btnRemover, 'Removendo…', async () => {
+          await api('DELETE', PATH + '/' + alvo);
+          cadastro.fechar();
+          toast('Removido.');
+          await recarregarLista();
+        });
+      }
+    }, 'Remover');
+
     const form = el('form', {
-      onsubmit: async (ev) => {
+      onsubmit: (ev) => {
         ev.preventDefault();
         if (!fldNome.value.trim()) { toast('Informe o nome.', true); return; }
         const body = {
@@ -1386,38 +1503,38 @@
           movelFaixa: fldMovel.value.trim() || null,
           fixoFaixa: fldFixo.value.trim() || null
         };
-        try {
-          if (emEdicaoId) await api('PUT', '/api/cabecotes/' + emEdicaoId, body);
-          else await api('POST', '/api/cabecotes', body);
-        } catch (e) { return; }
-        cacheInvalidar('/api/cabecotes');
-        toast('Salvo.');
-        limpar();
-        telaCabecotes();
+        const alvo = emEdicaoId;
+        comBotaoOcupado(btnSalvar, 'Salvando…', async () => {
+          if (alvo) await api('PUT', PATH + '/' + alvo, body);
+          else await api('POST', PATH, body);
+          cadastro.fechar();
+          toast('Salvo.');
+          await recarregarLista();
+        });
       }
     },
-      el('h2', { class: 'secao' }, 'Novo / editar'),
       campo('Categoria', fldCategoria),
       campo('Nome / Motor', fldNome),
       el('div', { class: 'row' }, campo('Móvel', fldMovel), campo('Fixo', fldFixo)),
-      el('div', { class: 'btn-group' },
-        el('button', { type: 'submit', class: 'btn btn-primary' }, 'Salvar'),
-        el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => limpar() }, 'Limpar'),
-        el('button', {
-          type: 'button', class: 'btn btn-danger', onclick: async () => {
-            if (!emEdicaoId) { toast('Selecione um item na lista para remover.', true); return; }
-            if (!confirm('Remover este item?')) return;
-            await api('DELETE', '/api/cabecotes/' + emEdicaoId);
-            cacheInvalidar('/api/cabecotes');
-            toast('Removido.');
-            limpar();
-            telaCabecotes();
-          }
-        }, 'Remover')
-      )
+      botoesCadastro(btnSalvar, btnRemover, () => cadastro.fechar())
     );
 
-    conteudo.appendChild(form);
+    const cadastro = formularioRecolhivel({
+      rotuloNovo: 'Novo produto', tituloNovo: 'Novo produto', tituloEditar: 'Editar produto', form, btnRemover,
+      preencher: (c) => {
+        emEdicaoId = c.id;
+        fldCategoria.value = c.categoria;
+        fldNome.value = c.nome || '';
+        fldMovel.value = c.movelFaixa || '';
+        fldFixo.value = c.fixoFaixa || '';
+      },
+      limpar: () => {
+        emEdicaoId = null; fldCategoria.selectedIndex = 0; fldNome.value = ''; fldMovel.value = ''; fldFixo.value = '';
+      },
+    });
+
+    redesenhar();
+    conteudo.appendChild(cadastro.elemento);
     conteudo.appendChild(el('h2', { class: 'secao' }, 'Cadastrados'));
     conteudo.appendChild(listaEl);
   }
@@ -1426,13 +1543,15 @@
 
   async function telaClientes() {
     tituloTopo.textContent = 'Clientes';
-    conteudo.innerHTML = '';
-    conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
-    const lista = await api('GET', '/api/clientes');
+    const meuGen = renderGen;
+    const PATH = '/api/clientes';
+    let [lista] = await carregarComCache([PATH]);
+    if (renderGen !== meuGen) return;
     conteudo.innerHTML = '';
 
     conteudo.appendChild(el('h2', { class: 'titulo' }, 'Clientes'));
-    conteudo.appendChild(el('div', { class: 'subtitulo' }, lista.length + ' cadastrados'));
+    const subtitulo = el('div', { class: 'subtitulo' });
+    conteudo.appendChild(subtitulo);
 
     let emEdicaoId = null;
     const fldNome = el('input', { class: 'input', type: 'text', placeholder: 'Nome completo' });
@@ -1448,6 +1567,7 @@
     const listaEl = el('div', {});
 
     function redesenhar() {
+      subtitulo.textContent = lista.length + ' cadastrados';
       const termo = fldBusca.value.trim().toLowerCase();
       const filtrados = !termo ? lista : lista.filter(c =>
         (c.nome || '').toLowerCase().includes(termo) || (c.telefone || '').toLowerCase().includes(termo));
@@ -1458,34 +1578,43 @@
         return;
       }
       filtrados.forEach(c => {
-        listaEl.appendChild(el('div', { class: 'linha', onclick: () => {
-          emEdicaoId = c.id;
-          fldNome.value = c.nome || '';
-          fldTelefone.value = c.telefone || '';
-          fldRua.value = c.rua || '';
-          fldNumero.value = c.numero || '';
-          fldBairro.value = c.bairro || '';
-          fldCep.value = c.cep || '';
-          fldMunicipio.value = c.municipio || '';
-          fldUf.value = c.uf || '';
-          window.scrollTo(0, 0);
-        } },
+        listaEl.appendChild(el('div', { class: 'linha', onclick: () => cadastro.abrir(c) },
           el('div', { class: 'linha-titulo' }, c.nome),
           el('div', { class: 'linha-sub' }, c.telefone || '-')
         ));
       });
     }
-    redesenhar();
     fldBusca.addEventListener('input', redesenhar);
 
-    function limpar() {
-      emEdicaoId = null;
-      fldNome.value = ''; fldTelefone.value = ''; fldRua.value = ''; fldNumero.value = '';
-      fldBairro.value = ''; fldCep.value = ''; fldMunicipio.value = ''; fldUf.value = '';
+    async function recarregarLista() {
+      cacheInvalidar(PATH);
+      try {
+        lista = await buscarECachear(PATH);
+        redesenhar();
+      } catch (e) { /* api() já avisou; a próxima visita busca de novo */ }
     }
 
+    const btnSalvar = el('button', { type: 'submit', class: 'btn btn-primary' }, 'Salvar');
+    const btnRemover = el('button', {
+      type: 'button', class: 'btn btn-danger', onclick: () => {
+        if (!emEdicaoId || !confirm('Remover este cliente?')) return;
+        const alvo = emEdicaoId;
+        comBotaoOcupado(btnRemover, 'Removendo…', async () => {
+          try {
+            await api('DELETE', PATH + '/' + alvo, undefined, [409]);
+          } catch (e) {
+            if (e.message === 'HTTP 409') toast('Não foi possível remover: cliente tem pedidos vinculados.', true);
+            return;
+          }
+          cadastro.fechar();
+          toast('Removido.');
+          await recarregarLista();
+        });
+      }
+    }, 'Remover');
+
     const form = el('form', {
-      onsubmit: async (ev) => {
+      onsubmit: (ev) => {
         ev.preventDefault();
         if (!fldNome.value.trim()) { toast('Informe o nome do cliente.', true); return; }
         const body = {
@@ -1498,44 +1627,47 @@
           municipio: fldMunicipio.value.trim() || null,
           uf: fldUf.value.trim() || null,
         };
-        try {
-          if (emEdicaoId) await api('PUT', '/api/clientes/' + emEdicaoId, body);
-          else await api('POST', '/api/clientes', body);
-        } catch (e) { return; }
-        toast('Cliente salvo.');
-        limpar();
-        telaClientes();
+        const alvo = emEdicaoId;
+        comBotaoOcupado(btnSalvar, 'Salvando…', async () => {
+          if (alvo) await api('PUT', PATH + '/' + alvo, body);
+          else await api('POST', PATH, body);
+          cadastro.fechar();
+          toast('Cliente salvo.');
+          await recarregarLista();
+        });
       }
     },
-      el('h2', { class: 'secao' }, 'Novo / editar'),
       campo('Nome', fldNome),
       campo('Telefone', fldTelefone),
       campo('Rua', fldRua),
       el('div', { class: 'row' }, campo('Número', fldNumero), campo('Bairro', fldBairro)),
       el('div', { class: 'row' }, campo('CEP', fldCep), campo('UF', fldUf)),
       campo('Município', fldMunicipio),
-      el('div', { class: 'btn-group' },
-        el('button', { type: 'submit', class: 'btn btn-primary' }, 'Salvar'),
-        el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => limpar() }, 'Limpar'),
-        el('button', {
-          type: 'button', class: 'btn btn-danger', onclick: async () => {
-            if (!emEdicaoId) { toast('Selecione um cliente na lista para remover.', true); return; }
-            if (!confirm('Remover este cliente?')) return;
-            try {
-              await api('DELETE', '/api/clientes/' + emEdicaoId);
-            } catch (e) {
-              toast('Não foi possível remover: cliente tem pedidos vinculados.', true);
-              return;
-            }
-            toast('Removido.');
-            limpar();
-            telaClientes();
-          }
-        }, 'Remover')
-      )
+      botoesCadastro(btnSalvar, btnRemover, () => cadastro.fechar())
     );
 
-    conteudo.appendChild(form);
+    const cadastro = formularioRecolhivel({
+      rotuloNovo: 'Novo cliente', tituloNovo: 'Novo cliente', tituloEditar: 'Editar cliente', form, btnRemover,
+      preencher: (c) => {
+        emEdicaoId = c.id;
+        fldNome.value = c.nome || '';
+        fldTelefone.value = c.telefone || '';
+        fldRua.value = c.rua || '';
+        fldNumero.value = c.numero || '';
+        fldBairro.value = c.bairro || '';
+        fldCep.value = c.cep || '';
+        fldMunicipio.value = c.municipio || '';
+        fldUf.value = c.uf || '';
+      },
+      limpar: () => {
+        emEdicaoId = null;
+        fldNome.value = ''; fldTelefone.value = ''; fldRua.value = ''; fldNumero.value = '';
+        fldBairro.value = ''; fldCep.value = ''; fldMunicipio.value = ''; fldUf.value = '';
+      },
+    });
+
+    redesenhar();
+    conteudo.appendChild(cadastro.elemento);
     conteudo.appendChild(el('h2', { class: 'secao' }, 'Cadastrados'));
     conteudo.appendChild(campo('Buscar', fldBusca));
     conteudo.appendChild(listaEl);
@@ -1599,14 +1731,14 @@
     const isServico = tipo === 'servicos';
     tituloTopo.textContent = isServico ? 'Serviços' : 'Peças';
     const base = isServico ? '/api/servicos-catalogo' : '/api/pecas-catalogo';
-
-    conteudo.innerHTML = '';
-    conteudo.appendChild(el('div', { class: 'empty' }, 'Carregando...'));
-    const [lista, categorias] = await Promise.all([api('GET', base), api('GET', '/api/categorias')]);
+    const meuGen = renderGen;
+    let [lista, categorias] = await carregarComCache([base, '/api/categorias']);
+    if (renderGen !== meuGen) return;
     conteudo.innerHTML = '';
 
     conteudo.appendChild(el('h2', { class: 'titulo' }, isServico ? 'Serviços' : 'Peças'));
-    conteudo.appendChild(el('div', { class: 'subtitulo' }, lista.length + ' cadastrados'));
+    const subtitulo = el('div', { class: 'subtitulo' });
+    conteudo.appendChild(subtitulo);
 
     let emEdicaoId = null;
     const fldCategoria = el('select', { class: 'input' }, ...categorias.map(c => el('option', { value: c.nome }, c.rotulo)));
@@ -1615,22 +1747,17 @@
 
     const listaEl = el('div', {});
 
-    function redesenhar(items) {
+    function redesenhar() {
+      subtitulo.textContent = lista.length + ' cadastrados';
       listaEl.innerHTML = '';
-      if (!items.length) {
+      if (!lista.length) {
         listaEl.appendChild(el('div', { class: 'empty' }, 'Nada cadastrado ainda.'));
         return;
       }
-      agruparPorCategoria(items).forEach(grupo => {
+      agruparPorCategoria(lista).forEach(grupo => {
         listaEl.appendChild(el('div', { class: 'grupo-categoria' },
           el('h3', null, grupo.rotulo),
-          ...grupo.itens.map(item => el('div', { class: 'linha', onclick: () => {
-            emEdicaoId = item.id;
-            fldCategoria.value = item.categoria;
-            fldNome.value = item.nome || '';
-            fldValor.value = item.valor != null ? item.valor : '';
-            window.scrollTo(0, 0);
-          } },
+          ...grupo.itens.map(item => el('div', { class: 'linha', onclick: () => cadastro.abrir(item) },
             el('div', { class: 'linha-topo' },
               el('span', { class: 'linha-titulo', style: 'font-size:15px' }, item.nome),
               el('span', { style: 'font-weight:600' }, moeda(item.valor))
@@ -1639,45 +1766,64 @@
         ));
       });
     }
-    redesenhar(lista);
 
-    function limpar() { emEdicaoId = null; fldCategoria.selectedIndex = 0; fldNome.value = ''; fldValor.value = ''; }
+    async function recarregarLista() {
+      cacheInvalidar(base);
+      try {
+        lista = await buscarECachear(base);
+        redesenhar();
+      } catch (e) { /* api() já avisou; a próxima visita busca de novo */ }
+    }
+
+    const btnSalvar = el('button', { type: 'submit', class: 'btn btn-primary' }, 'Salvar');
+    const btnRemover = el('button', {
+      type: 'button', class: 'btn btn-danger', onclick: () => {
+        if (!emEdicaoId || !confirm('Remover este item do catálogo?')) return;
+        const alvo = emEdicaoId;
+        comBotaoOcupado(btnRemover, 'Removendo…', async () => {
+          await api('DELETE', base + '/' + alvo);
+          cadastro.fechar();
+          toast('Removido.');
+          await recarregarLista();
+        });
+      }
+    }, 'Remover');
 
     const form = el('form', {
-      onsubmit: async (ev) => {
+      onsubmit: (ev) => {
         ev.preventDefault();
         if (!fldNome.value.trim()) { toast('Informe o nome.', true); return; }
         const body = { categoria: fldCategoria.value, nome: fldNome.value.trim(), valor: Number(fldValor.value || 0) };
-        try {
-          if (emEdicaoId) await api('PUT', base + '/' + emEdicaoId, body);
+        const alvo = emEdicaoId;
+        comBotaoOcupado(btnSalvar, 'Salvando…', async () => {
+          if (alvo) await api('PUT', base + '/' + alvo, body);
           else await api('POST', base, body);
-        } catch (e) { return; }
-        toast('Salvo.');
-        limpar();
-        telaCatalogo(tipo);
+          cadastro.fechar();
+          toast('Salvo.');
+          await recarregarLista();
+        });
       }
     },
-      el('h2', { class: 'secao' }, 'Novo / editar'),
       campo('Categoria', fldCategoria),
       campo('Nome', fldNome),
       campo('Valor (R$) — pode deixar 0 e ajustar depois', fldValor),
-      el('div', { class: 'btn-group' },
-        el('button', { type: 'submit', class: 'btn btn-primary' }, 'Salvar'),
-        el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => limpar() }, 'Limpar'),
-        el('button', {
-          type: 'button', class: 'btn btn-danger', onclick: async () => {
-            if (!emEdicaoId) { toast('Selecione um item na lista para remover.', true); return; }
-            if (!confirm('Remover este item do catálogo?')) return;
-            await api('DELETE', base + '/' + emEdicaoId);
-            toast('Removido.');
-            limpar();
-            telaCatalogo(tipo);
-          }
-        }, 'Remover')
-      )
+      botoesCadastro(btnSalvar, btnRemover, () => cadastro.fechar())
     );
 
-    conteudo.appendChild(form);
+    const novo = isServico ? 'Novo serviço' : 'Nova peça';
+    const cadastro = formularioRecolhivel({
+      rotuloNovo: novo, tituloNovo: novo, tituloEditar: isServico ? 'Editar serviço' : 'Editar peça', form, btnRemover,
+      preencher: (item) => {
+        emEdicaoId = item.id;
+        fldCategoria.value = item.categoria;
+        fldNome.value = item.nome || '';
+        fldValor.value = item.valor != null ? item.valor : '';
+      },
+      limpar: () => { emEdicaoId = null; fldCategoria.selectedIndex = 0; fldNome.value = ''; fldValor.value = ''; },
+    });
+
+    redesenhar();
+    conteudo.appendChild(cadastro.elemento);
     conteudo.appendChild(el('h2', { class: 'secao' }, 'Cadastrados'));
     conteudo.appendChild(listaEl);
   }
@@ -1899,5 +2045,20 @@
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
+
+    // O sw.js serve o app do cache (abre rápido) e avisa quando baixou uma
+    // versão nova em segundo plano — o aviso fica até o usuário tocar.
+    let avisoNovaVersao = null;
+    navigator.serviceWorker.addEventListener('message', (ev) => {
+      if (!ev.data || ev.data.type !== 'retifica:nova-versao' || avisoNovaVersao) return;
+      avisoNovaVersao = el('button', {
+        type: 'button',
+        style: 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom));' +
+          'width:calc(100% - 32px);max-width:688px;z-index:20;border:none;cursor:pointer;padding:12px 16px;' +
+          'font:inherit;font-size:14px;background:var(--color-text);color:var(--color-bg);box-shadow:var(--shadow-md)',
+        onclick: () => location.reload()
+      }, 'Nova versão disponível — toque para atualizar');
+      document.body.appendChild(avisoNovaVersao);
+    });
   }
 })();
