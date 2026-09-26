@@ -8,7 +8,9 @@
 // rede no caminho crítico da abertura.
 // Nunca cacheia /api/* (dados sempre frescos) nem requisições de outras
 // origens (Google Fonts etc. ficam com o cache HTTP do próprio navegador).
-const CACHE = 'retifica-shell-v5';
+// v6: a v5 tinha o bug de nunca atualizar o cache (ver comentário no fetch);
+// trocar o nome força instalar do zero e resgata quem ficou preso nela.
+const CACHE = 'retifica-shell-v6';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'assets/logo-dih.png'];
 
 self.addEventListener('install', (event) => {
@@ -19,8 +21,14 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((chaves) => Promise.all(chaves.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
+      .then(async (chaves) => {
+        const antigos = chaves.filter((k) => k !== CACHE);
+        await Promise.all(antigos.map((k) => caches.delete(k)));
+        await self.clients.claim();
+        // substituiu uma versão anterior: a aba aberta ainda roda o app.js
+        // antigo, então oferece recarregar.
+        if (antigos.length) await avisarNovaVersao();
+      })
   );
 });
 
@@ -39,7 +47,7 @@ async function revalidar(request, emCache) {
   if (!resp.ok || resp.type !== 'basic') return resp;
   const cache = await caches.open(CACHE);
   if (emCache && ehTextoDoShell(resp)) {
-    const [novo, antigo] = await Promise.all([resp.clone().text(), emCache.clone().text()]);
+    const [novo, antigo] = await Promise.all([resp.clone().text(), emCache.text()]);
     await cache.put(request, resp.clone());
     if (novo !== antigo) await avisarNovaVersao();
   } else {
@@ -60,7 +68,10 @@ self.addEventListener('fetch', (event) => {
     if (!emCache && request.mode === 'navigate') {
       emCache = await caches.match('index.html');
     }
-    const daRede = revalidar(request, emCache);
+    // Clona ANTES de devolver: a página consome o corpo de emCache, e ler
+    // esse mesmo objeto depois (na comparação) falhava em silêncio — o cache
+    // nunca atualizava e o app ficava preso na versão antiga.
+    const daRede = revalidar(request, emCache ? emCache.clone() : null);
     if (emCache) {
       // devolve o cache na hora; a revalidação continua viva via waitUntil
       event.waitUntil(daRede.catch(() => {}));

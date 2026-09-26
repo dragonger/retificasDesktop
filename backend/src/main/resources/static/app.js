@@ -97,6 +97,42 @@
     }
   }
 
+  // Confirmação no visual do app (o confirm() nativo destoa e, no Android,
+  // mostra o domínio do site no título). Resolve true/false.
+  function confirmar(mensagem, rotuloConfirmar, perigoso) {
+    return new Promise(resolve => {
+      function fechar(resposta) {
+        document.removeEventListener('keydown', teclado);
+        fundo.remove();
+        resolve(resposta);
+      }
+      function teclado(ev) { if (ev.key === 'Escape') fechar(false); }
+      const btnOk = el('button', {
+        type: 'button', class: 'btn ' + (perigoso ? 'btn-danger' : 'btn-primary'), onclick: () => fechar(true)
+      }, rotuloConfirmar || 'Confirmar');
+      const btnCancelar = el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => fechar(false) }, 'Cancelar');
+      const caixa = el('div', {
+        role: 'dialog', 'aria-modal': 'true',
+        style: 'background:var(--color-bg);padding:20px;width:100%;max-width:400px;box-shadow:var(--shadow-md)'
+      },
+        el('div', { style: 'font-size:15px;line-height:1.4;margin-bottom:18px' }, mensagem),
+        el('div', { class: 'btn-group', style: 'margin:0' }, btnCancelar, btnOk));
+      const fundo = el('div', {
+        style: 'position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;' +
+          'padding:16px;background:color-mix(in srgb, var(--color-text) 45%, transparent)',
+        onclick: (ev) => { if (ev.target === fundo) fechar(false); }
+      }, caixa);
+      document.addEventListener('keydown', teclado);
+      document.body.appendChild(fundo);
+      // ação destrutiva: Enter cancela em vez de apagar
+      (perigoso ? btnCancelar : btnOk).focus();
+    });
+  }
+
+  function cadastrados(n) {
+    return n + (n === 1 ? ' cadastrado' : ' cadastrados');
+  }
+
   // statusSemAviso: códigos que o chamador trata com mensagem própria (evita
   // dois toasts seguidos, o genérico e o específico).
   async function api(method, path, body, statusSemAviso) {
@@ -142,6 +178,7 @@
   // ao reabrir a tela mostra o que já tem na hora (sem "Carregando..." nem
   // esperar rede) e busca de novo por trás; só redesenha com o dado fresco
   // se ele realmente mudou, senão a tela fica quieta (sem piscar).
+  const PEDIDOS_ABERTOS = '/api/pedidos?abertos=true';
   const respostaCache = new Map();
   const cacheVersao = new Map();
   let renderGen = 0;
@@ -547,14 +584,16 @@
 
   async function telaPedidos(filtroChave) {
     tituloTopo.textContent = 'Pedidos';
-    function render(todos) {
+    // Só os abertos: finalizados já ficam na aba Encerrados, e trazer todos
+    // aqui fazia a lista (e o download) crescer sem limite mês a mês.
+    function render(abertos) {
       const filtro = FILTROS_PEDIDOS[filtroChave];
-      const pedidos = filtro ? todos.filter(filtro.fn) : todos;
+      const pedidos = filtro ? abertos.filter(filtro.fn) : abertos;
       conteudo.innerHTML = '';
 
       conteudo.appendChild(el('h2', { class: 'titulo' }, 'Pedidos'));
       conteudo.appendChild(el('div', { class: 'subtitulo' },
-        filtro ? filtro.rotulo + ' — ' + pedidos.length : pedidos.filter(p => !p.finalizado).length + ' em aberto'));
+        filtro ? filtro.rotulo + ' — ' + pedidos.length : pedidos.length + ' em aberto'));
 
       if (filtro) {
         conteudo.appendChild(btnBlueprint('Ver todos os pedidos', 'btn-secondary btn-block', {
@@ -563,16 +602,22 @@
       }
 
       if (!pedidos.length) {
-        conteudo.appendChild(el('div', { class: 'empty' }, filtro ? 'Nenhum pedido nessa situação.' : 'Nenhum pedido cadastrado ainda.'));
+        conteudo.appendChild(el('div', { class: 'empty' }, filtro ? 'Nenhum pedido nessa situação.' : 'Nenhum pedido em aberto.'));
       } else {
         pedidos.forEach(p => conteudo.appendChild(linhaPedido(p)));
+      }
+
+      if (!filtro) {
+        conteudo.appendChild(btnBlueprint('Ver finalizados', 'btn-secondary btn-block', {
+          style: 'margin-top:16px', onclick: () => { location.hash = '#/encerrados'; }
+        }));
       }
 
       conteudo.appendChild(btnBlueprint('+', 'btn-primary btn-fab', {
         'aria-label': 'Novo pedido', onclick: () => { location.hash = '#/pedidos/novo'; }
       }));
     }
-    await comCache('/api/pedidos', render);
+    await comCache(PEDIDOS_ABERTOS, render);
   }
 
   function linhaPedido(p) {
@@ -678,9 +723,9 @@
     menuPedidoPopover.appendChild(el('button', {
       type: 'button', class: 'danger', onclick: async () => {
         menuPedidoPopover.hidden = true;
-        if (!confirm('Deletar o pedido #' + id + '? Essa ação não pode ser desfeita.')) return;
+        if (!(await confirmar('Excluir o pedido #' + id + '? Essa ação não pode ser desfeita.', 'Excluir', true))) return;
         await api('DELETE', '/api/pedidos/' + id);
-        cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
+        cacheInvalidar(PEDIDOS_ABERTOS, '/api/pedidos/dashboard', '/api/pedidos/encerrados');
         orcamentoInvalidar(id);
         toast('Pedido deletado.');
         location.hash = '#/pedidos';
@@ -711,12 +756,12 @@
           }
         }),
         p.finalizado ? null : btnBlueprint('Finalizar', 'btn-secondary', {
-          style: 'flex:1', onclick: (ev) => {
+          style: 'flex:1', onclick: async (ev) => {
             const botao = ev.currentTarget;
-            if (!confirm('Finalizar o pedido #' + id + '? A data de entrega será registrada agora.')) return;
+            if (!(await confirmar('Finalizar o pedido #' + id + '? A data de entrega será registrada agora.', 'Finalizar'))) return;
             comBotaoOcupado(botao, 'Finalizando…', async () => {
               await api('POST', '/api/pedidos/' + id + '/finalizar');
-              cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
+              cacheInvalidar(PEDIDOS_ABERTOS, '/api/pedidos/dashboard', '/api/pedidos/encerrados');
               orcamentoInvalidar(id);
               toast('Pedido finalizado.');
               telaVisualizarPedido(id);
@@ -1366,7 +1411,7 @@
           ? api('PUT', '/api/pedidos/' + id, body)
           : api('POST', '/api/pedidos', body));
         if (!salvo) return;
-        cacheInvalidar('/api/pedidos', '/api/pedidos/dashboard', '/api/pedidos/encerrados');
+        cacheInvalidar(PEDIDOS_ABERTOS, '/api/pedidos/dashboard', '/api/pedidos/encerrados');
         orcamentoInvalidar(salvo.id);
         registrarClienteRecente(clienteSelecionado.id);
         toast('Pedido salvo.');
@@ -1451,7 +1496,7 @@
     const listaEl = el('div', {});
 
     function redesenhar() {
-      subtitulo.textContent = 'Cabeçotes, blocos, bielas e virabrequins — ' + lista.length + ' cadastrados';
+      subtitulo.textContent = 'Cabeçotes, blocos, bielas e virabrequins — ' + cadastrados(lista.length);
       listaEl.innerHTML = '';
       if (!lista.length) {
         listaEl.appendChild(el('div', { class: 'empty' }, 'Nada cadastrado ainda.'));
@@ -1481,9 +1526,10 @@
 
     const btnSalvar = el('button', { type: 'submit', class: 'btn btn-primary' }, 'Salvar');
     const btnRemover = el('button', {
-      type: 'button', class: 'btn btn-danger', onclick: () => {
-        if (!emEdicaoId || !confirm('Remover este item?')) return;
+      type: 'button', class: 'btn btn-danger', onclick: async () => {
+        if (!emEdicaoId) return;
         const alvo = emEdicaoId;
+        if (!(await confirmar('Remover este produto?', 'Remover', true))) return;
         comBotaoOcupado(btnRemover, 'Removendo…', async () => {
           await api('DELETE', PATH + '/' + alvo);
           cadastro.fechar();
@@ -1567,7 +1613,7 @@
     const listaEl = el('div', {});
 
     function redesenhar() {
-      subtitulo.textContent = lista.length + ' cadastrados';
+      subtitulo.textContent = cadastrados(lista.length);
       const termo = fldBusca.value.trim().toLowerCase();
       const filtrados = !termo ? lista : lista.filter(c =>
         (c.nome || '').toLowerCase().includes(termo) || (c.telefone || '').toLowerCase().includes(termo));
@@ -1596,9 +1642,10 @@
 
     const btnSalvar = el('button', { type: 'submit', class: 'btn btn-primary' }, 'Salvar');
     const btnRemover = el('button', {
-      type: 'button', class: 'btn btn-danger', onclick: () => {
-        if (!emEdicaoId || !confirm('Remover este cliente?')) return;
+      type: 'button', class: 'btn btn-danger', onclick: async () => {
+        if (!emEdicaoId) return;
         const alvo = emEdicaoId;
+        if (!(await confirmar('Remover este cliente?', 'Remover', true))) return;
         comBotaoOcupado(btnRemover, 'Removendo…', async () => {
           try {
             await api('DELETE', PATH + '/' + alvo, undefined, [409]);
@@ -1748,7 +1795,7 @@
     const listaEl = el('div', {});
 
     function redesenhar() {
-      subtitulo.textContent = lista.length + ' cadastrados';
+      subtitulo.textContent = cadastrados(lista.length);
       listaEl.innerHTML = '';
       if (!lista.length) {
         listaEl.appendChild(el('div', { class: 'empty' }, 'Nada cadastrado ainda.'));
@@ -1777,9 +1824,10 @@
 
     const btnSalvar = el('button', { type: 'submit', class: 'btn btn-primary' }, 'Salvar');
     const btnRemover = el('button', {
-      type: 'button', class: 'btn btn-danger', onclick: () => {
-        if (!emEdicaoId || !confirm('Remover este item do catálogo?')) return;
+      type: 'button', class: 'btn btn-danger', onclick: async () => {
+        if (!emEdicaoId) return;
         const alvo = emEdicaoId;
+        if (!(await confirmar('Remover este item do catálogo?', 'Remover', true))) return;
         comBotaoOcupado(btnRemover, 'Removendo…', async () => {
           await api('DELETE', base + '/' + alvo);
           cadastro.fechar();
