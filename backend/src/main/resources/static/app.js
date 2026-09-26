@@ -134,6 +134,13 @@
     return (nome || '').trim().toLowerCase();
   }
 
+  // Mesmo serviço/peça no pedido: mesmo nome e mesma categoria. Item antigo
+  // (gravado antes de guardar a categoria) casa com qualquer categoria.
+  function mesmoItem(entrada, nome, categoria) {
+    return chaveNome(entrada.descricao) === chaveNome(nome)
+      && (!entrada.categoria || !categoria || entrada.categoria === categoria);
+  }
+
   function cadastrados(n) {
     return n + (n === 1 ? ' cadastrado' : ' cadastrados');
   }
@@ -950,14 +957,19 @@
       el('span', { style: 'opacity:.55' }, rotulo), tagSituacao(situacao));
   }
 
+  const ROTULOS_CATEGORIA = { CABECOTE: 'Cabeçote', BLOCO: 'Bloco', BIELA: 'Biela', VIRABREQUIM: 'Virabrequim', MONTAGEM: 'Montagem', OUTRO: 'Outro' };
+
   function tabelaItens(itens, vazio, comQuantidade) {
     if (!itens || !itens.length) {
       return el('div', { class: 'empty', style: 'padding:16px 0' }, vazio);
     }
     const box = el('div', {});
-    itens.forEach(i => {
+    itens.forEach((i, idx) => {
+      // mesmo nome em dois componentes: mostra de qual é cada um
+      const ambiguo = itens.some((o, j) => j !== idx && chaveNome(o.descricao) === chaveNome(i.descricao));
+      const rotulo = i.descricao + (ambiguo && i.categoria ? ' · ' + (ROTULOS_CATEGORIA[i.categoria] || i.categoria) : '');
       box.appendChild(el('div', { class: 'item-linha' },
-        el('span', null, comQuantidade ? i.descricao + ' ×' + i.quantidade : i.descricao)
+        el('span', null, comQuantidade ? rotulo + ' ×' + i.quantidade : rotulo)
       ));
     });
     return box;
@@ -1037,6 +1049,10 @@
     // aparece quando a categoria correspondente estiver marcada em
     // "Categorias envolvidas"; um pedido pode ter mais de um componente —
     const CATEGORIAS_COMPONENTE = ['CABECOTE', 'BLOCO', 'BIELA', 'VIRABREQUIM'];
+    function rotuloCategoria(nome) {
+      const c = catalogoCache.categorias.find(x => x.nome === nome);
+      return c ? c.rotulo : nome;
+    }
     const selComponente = el('select', { class: 'input' });
     const listaComponentesEl = el('div', {});
 
@@ -1311,8 +1327,12 @@
         return;
       }
       lista.forEach((item, idx) => {
+        // mesmo nome em dois componentes (ex.: Plainar do Bloco e do
+        // Cabeçote): mostra de qual é cada um
+        const ambiguo = lista.some((o, j) => j !== idx && chaveNome(o.descricao) === chaveNome(item.descricao));
+        const rotulo = item.descricao + (ambiguo && item.categoria ? ' · ' + rotuloCategoria(item.categoria) : '');
         container.appendChild(el('div', { class: 'item-linha' },
-          el('span', null, comQuantidade ? item.descricao + ' ×' + item.quantidade : item.descricao),
+          el('span', null, comQuantidade ? rotulo + ' ×' + item.quantidade : rotulo),
           el('button', { onclick: () => { lista.splice(idx, 1); redesenhar(); } }, '✕')
         ));
       });
@@ -1339,8 +1359,7 @@
         corpo.innerHTML = '';
         checkboxes.clear();
         qtdInputs.clear();
-        const jaAdicionados = new Set(lista.map(i => chaveNome(i.descricao)));
-        const filtrado = catalogoFiltrado(catalogo).filter(item => !jaAdicionados.has(chaveNome(item.nome)));
+        const filtrado = catalogoFiltrado(catalogo).filter(item => !lista.some(i => mesmoItem(i, item.nome, item.categoria)));
         if (!filtrado.length) {
           corpo.appendChild(el('div', { class: 'empty', style: 'padding:12px 0' }, 'Nenhum item disponível pra adicionar.'));
           return;
@@ -1370,17 +1389,15 @@
       const btnAdicionar = btnBlueprint('Adicionar selecionados', 'btn-secondary btn-block', {
         onclick: () => {
           let algum = false;
-          // nomes já no pedido + os marcados agora: o catálogo pode ter o
-          // mesmo nome duas vezes, e marcar os dois repetia o item no pedido
-          const nomes = new Set(lista.map(i => chaveNome(i.descricao)));
           checkboxes.forEach((chk, id) => {
             if (!chk.checked) return;
             const item = catalogo.find(c => c.id === id);
             if (!item) return;
             algum = true;
-            if (nomes.has(chaveNome(item.nome))) return;
-            nomes.add(chaveNome(item.nome));
-            const entrada = { descricao: item.nome };
+            // já no pedido (inclusive marcado agora, se o catálogo tiver o
+            // mesmo nome duas vezes na categoria) — não repete
+            if (lista.some(i => mesmoItem(i, item.nome, item.categoria))) return;
+            const entrada = { descricao: item.nome, categoria: item.categoria };
             if (comQuantidade) {
               const qtdEl = qtdInputs.get(id);
               entrada.quantidade = Math.max(1, parseInt((qtdEl && qtdEl.value) || '1', 10));
@@ -1419,11 +1436,11 @@
             onclick: async (ev) => {
               const nome = fldNome.value.trim();
               if (!nome) { toast('Informe o nome.', true); return; }
-              if (lista.some(i => i.descricao.toLowerCase() === nome.toLowerCase())) {
+              if (lista.some(i => mesmoItem(i, nome, fldCategoria.value))) {
                 toast((feminino ? 'Essa ' : 'Esse ') + singular + ' já está no pedido.', true); return;
               }
               // Já existe no catálogo com esse nome: só adiciona, sem duplicar.
-              let item = catalogo.find(c => c.nome.toLowerCase() === nome.toLowerCase());
+              let item = catalogo.find(c => chaveNome(c.nome) === chaveNome(nome) && c.categoria === fldCategoria.value);
               if (!item) {
                 item = await comBotaoOcupado(ev.currentTarget, 'Salvando…', () => api('POST', cadastroInline.endpoint, {
                   categoria: fldCategoria.value, nome, valor: 0
@@ -1432,7 +1449,7 @@
                 catalogo.push(item);
                 cacheInvalidar(cadastroInline.endpoint);
               }
-              const entrada = { descricao: item.nome };
+              const entrada = { descricao: item.nome, categoria: item.categoria };
               if (fldQtd) entrada.quantidade = Math.max(1, parseInt(fldQtd.value || '1', 10) || 1);
               lista.push(entrada);
               fldNome.value = '';
@@ -1659,7 +1676,7 @@
   }
 
   function clonarItem(i) {
-    return { descricao: i.descricao, quantidade: i.quantidade };
+    return { descricao: i.descricao, quantidade: i.quantidade, categoria: i.categoria || null };
   }
 
   function campo(rotulo, inputEl) {

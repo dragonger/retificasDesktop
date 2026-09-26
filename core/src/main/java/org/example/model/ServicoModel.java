@@ -12,6 +12,13 @@ public class ServicoModel {
 
     private String descricao;
 
+    // Componente (categoria) a que o item pertence no pedido — o mesmo nome
+    // pode existir em mais de uma categoria do catálogo (ex.: "Plainar" em
+    // Bloco e Cabeçote). Nulo nos itens gravados antes desta coluna existir;
+    // aí o orçamento cai no nome do catálogo (ver PedidoPdfService).
+    @Enumerated(EnumType.STRING)
+    private CategoriaProduto categoria;
+
     @ManyToOne
     @JoinColumn(name = "pedido_id")
     private PedidoModel pedido;
@@ -41,5 +48,13 @@ public class ServicoModel {
 
     public void setPedido(PedidoModel pedido) {
         this.pedido = pedido;
+    }
+
+    public CategoriaProduto getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(CategoriaProduto categoria) {
+        this.categoria = categoria;
     }
 }
