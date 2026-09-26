@@ -220,9 +220,13 @@ h2.titulo { font-size: 26px; margin-bottom: 2px; }
 }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-primary { background: var(--color-accent); color: var(--color-bg); border-color: var(--color-accent); }
+.btn-primary:hover { background: var(--color-accent-600); }
 .btn-primary:active { background: var(--color-accent-700); }
+.btn-secondary:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
 .btn-secondary:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
 .btn-ghost { color: var(--color-accent); border-color: transparent; }
+.btn-ghost:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.btn-ghost:active { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
 .btn-danger { color: var(--color-danger); border-color: var(--color-danger); }
 .btn-block { width: 100%; }
 .btn-icon { width: 44px; height: 44px; padding: 0; }
