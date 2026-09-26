@@ -55,7 +55,7 @@ public class PecaCatalogoController {
     }
 
     private ResponseEntity<CatalogoItemDTO> salvar(PecaCatalogoModel peca, CatalogoRequestDTO request) {
-        if (request.nome == null || request.nome.isBlank()) {
+        if (request.nome == null || request.nome.isBlank() || (request.valor != null && request.valor.signum() < 0)) {
             return ResponseEntity.badRequest().build();
         }
         peca.setNome(request.nome.trim());

@@ -140,7 +140,7 @@ public class PedidoController {
 
     @PostMapping
     public ResponseEntity<PedidoDetalheDTO> criar(@RequestBody PedidoRequestDTO request) {
-        if (request.clienteId == null) {
+        if (request.clienteId == null || temValorInvalido(request)) {
             return ResponseEntity.badRequest().build();
         }
         // Tudo numa transação só (ver PedidoRepository.criar): antes eram
@@ -158,7 +158,7 @@ public class PedidoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<PedidoDetalheDTO> atualizar(@PathVariable Long id, @RequestBody PedidoRequestDTO request) {
-        if (request.clienteId == null) {
+        if (request.clienteId == null || temValorInvalido(request)) {
             return ResponseEntity.badRequest().build();
         }
         PedidoDetalheDTO dto = pedidoRepository.atualizar(
@@ -229,6 +229,32 @@ public class PedidoController {
      * O resultado final e a ordem são os mesmos de antes (ordem = id, ver
      * @OrderBy em PedidoModel), com bem menos DELETE/INSERT.
      */
+    /** Valores negativos (ou quantidade menor que 1) nunca fazem sentido num orçamento. */
+    private static boolean temValorInvalido(PedidoRequestDTO request) {
+        if (negativo(request.descontoValor)) {
+            return true;
+        }
+        if (request.categoriaValores != null) {
+            for (CategoriaValorRequestDTO cv : request.categoriaValores) {
+                if (cv != null && (negativo(cv.valorServicos) || negativo(cv.valorPecas))) {
+                    return true;
+                }
+            }
+        }
+        if (request.pecas != null) {
+            for (ItemRequestDTO peca : request.pecas) {
+                if (peca != null && peca.quantidade != null && peca.quantidade < 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean negativo(BigDecimal valor) {
+        return valor != null && valor.signum() < 0;
+    }
+
     private void aplicarRequest(PedidoModel pedido, PedidoRequestDTO request) {
         pedido.setPedido(request.pedidoDescricao);
         pedido.setObservacao(request.observacao);
