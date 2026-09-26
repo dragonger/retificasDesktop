@@ -456,8 +456,10 @@
     attrs = Object.assign({}, attrs, { class: ((attrs && attrs.class) || '') + ' blueprint' });
     return el(tag, attrs, ...corners(), ...filhos);
   }
+  // Botões no redesign "Retifica App": retângulo com borda fina, sem os
+  // cantos em L (esses ficam só nos cards/caixas).
   function btnBlueprint(texto, cls, attrs) {
-    return blueprintBox('button', Object.assign({ type: 'button' }, attrs, { class: 'btn ' + cls }), texto);
+    return el('button', Object.assign({ type: 'button' }, attrs, { class: 'btn ' + cls }), texto);
   }
 
   const STATUS_OPCOES = [['ABERTO', 'Aberto'], ['EM_ANDAMENTO', 'Em andamento'], ['PRONTO', 'Pronto']];
