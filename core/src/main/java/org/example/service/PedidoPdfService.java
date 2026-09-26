@@ -350,7 +350,9 @@ public class PedidoPdfService {
             itens.add(new String[]{valor(p.getDescricao()), qtd});
         }
         for (String[] item : itens) {
-            Grupo g = porCategoria.get(categoriaPorItem.get(chaveItem(item[0])));
+            CategoriaProduto cat = categoriaPorItem.get(chaveItem(item[0]));
+            // cat null = item fora do catálogo; não pode casar com uma categoria null do pedido
+            Grupo g = cat != null ? porCategoria.get(cat) : null;
             if (g == null) g = unico != null ? unico : outros;
             g.itens.add(item);
         }
