@@ -25,6 +25,7 @@ const BACKEND_HOST = process.env.BACKEND_HOST || 'retifica-backend.railway.inter
 const BACKEND_PORT = Number(process.env.BACKEND_PORT || 8080);
 const BACKEND_TLS = process.env.BACKEND_TLS === 'true';
 const upstreamModule = BACKEND_TLS ? https : http;
+const BACKEND_HEALTH_PATH = process.env.BACKEND_HEALTH_PATH || '/health';
 const IDLE_TIMEOUT_MS = Number(process.env.IDLE_TIMEOUT_MINUTES || 30) * 60 * 1000;
 const WAKE_TIMEOUT_MS = Number(process.env.WAKE_TIMEOUT_SECONDS || 45) * 1000;
 
@@ -90,16 +91,24 @@ async function stopBackend(deploymentId) {
 
 let lastActivityAt = Date.now();
 let statusCache = { deployment: null, at: 0 };
+// "No ar" vale por 60s: reconsultar a API do Railway a cada 4s custava
+// ~170ms em quase toda requisição fora do horário. Se o backend cair
+// nesse meio-tempo (ex.: cron das 20h), o repasse falha e invalida o cache.
+const STATUS_CACHE_OK_MS = 60 * 1000;
 const STATUS_CACHE_MS = 4000;
 let wakePromise = null;
 
 async function getStatusCached() {
   const agora = Date.now();
-  if (agora - statusCache.at < STATUS_CACHE_MS) return statusCache.deployment;
+  const validade = statusCache.deployment && statusCache.deployment.status === 'SUCCESS'
+    ? STATUS_CACHE_OK_MS : STATUS_CACHE_MS;
+  if (agora - statusCache.at < validade) return statusCache.deployment;
   const deployment = await getLatestDeployment();
   statusCache = { deployment, at: agora };
   return deployment;
 }
+
+function invalidarStatus() { statusCache.at = 0; }
 
 function aguardar(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -108,8 +117,10 @@ function backendResponde() {
   // SEMPRE responde algo mesmo com o servico parado (ex.: 404 de "nenhum
   // deployment ativo") - por isso exige status 200 de verdade (a home
   // real da app), nao só "respondeu alguma coisa".
+  // /health só responde depois que o Hibernate subiu (ver HealthController),
+  // então a requisição do usuário não fica presa na inicialização do banco.
   return new Promise((resolve) => {
-    const req = upstreamModule.request({ host: BACKEND_HOST, port: BACKEND_PORT, path: '/', method: 'GET', timeout: 2000 }, (res) => {
+    const req = upstreamModule.request({ host: BACKEND_HOST, port: BACKEND_PORT, path: BACKEND_HEALTH_PATH, method: 'GET', timeout: 8000 }, (res) => {
       res.resume();
       resolve(res.statusCode === 200);
     });
@@ -124,8 +135,9 @@ async function garantirLigado() {
   wakePromise = (async () => {
     try {
       const deployment = await getStatusCached();
-      if (deployment && deployment.status !== 'SUCCESS' && deployment.status !== 'REMOVED') {
-        // ja esta subindo (status intermediario, ex. BUILDING/DEPLOYING) - so espera.
+      if (deployment && deployment.status !== 'REMOVED') {
+        // SUCCESS (falha momentânea no repasse) ou subindo (BUILDING/
+        // DEPLOYING): não redeploya, só espera o /health responder.
       } else if (deployment) {
         await redeployBackend(deployment.id);
       } else {
@@ -163,6 +175,7 @@ setInterval(async () => {
     const deployment = await getLatestDeployment(); // sem cache, checagem real
     if (deployment && deployment.status === 'SUCCESS') {
       await stopBackend(deployment.id);
+      statusCache = { deployment: { id: deployment.id, status: 'REMOVED' }, at: Date.now() };
     }
   } catch (e) {
     console.error('[idle] Erro na checagem de inatividade:', e.message);
@@ -171,7 +184,11 @@ setInterval(async () => {
 
 // ---------- proxy reverso ----------
 
-function proxyRequest(req, res) {
+// tentarAcordar: se o repasse falhar fora do horário (cache dizia "no ar"
+// mas o backend já tinha parado), liga o backend e tenta de novo — só pra
+// GET/HEAD, que não têm corpo e podem ser repetidos sem risco.
+function proxyRequest(req, res, tentarAcordar) {
+  const semCorpo = req.method === 'GET' || req.method === 'HEAD';
   const headers = { ...req.headers, host: BACKEND_HOST };
   const upstream = upstreamModule.request({
     host: BACKEND_HOST,
@@ -185,10 +202,18 @@ function proxyRequest(req, res) {
   });
   upstream.on('error', (e) => {
     console.error('[proxy] Erro ao repassar pro backend:', e.code || e.message || e);
+    invalidarStatus();
+    if (tentarAcordar && semCorpo && !res.headersSent) {
+      garantirLigado().then((ligou) => (ligou ? proxyRequest(req, res, false) : paginaCarregando(res)));
+      return;
+    }
     if (!res.headersSent) res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Erro ao conectar no servidor.');
   });
-  req.pipe(upstream);
+  // GET/HEAD: encerra direto em vez de pipe — numa segunda tentativa o req
+  // já terminou e o pipe nunca chamaria end() no upstream.
+  if (semCorpo) upstream.end();
+  else req.pipe(upstream);
 }
 
 function paginaCarregando(res) {
@@ -204,18 +229,24 @@ function paginaCarregando(res) {
 // ---------- servidor ----------
 
 const server = http.createServer(async (req, res) => {
+  // healthcheck do próprio proxy (railway.json) — não pode repassar nem
+  // acordar o backend, senão cada deploy do proxy à noite o ligaria.
+  if (req.url === '/__proxy_health') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    return res.end('ok');
+  }
   if (!isClosedHours()) {
-    return proxyRequest(req, res);
+    return proxyRequest(req, res, false);
   }
 
   lastActivityAt = Date.now();
   try {
     const deployment = await getStatusCached();
     if (deployment && deployment.status === 'SUCCESS') {
-      return proxyRequest(req, res);
+      return proxyRequest(req, res, true);
     }
     const ligou = await garantirLigado();
-    if (ligou) return proxyRequest(req, res);
+    if (ligou) return proxyRequest(req, res, false);
     return paginaCarregando(res);
   } catch (e) {
     console.error('[server] Erro:', e.message);

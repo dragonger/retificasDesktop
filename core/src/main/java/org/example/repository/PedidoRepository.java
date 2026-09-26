@@ -264,6 +264,15 @@ public class PedidoRepository {
      * tabela da tela inicial).
      */
     public List<PedidoModel> listarTodos(Long empresaId) {
+        return listar(empresaId, false);
+    }
+
+    /** Só os não finalizados (datEntrega nula) — listagem do dia a dia e dashboard. */
+    public List<PedidoModel> listarAbertos(Long empresaId) {
+        return listar(empresaId, true);
+    }
+
+    private List<PedidoModel> listar(Long empresaId, boolean apenasAbertos) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
@@ -271,7 +280,8 @@ public class PedidoRepository {
                             "LEFT JOIN FETCH p.cliente c " +
                             "LEFT JOIN FETCH c.empresa " +
                             "LEFT JOIN FETCH p.componentes " +
-                            "WHERE p.empresa.id = :empresaId",
+                            "WHERE p.empresa.id = :empresaId" +
+                            (apenasAbertos ? " AND p.datEntrega IS NULL" : ""),
                     PedidoModel.class)
                     .setParameter("empresaId", empresaId)
                     .getResultList();

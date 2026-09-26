@@ -37,9 +37,10 @@ public class PedidoController {
     private final PedidoPdfService pdfService = new PedidoPdfService();
 
     @GetMapping
-    public List<PedidoResumoDTO> listar() {
+    public List<PedidoResumoDTO> listar(@RequestParam(name = "abertos", defaultValue = "false") boolean abertos) {
+        Long empresaId = SecurityUtils.empresaAtual();
         List<PedidoResumoDTO> resultado = new ArrayList<>();
-        for (PedidoModel pedido : pedidoRepository.listarTodos(SecurityUtils.empresaAtual())) {
+        for (PedidoModel pedido : abertos ? pedidoRepository.listarAbertos(empresaId) : pedidoRepository.listarTodos(empresaId)) {
             resultado.add(toResumo(pedido));
         }
         return resultado;
@@ -51,7 +52,7 @@ public class PedidoController {
         DashboardDTO dto = new DashboardDTO();
         dto.entregasHoje = new ArrayList<>();
 
-        for (PedidoModel pedido : pedidoRepository.listarTodos(SecurityUtils.empresaAtual())) {
+        for (PedidoModel pedido : pedidoRepository.listarAbertos(SecurityUtils.empresaAtual())) {
             if (pedido.isFinalizado()) {
                 continue;
             }
