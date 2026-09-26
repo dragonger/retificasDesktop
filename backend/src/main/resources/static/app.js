@@ -242,13 +242,21 @@
   // toque — pré-carregar o PDF evita que o fetch "gaste" essa janela de gesto.
   // Memorizado por pedido na sessão (~170KB cada): reabrir o mesmo pedido não
   // baixa/gera o PDF de novo. Invalidado ao editar/finalizar/excluir.
+  // Validade de 10 min: o app fica aberto dias no celular, e o PDF leva a
+  // data de emissão/validade e as categorias do catálogo — um PDF de ontem
+  // guardado sairia com a data errada.
+  const ORCAMENTO_CACHE_MS = 10 * 60 * 1000;
   const orcamentoCache = new Map();
+  const orcamentoCacheEm = new Map();
   function orcamentoInvalidar(id) {
     orcamentoCache.delete(String(id));
   }
   function prepararOrcamento(id) {
     const chave = String(id);
-    if (orcamentoCache.has(chave)) return orcamentoCache.get(chave);
+    if (orcamentoCache.has(chave) && Date.now() - orcamentoCacheEm.get(chave) < ORCAMENTO_CACHE_MS) {
+      return orcamentoCache.get(chave);
+    }
+    orcamentoCacheEm.set(chave, Date.now());
     const auth = getAuth();
     const promise = fetch('/api/pedidos/' + id + '/pdf', {
       headers: auth && auth.token ? { 'Authorization': 'Bearer ' + auth.token } : {}
@@ -2098,13 +2106,16 @@
         return;
       }
 
-      grupos.forEach(grupo => {
+      grupos.forEach((grupo, idx) => {
         const corpo = el('div', { class: 'accordion-body' }, ...grupo.pedidos.map(linhaPedido));
+        // só o mês mais recente começa aberto — com todos abertos a lista
+        // crescia sem fim e os meses antigos ficavam lá embaixo
+        corpo.hidden = idx > 0;
         const chevron = svgIcone('currentColor', 15, '');
         function atualizarChevron() {
           chevron.innerHTML = corpo.hidden ? '<path d="m6 9 6 6 6-6"></path>' : '<path d="m18 15-6-6-6 6"></path>';
         }
-        const cab = blueprintBox('button', { type: 'button', class: 'accordion-cab', 'aria-expanded': 'true' },
+        const cab = blueprintBox('button', { type: 'button', class: 'accordion-cab', 'aria-expanded': String(!corpo.hidden) },
           el('span', { class: 'linha-titulo' }, grupo.mes),
           el('span', { class: 'accordion-meta' }, grupo.quantidade + ' · ' + moeda(grupo.total), chevron)
         );

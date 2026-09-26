@@ -206,7 +206,7 @@ public class PedidoController {
                 mapa.put(PedidoPdfService.chaveItem(s.getNome()), s.getCategoria());
             }
             return mapa;
-        });
+        }).exceptionally(erro -> Map.of()); // catálogo fora do ar: o orçamento sai sem agrupar, mas sai
         PedidoModel pedido = pedidoRepository.buscarParaPdf(id, empresaId);
         if (pedido == null) {
             return ResponseEntity.notFound().build();
