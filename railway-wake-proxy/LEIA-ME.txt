@@ -42,6 +42,14 @@ Variáveis de ambiente (service retifica-wake-proxy no Railway):
   Railway. (Zerei bastante tempo tentando debugar "rede privada não
   funciona" quando na verdade era só a porta errada — a rede privada
   sempre funcionou normal.)
+- BACKEND_HEALTH_PATH (default /health) — o proxy só considera o backend
+  "pronto" quando esse endereço responde 200 (só acontece depois do
+  Hibernate subir, ver HealthController).
+- Status "no ar" fica em cache por 60s (4s nos outros estados); se o
+  repasse falhar, o cache é invalidado e GET/HEAD tentam acordar de novo.
+- Healthcheck do Railway (configurado no ambiente, não em arquivo):
+  backend em /health (120s), proxy em /__proxy_health (60s — responde
+  sem repassar, pra não acordar o backend a cada deploy do proxy).
 - IDLE_TIMEOUT_MINUTES (default 30), WAKE_TIMEOUT_SECONDS (default 45) —
   ajustáveis se quiser mudar o tempo de espera.
 - FORCE_CLOSED=true/false — só pra teste manual (força o proxy a agir
