@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
  */
 public class PedidoPdfService {
 
+    private static final int VALIDADE_DIAS = 15;
     private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
 
@@ -85,6 +86,7 @@ public class PedidoPdfService {
     private static final Font FONTE_TITULO;
     private static final Font FONTE_KICKER;
     private static final Font FONTE_INFO_VALOR;
+    private static final Font FONTE_VALIDADE;
     private static final Font FONTE_CARD_TITULO;
     private static final Font FONTE_GRUPO;
     private static final Font FONTE_ITEM;
@@ -109,6 +111,7 @@ public class PedidoPdfService {
         FONTE_TITULO = new Font(barlowCondensedSemiBold, 25.5f, Font.NORMAL, COR_TEXTO);
         FONTE_KICKER = new Font(barlow, 7f, Font.NORMAL, COR_ACCENT);
         FONTE_INFO_VALOR = new Font(barlowCondensedSemiBold, 12f, Font.NORMAL, COR_TEXTO);
+        FONTE_VALIDADE = new Font(barlow, 8f, Font.NORMAL, COR_ACCENT_700);
         FONTE_CARD_TITULO = new Font(barlowCondensedSemiBold, 12f, Font.NORMAL, COR_TEXTO);
         FONTE_GRUPO = new Font(barlowCondensedSemiBold, 10.5f, Font.NORMAL, COR_ACCENT_900);
         FONTE_ITEM = new Font(barlow, 9.75f, Font.NORMAL, COR_TEXTO);
@@ -284,7 +287,12 @@ public class PedidoPdfService {
         conteudo.addCell(celulaInfo("Cliente", pedido.getCliente() != null ? valor(pedido.getCliente().getNome()) : "-", false));
         conteudo.addCell(celulaInfo("Modelo", modeloTexto(pedido), true));
         conteudo.addCell(celulaInfo("Orçamento Nº", numero, true));
-        conteudo.addCell(celulaInfo("Data", LocalDate.now().format(DATA_BR), true));
+        LocalDate emitido = LocalDate.now();
+        PdfPCell data = celulaInfo("Data", emitido.format(DATA_BR), true);
+        Paragraph validade = new Paragraph("Válido até " + emitido.plusDays(VALIDADE_DIAS).format(DATA_BR), FONTE_VALIDADE);
+        validade.setLeading(11f);
+        data.addElement(validade);
+        conteudo.addCell(data);
 
         PdfPTable cartao = cartao(conteudo, 10.5f, 13.5f, COR_BRANCO, COR_DIVIDER, true);
         cartao.setSpacingAfter(12f);
