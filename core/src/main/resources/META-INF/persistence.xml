@@ -38,6 +38,13 @@
                  Reative manualmente aqui pra depurar queries localmente. -->
             <property name="hibernate.show_sql" value="false"/>
             <property name="hibernate.format_sql" value="false"/>
+            <!-- Agrupa INSERT/UPDATE/DELETE iguais num lote JDBC só (uma ida ao banco
+                 em vez de uma por linha) — vale pra tabela de junção PEDIDO_COMPONENTE,
+                 atualizações e remoções de itens. INSERT de entidade com id IDENTITY
+                 continua um por um (o Hibernate precisa do id gerado de cada linha). -->
+            <property name="hibernate.jdbc.batch_size" value="25"/>
+            <property name="hibernate.order_inserts" value="true"/>
+            <property name="hibernate.order_updates" value="true"/>
 
             <!-- HikariCP em vez do pool interno do Hibernate: o Neon (Postgres gerenciado
                  de produção) suspende o compute quando fica ocioso e derruba as conexões

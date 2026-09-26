@@ -72,10 +72,19 @@ public class PedidoModel {
             inverseJoinColumns = @JoinColumn(name = "cabecote_id"))
     private List<CabecoteModel> componentes = new ArrayList<>();
 
+    /*
+     * @OrderBy("id") nas três listas de itens: sem ele a ordem de leitura é a
+     * ordem física da tabela, que só coincidia com a ordem de cadastro porque
+     * toda edição apagava e reinseria tudo. A edição agora reaproveita os
+     * itens que não mudaram (menos idas ao banco), então a ordem precisa vir
+     * do id — que segue a ordem de inserção.
+     */
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
     private List<ServicoModel> servicoList = new ArrayList<>();
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
     private List<PecaModel> pecaList = new ArrayList<>();
 
     /**
@@ -100,6 +109,7 @@ public class PedidoModel {
      */
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 30)
+    @OrderBy("id ASC")
     private List<PedidoCategoriaModel> categoriaValores = new ArrayList<>();
 
     public PedidoModel() {

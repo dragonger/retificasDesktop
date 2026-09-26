@@ -1,6 +1,14 @@
-// Service worker mínimo: cacheia o "shell" do app para abrir rápido/offline;
-// nunca cacheia /api/* — os dados sempre vêm frescos do servidor.
-const CACHE = 'retifica-shell-v4';
+// Service worker do shell (index.html, app.js, style.css, ícones).
+// Estratégia: stale-while-revalidate. Responde do cache na hora (abre sem
+// pagar ~250ms de rede por arquivo) e busca a versão nova em segundo plano;
+// se o texto de index.html/app.js/style.css mudou, atualiza o cache e avisa
+// as abas abertas com postMessage({ type: 'retifica:nova-versao' }) — o
+// app.js mostra o aviso pra recarregar. Antes era network-first justamente
+// pra nunca prender o app numa versão velha; o aviso resolve isso sem pôr a
+// rede no caminho crítico da abertura.
+// Nunca cacheia /api/* (dados sempre frescos) nem requisições de outras
+// origens (Google Fonts etc. ficam com o cache HTTP do próprio navegador).
+const CACHE = 'retifica-shell-v5';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'assets/logo-dih.png'];
 
 self.addEventListener('install', (event) => {
@@ -10,30 +18,55 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((chaves) =>
-      Promise.all(chaves.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
+    caches.keys()
+      .then((chaves) => Promise.all(chaves.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  if (url.pathname.startsWith('/api/')) {
-    return; // deixa passar direto para a rede
+function ehTextoDoShell(resp) {
+  const tipo = resp.headers.get('content-type') || '';
+  return tipo.includes('text/html') || tipo.includes('javascript') || tipo.includes('text/css');
+}
+
+async function avisarNovaVersao() {
+  const clientes = await self.clients.matchAll({ includeUncontrolled: true });
+  clientes.forEach((c) => c.postMessage({ type: 'retifica:nova-versao' }));
+}
+
+async function revalidar(request, emCache) {
+  const resp = await fetch(request);
+  if (!resp.ok || resp.type !== 'basic') return resp;
+  const cache = await caches.open(CACHE);
+  if (emCache && ehTextoDoShell(resp)) {
+    const [novo, antigo] = await Promise.all([resp.clone().text(), emCache.clone().text()]);
+    await cache.put(request, resp.clone());
+    if (novo !== antigo) await avisarNovaVersao();
+  } else {
+    await cache.put(request, resp.clone());
   }
-  // Network-first: sempre busca a versão mais nova quando online (e atualiza o
-  // cache com ela); só usa o cache se a rede falhar (modo offline). Evita o
-  // app ficar preso numa versão antiga do shell (app.js/index.html) — antes
-  // era cache-first, e como o cache não tinha versão que mudasse a cada
-  // deploy, uma vez cacheado só atualizava se o sw.js em si mudasse de bytes.
-  event.respondWith(
-    fetch(event.request)
-      .then((resp) => {
-        const copia = resp.clone();
-        caches.open(CACHE).then((cache) => cache.put(event.request, copia));
-        return resp;
-      })
-      .catch(() => caches.match(event.request))
-  );
+  return resp;
+}
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/api/')) return;
+
+  event.respondWith((async () => {
+    let emCache = await caches.match(request, { ignoreSearch: true });
+    if (!emCache && request.mode === 'navigate') {
+      emCache = await caches.match('index.html');
+    }
+    const daRede = revalidar(request, emCache);
+    if (emCache) {
+      // devolve o cache na hora; a revalidação continua viva via waitUntil
+      event.waitUntil(daRede.catch(() => {}));
+      return emCache;
+    }
+    // primeira visita (ou arquivo fora do SHELL): rede normal
+    return daRede;
+  })());
 });
