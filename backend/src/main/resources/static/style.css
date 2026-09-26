@@ -101,12 +101,13 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; margin: 0; 
 .app-bar {
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; gap: 8px;
-  padding: calc(10px + env(safe-area-inset-top)) var(--space-4) 10px;
+  padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-divider);
 }
-.app-bar h1 { font-size: 19px; flex: 1; }
-.app-bar-logo { height: 40px; width: auto; flex: none; display: block; }
+.app-bar h1 { font-size: 20px; flex: 1; }
+/* Logo em destaque no topo (redesign "Retifica App", claude.ai/design). */
+.app-bar-logo { height: 84px; max-width: 97px; width: auto; object-fit: contain; flex: none; display: block; }
 /* 44x44 minimo de area de toque (recomendacao Apple/Material) */
 .icon-btn {
   background: none; border: none; color: var(--color-text);
@@ -119,23 +120,24 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; margin: 0; 
 .popover {
   position: absolute; top: 100%; right: var(--space-4); margin-top: 4px;
   background: var(--color-surface); border: 1px solid var(--color-divider);
-  min-width: 160px; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  min-width: 170px; z-index: 20; box-shadow: var(--shadow-md);
 }
 .popover button {
   display: block; width: 100%; text-align: left; background: none; border: none;
-  padding: 12px 16px; min-height: 44px; font-family: var(--font-body); font-size: 14px; color: var(--color-text); cursor: pointer;
+  padding: 13px 16px; min-height: 44px; font-family: var(--font-body); font-size: 14px; color: var(--color-text); cursor: pointer;
 }
 .popover button:active { background: var(--color-bg); }
-.popover button.danger { color: #a4453f; }
+.popover button.danger { color: var(--color-danger); }
 .popover button + button { border-top: 1px solid var(--color-divider); }
 
-main { flex: 1; overflow-y: auto; padding: var(--space-4) var(--space-4) 96px; max-width: 720px; width: 100%; margin: 0 auto; }
+main { flex: 1; overflow-y: auto; padding: 20px 18px 96px; max-width: 720px; width: 100%; margin: 0 auto; }
 
 .tab-bar {
   position: fixed; bottom: 0; left: 0; right: 0;
-  display: flex; background: var(--color-bg);
+  display: flex; background: var(--color-surface);
   border-top: 1px solid var(--color-divider);
-  padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 12px color-mix(in srgb, #2b2b2d 8%, transparent);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
   z-index: 10;
 }
 .tab {
@@ -155,12 +157,14 @@ h2.secao {
   font-family: var(--font-body); font-weight: 400;
 }
 h2.secao:first-child { margin-top: 0; }
-h2.titulo { font-size: 22px; margin-bottom: 2px; }
-.subtitulo { font-size: 12px; color: color-mix(in srgb, var(--color-text) 55%, transparent); margin-bottom: var(--space-4); }
+h2.titulo { font-size: 26px; margin-bottom: 2px; }
+.subtitulo { font-size: 12px; color: color-mix(in srgb, var(--color-text) 55%, transparent); margin-bottom: 18px; }
+/* data por extenso no topo do Início */
+.data-hoje { font-family: var(--font-heading); font-size: 20px; font-weight: 600; margin-bottom: 22px; text-transform: capitalize; }
 
 /* — stat cards (Início/Dashboard) — */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-bottom: var(--space-6); }
-.stat-card { padding: var(--space-3); overflow: hidden; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+.stat-card { padding: 16px; overflow: hidden; }
 .stat-card-clicavel { cursor: pointer; }
 .stat-card-clicavel:active { opacity: .7; }
 .stat-card-topo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -189,11 +193,11 @@ h2.titulo { font-size: 22px; margin-bottom: 2px; }
 /* — linhas de lista (pedidos) — */
 .linha {
   display: flex; flex-direction: column; gap: 4px;
-  padding: var(--space-3) 0; border-bottom: 1px solid var(--color-divider); cursor: pointer;
+  padding: 14px 0; border-bottom: 1px solid var(--color-divider); cursor: pointer;
 }
 .linha-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .linha-titulo { font-family: var(--font-heading); font-weight: 600; font-size: 16px; }
-.linha-sub { font-size: 13px; opacity: .75; }
+.linha-sub { font-size: 13px; opacity: .7; }
 .linha-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: color-mix(in srgb, var(--color-text) 55%, transparent); }
 
 /* — tags de situação — */
@@ -219,12 +223,12 @@ h2.titulo { font-size: 22px; margin-bottom: 2px; }
 .btn-primary:active { background: var(--color-accent-700); }
 .btn-secondary:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
 .btn-ghost { color: var(--color-accent); border-color: transparent; }
-.btn-danger { color: #a4453f; border-color: #a4453f; }
+.btn-danger { color: var(--color-danger); border-color: var(--color-danger); }
 .btn-block { width: 100%; }
 .btn-icon { width: 44px; height: 44px; padding: 0; }
 .btn-fab {
   position: fixed; right: 18px; bottom: calc(78px + env(safe-area-inset-bottom));
-  width: 52px; height: 52px; padding: 0; border-radius: 50%;
+  width: 54px; height: 54px; padding: 0; border-radius: 50%; font-size: 22px;
   background: var(--color-accent); color: var(--color-bg); border-color: var(--color-accent);
   box-shadow: var(--shadow-lg); z-index: 9;
 }
@@ -264,12 +268,12 @@ textarea.input { min-height: 90px; resize: vertical; }
 /* — itens de serviço/peça adicionados — */
 .item-linha {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-bottom: 1px solid var(--color-divider); font-size: 13.5px; gap: 8px;
+  padding: 9px 0; border-bottom: 1px solid var(--color-divider); font-size: 13.5px; gap: 8px;
 }
 .item-linha:last-child { border-bottom: none; }
 .item-linha .valor { color: color-mix(in srgb, var(--color-text) 55%, transparent); white-space: nowrap; }
 .item-linha button {
-  background: none; border: none; color: #a4453f; font-size: 18px; cursor: pointer; padding: 0;
+  background: none; border: none; color: var(--color-danger); font-size: 16px; cursor: pointer; padding: 0;
   min-width: 44px; min-height: 44px; flex: none;
   display: inline-flex; align-items: center; justify-content: center;
 }
@@ -277,7 +281,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 .total-box { display: flex; justify-content: space-between; align-items: baseline; padding-top: var(--space-3); border-top: 1px solid var(--color-divider); }
 .total-box .valor { font-family: var(--font-heading); font-weight: 600; font-size: 22px; }
 
-.empty { text-align: center; color: color-mix(in srgb, var(--color-text) 50%, transparent); padding: 40px 10px; font-size: 14px; }
+.empty { text-align: center; color: color-mix(in srgb, var(--color-text) 55%, transparent); padding: 18px 0; font-size: 13px; }
 
 .grupo-categoria h3 {
   font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
@@ -286,14 +290,22 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 
 .toast {
-  position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%);
-  background: var(--color-text); color: var(--color-bg);
-  padding: 10px 18px; font-size: 13px; z-index: 50; max-width: 90vw;
+  position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);
+  width: calc(100% - 36px); max-width: 394px;
+  background: var(--color-text); color: var(--color-bg); box-shadow: var(--shadow-md);
+  padding: 12px 16px; font-size: 13.5px; z-index: 50;
 }
-.toast.erro { background: #a4453f; }
+.toast.erro { background: var(--color-danger); }
 
-.accordion-cab { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 4px 0; min-height: 44px; }
-.accordion-body { padding-top: 4px; }
+/* cabeçalho de mês (Encerrados): faixa blueprint clicável */
+.accordion-cab {
+  width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 13px 16px; min-height: 44px; background: var(--color-surface); cursor: pointer;
+  font-family: var(--font-body); color: var(--color-text); text-align: left;
+}
+.accordion-cab .linha-titulo { font-size: 16px; }
+.accordion-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+.accordion-body { padding: 0 2px; }
 
 .catalogo-menu { display: flex; flex-direction: column; gap: var(--space-2); }
 .catalogo-menu .linha { flex-direction: row; align-items: center; justify-content: space-between; }
@@ -345,16 +357,64 @@ textarea.input { min-height: 90px; resize: vertical; }
 .bar-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; }
 .bar-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bar-value { font-family: var(--font-heading); font-weight: 600; white-space: nowrap; }
-.bar-track { height: 8px; background: var(--color-surface); border-radius: 4px; overflow: hidden; }
+.bar-track { height: 9px; background: var(--color-surface); border-radius: 4px; overflow: hidden; }
 .bar-fill { height: 100%; min-width: 3px; background: var(--color-accent); border-radius: 4px; }
 
+/* — card em destaque: fundo azul claro + tarja à esquerda (cliente do
+   pedido, cliente escolhido, cards de valor por categoria) — */
+.card-destaque { background: var(--color-accent-100); overflow: hidden; }
+.card-destaque::before {
+  content: ""; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+  background: var(--color-accent);
+}
+.card-destaque-titulo { font-family: var(--font-heading); font-weight: 600; font-size: 16px; }
+
 .cliente-selecionado {
-  border: 1px solid var(--color-accent);
-  padding: 10px 12px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
 }
-.cliente-selecionado button { background: none; border: none; color: var(--color-accent); font-size: 13px; cursor: pointer; }
+.cliente-selecionado button {
+  background: none; border: none; color: var(--color-accent-700); font-size: 13px; font-weight: 600;
+  cursor: pointer; min-height: 44px; padding: 0 4px; font-family: var(--font-body);
+}
+
+/* — caixa de cadastro rápido/edição (Novo cliente, Novo modelo, formulários
+   do catálogo): blueprint com fundo de superfície — */
+.caixa-form { display: flex; flex-direction: column; gap: 14px; padding: 16px; background: var(--color-surface); }
+.caixa-form .field { margin-bottom: 0; }
+.caixa-form-titulo { font-family: var(--font-heading); font-weight: 600; font-size: 18px; }
+.caixa-form form { display: flex; flex-direction: column; gap: 14px; }
+.caixa-form .btn-group { margin-top: 0; }
+
+/* — lista de clientes pra escolher no pedido (substitui o <select size>) — */
+.lista-escolha { border: 1px solid var(--color-divider); max-height: 228px; overflow-y: auto; margin-top: 8px; background: var(--color-bg); }
+.lista-escolha button {
+  display: block; width: 100%; text-align: left; background: none; border: none;
+  border-bottom: 1px solid var(--color-divider); padding: 11px 12px; min-height: 44px;
+  font-family: var(--font-body); font-size: 13.5px; color: var(--color-text); cursor: pointer;
+}
+.lista-escolha button:last-child { border-bottom: none; }
+.lista-escolha button:active, .lista-escolha button:hover { background: var(--color-accent-100); }
+.lista-escolha .tel { opacity: .55; }
+.lista-escolha-vazia { padding: 11px 12px; font-size: 13px; opacity: .55; }
+
+/* chip "Recentes" (contorno azul) */
+.chip-outline { border-color: var(--color-accent); color: var(--color-accent); }
+
+/* — barra de total do pedido (formulário e visualizar): sangra até as
+   bordas da tela — */
+.barra-total {
+  background: var(--color-surface); margin: 24px -18px 0;
+  display: flex; flex-direction: column; gap: 10px; padding: 16px 18px;
+}
+.barra-total-form { box-shadow: var(--shadow-lg); border-top: 3px solid var(--color-accent); }
+.barra-total-view { position: sticky; bottom: 0; margin-top: 20px; padding: 14px 18px; }
+.barra-total .linha-total { display: flex; justify-content: space-between; align-items: baseline; }
+.barra-total .valor { font-family: var(--font-heading); font-weight: 600; font-size: 23px; }
+.barra-total-form .valor { font-size: 28px; color: var(--color-accent-800); }
+.barra-total-form .linha-total { border-top: 1px solid var(--color-divider); padding-top: 10px; }
+.barra-total-form .linha-total > span:first-child { font-family: var(--font-heading); font-size: 15px; font-weight: 600; }
