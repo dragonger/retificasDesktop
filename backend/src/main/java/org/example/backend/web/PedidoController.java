@@ -297,25 +297,39 @@ public class PedidoController {
     }
 
     private void sincronizarServicos(PedidoModel pedido, List<ItemRequestDTO> itens) {
-        List<String> desejados = new ArrayList<>();
+        List<ItemRequestDTO> desejados = new ArrayList<>();
         if (itens != null) {
             for (ItemRequestDTO item : itens) {
                 if (item.descricao != null && !item.descricao.isBlank()) {
-                    desejados.add(item.descricao);
+                    desejados.add(item);
                 }
             }
         }
         List<ServicoModel> atuais = pedido.getServicoList();
         int i = 0;
         while (i < atuais.size() && i < desejados.size()
-                && Objects.equals(atuais.get(i).getDescricao(), desejados.get(i))) {
+                && Objects.equals(atuais.get(i).getDescricao(), desejados.get(i).descricao)
+                && atuais.get(i).getCategoria() == parseCategoriaItem(desejados.get(i).categoria)) {
             i++;
         }
         removerAPartirDe(atuais, i);
         for (int j = i; j < desejados.size(); j++) {
             ServicoModel linha = new ServicoModel();
-            linha.setDescricao(desejados.get(j));
+            linha.setDescricao(desejados.get(j).descricao);
+            linha.setCategoria(parseCategoriaItem(desejados.get(j).categoria));
             pedido.addServico(linha);
+        }
+    }
+
+    /** Categoria de um serviço/peça do request; nula quando ausente ou desconhecida. */
+    private static CategoriaProduto parseCategoriaItem(String nome) {
+        if (nome == null || nome.isBlank()) {
+            return null;
+        }
+        try {
+            return CategoriaProduto.valueOf(nome);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 
@@ -331,7 +345,8 @@ public class PedidoController {
         List<PecaModel> atuais = pedido.getPecaList();
         int i = 0;
         while (i < atuais.size() && i < desejadas.size()
-                && Objects.equals(atuais.get(i).getDescricao(), desejadas.get(i).descricao)) {
+                && Objects.equals(atuais.get(i).getDescricao(), desejadas.get(i).descricao)
+                && atuais.get(i).getCategoria() == parseCategoriaItem(desejadas.get(i).categoria)) {
             Integer quantidade = desejadas.get(i).quantidade != null ? desejadas.get(i).quantidade : 1;
             if (!quantidade.equals(atuais.get(i).getQuantidade())) {
                 atuais.get(i).setQuantidade(quantidade);
@@ -344,6 +359,7 @@ public class PedidoController {
             PecaModel linha = new PecaModel();
             linha.setDescricao(item.descricao);
             linha.setQuantidade(item.quantidade != null ? item.quantidade : 1);
+            linha.setCategoria(parseCategoriaItem(item.categoria));
             pedido.addPeca(linha);
         }
     }
@@ -518,6 +534,7 @@ public class PedidoController {
             ItemDTO item = new ItemDTO();
             item.id = s.getId();
             item.descricao = s.getDescricao();
+            item.categoria = s.getCategoria() != null ? s.getCategoria().name() : null;
             dto.servicos.add(item);
         }
 
@@ -527,6 +544,7 @@ public class PedidoController {
             item.id = p.getId();
             item.descricao = p.getDescricao();
             item.quantidade = p.getQuantidade();
+            item.categoria = p.getCategoria() != null ? p.getCategoria().name() : null;
             dto.pecas.add(item);
         }
 

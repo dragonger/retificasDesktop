@@ -175,7 +175,7 @@ public class PedidoPdfService {
      */
     public void gerar(PedidoModel pedido, Map<String, CategoriaProduto> categoriaPorItem, OutputStream saida) {
         // 34px/44px de padding do design ≈ 25,5pt/33pt; embaixo sobra espaço pro rodapé fixo.
-        Document documento = new Document(PageSize.A4, 33, 33, 25.5f, 48);
+        Document documento = new Document(PageSize.A4, 33, 33, 25.5f, 40);
         try {
             PdfWriter writer = PdfWriter.getInstance(documento, saida);
             writer.setPageEvent(new FundoERodapeEvent());
@@ -186,8 +186,7 @@ public class PedidoPdfService {
             documento.add(titulo());
             documento.add(faixaInfo(pedido));
             documento.add(cartaoServicos(pedido, categoriaPorItem));
-            documento.add(condicoes());
-            documento.add(caixaTotal(pedido));
+            documento.add(fechamento(pedido));
 
             documento.close();
         } catch (DocumentException e) {
@@ -341,16 +340,24 @@ public class PedidoPdfService {
         Grupo unico = porCategoria.size() == 1 ? porCategoria.values().iterator().next() : null;
         Grupo outros = new Grupo(porCategoria.isEmpty() ? "Serviços e peças" : "Outros itens", null);
 
+        // Cada item: {descrição, coluna da direita} + a categoria gravada nele
+        // (itens antigos não têm — aí vale a do catálogo pelo nome).
         List<String[]> itens = new ArrayList<>();
+        List<CategoriaProduto> categoriasItens = new ArrayList<>();
         for (ServicoModel s : pedido.getServicoList()) {
             itens.add(new String[]{valor(s.getDescricao()), ""});
+            categoriasItens.add(s.getCategoria());
         }
         for (PecaModel p : pedido.getPecaList()) {
             String qtd = p.getQuantidade() != null ? "× " + p.getQuantidade() : "";
             itens.add(new String[]{valor(p.getDescricao()), qtd});
+            categoriasItens.add(p.getCategoria());
         }
-        for (String[] item : itens) {
-            CategoriaProduto cat = categoriaPorItem.get(chaveItem(item[0]));
+        for (int i = 0; i < itens.size(); i++) {
+            String[] item = itens.get(i);
+            CategoriaProduto cat = categoriasItens.get(i) != null
+                    ? categoriasItens.get(i)
+                    : categoriaPorItem.get(chaveItem(item[0]));
             // cat null = item fora do catálogo; não pode casar com uma categoria null do pedido
             Grupo g = cat != null ? porCategoria.get(cat) : null;
             if (g == null) g = unico != null ? unico : outros;
@@ -439,6 +446,23 @@ public class PedidoPdfService {
 
     // ---------- condições e total ----------
 
+    /**
+     * Condições + total num bloco só, que nunca se separa: se não couber no
+     * fim da página, os dois vão juntos pra próxima (em vez do total sozinho).
+     */
+    private PdfPTable fechamento(PedidoModel pedido) {
+        PdfPTable bloco = new PdfPTable(1);
+        bloco.setWidthPercentage(100);
+        bloco.setKeepTogether(true);
+        PdfPTable cond = condicoes();
+        cond.setSpacingAfter(0);
+        PdfPCell c1 = semBorda(new PdfPCell(cond));
+        c1.setPaddingBottom(12f);
+        bloco.addCell(c1);
+        bloco.addCell(semBorda(new PdfPCell(caixaTotal(pedido))));
+        return bloco;
+    }
+
     private PdfPTable condicoes() {
         PdfPTable t = new PdfPTable(new float[]{1f, 1.25f, 0.85f});
         t.setWidthPercentage(100);
@@ -450,7 +474,10 @@ public class PedidoPdfService {
     }
 
     private PdfPCell condicao(String rotulo, String texto, int alinhamento) {
-        Phrase frase = new Phrase();
+        // Leading explícito: new Phrase() sem ele deixava a linha com a altura
+        // da fonte só, o texto "não cabia" e a página virava logo depois
+        // (o total ia sozinho pra página seguinte).
+        Phrase frase = new Phrase(13f);
         frase.add(new Chunk(rotulo + "  ", FONTE_COND_ROTULO));
         frase.add(new Chunk(texto, FONTE_COND_TEXTO));
         PdfPCell c = semBorda(new PdfPCell(frase));
@@ -561,7 +588,7 @@ public class PedidoPdfService {
             fundo.restoreState();
 
             PdfContentByte cb = writer.getDirectContent();
-            float y = 24f;
+            float y = 20f;
             ColumnText.showTextAligned(cb, Element.ALIGN_LEFT,
                     new Phrase("Qualidade · Confiança · Precisão", FONTE_RODAPE), document.leftMargin(), y, 0);
             ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT,

@@ -9,4 +9,6 @@ package org.example.backend.dto;
 public class ItemRequestDTO {
     public String descricao;
     public Integer quantidade;
+    /** Componente do item (CABECOTE, BLOCO...); nulo em itens antigos. */
+    public String categoria;
 }
