@@ -111,9 +111,9 @@
         type: 'button', class: 'btn ' + (perigoso ? 'btn-danger' : 'btn-primary'), onclick: () => fechar(true)
       }, rotuloConfirmar || 'Confirmar');
       const btnCancelar = el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => fechar(false) }, 'Cancelar');
-      const caixa = el('div', {
+      const caixa = blueprintBox('div', {
         role: 'dialog', 'aria-modal': 'true',
-        style: 'background:var(--color-bg);padding:20px;width:100%;max-width:400px;box-shadow:var(--shadow-md)'
+        style: 'background:var(--color-bg);padding:20px;width:100%;max-width:394px;box-shadow:var(--shadow-lg)'
       },
         el('div', { style: 'font-size:15px;line-height:1.4;margin-bottom:18px' }, mensagem),
         el('div', { class: 'btn-group', style: 'margin:0' }, btnCancelar, btnOk));
@@ -571,13 +571,12 @@
   // ---------- Início (dashboard) ----------
 
   async function telaInicio() {
-    tituloTopo.textContent = 'Retífica';
+    tituloTopo.textContent = 'Retífica Dih Soluções';
     function render(dash) {
       conteudo.innerHTML = '';
 
       const hoje = new Date();
-      conteudo.appendChild(el('h2', { class: 'titulo' }, 'Retífica'));
-      conteudo.appendChild(el('div', { class: 'subtitulo' }, hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })));
+      conteudo.appendChild(el('div', { class: 'data-hoje' }, hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })));
 
       conteudo.appendChild(el('div', { class: 'stat-grid' },
         statCard('Em aberto', dash.abertos, 'pedidos', () => { location.hash = '#/pedidos?filtro=abertos'; }, 'accent', svgCaixa('var(--color-accent-700)')),
@@ -586,7 +585,7 @@
         statCard('Atrasados', dash.atrasados, 'pedidos', () => { location.hash = '#/pedidos?filtro=atrasados'; }, 'danger', svgAlertaStat('var(--color-danger)')),
       ));
 
-      conteudo.appendChild(el('div', { class: 'btn-group', style: 'margin-top:0;margin-bottom:24px' },
+      conteudo.appendChild(el('div', { class: 'btn-group', style: 'margin-top:0;margin-bottom:30px' },
         btnBlueprint('Novo pedido', 'btn-primary', { onclick: () => { location.hash = '#/pedidos/novo'; } }),
         btnBlueprint('Ver pedidos', 'btn-secondary', { onclick: () => { location.hash = '#/pedidos'; } }),
       ));
@@ -611,6 +610,17 @@
       el('div', { class: 'stat-value' }, String(valor)),
       el('div', { class: 'stat-sub' }, sub),
     );
+  }
+
+  // Ícone de traço genérico (mesmo estilo dos demais: stroke 1.5, sem fill).
+  function svgIcone(cor, tamanho, conteudoSvg) {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', String(tamanho)); s.setAttribute('height', String(tamanho)); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', cor); s.setAttribute('stroke-width', '1.5');
+    s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
+    s.style.flex = 'none';
+    s.innerHTML = conteudoSvg;
+    return s;
   }
 
   function svgCaixa(cor) {
@@ -737,8 +747,10 @@
     // Preenchido no fim desta função, depois da tela desenhada (ver abaixo).
     let pdfPromise = null;
 
-    conteudo.appendChild(blueprintBox('div', { style: 'padding:14px;margin-bottom:16px' },
-      el('div', { class: 'linha-titulo', style: 'margin-bottom:8px' }, p.cliente ? p.cliente.nome : '-'),
+    conteudo.appendChild(blueprintBox('div', { class: 'card-destaque elev-md', style: 'padding:16px;margin-bottom:18px' },
+      el('div', { style: 'display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px' },
+        el('div', { class: 'card-destaque-titulo', style: 'font-size:18px' }, p.cliente ? p.cliente.nome : '-'),
+        svgIcone('var(--color-accent-700)', 18, '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>')),
       p.cliente && p.cliente.telefone ? el('div', { class: 'linha-sub' }, p.cliente.telefone) : null,
       (p.cliente && (p.cliente.rua || p.cliente.municipio)) ? el('div', { class: 'linha-sub' },
         [p.cliente.rua, p.cliente.numero].filter(Boolean).join(', ') +
@@ -748,7 +760,7 @@
     ));
 
     const linhasComponente = componentesPorCategoria(p);
-    conteudo.appendChild(el('div', { style: 'display:flex;flex-direction:column;gap:8px;font-size:13px;margin-bottom:16px' },
+    conteudo.appendChild(el('div', { style: 'display:flex;flex-direction:column;gap:9px;font-size:13px;margin-bottom:20px' },
       ...(linhasComponente.length ? linhasComponente.map(([rotulo, nomes]) => linhaChave(rotulo, nomes))
         : [linhaChave('Descrição', p.pedidoDescricao || '-')]),
       linhaChave('Criado em', p.datCriacao || '-'),
@@ -766,7 +778,7 @@
     conteudo.appendChild(tabelaValoresPorCategoria(p.categoriaValores));
 
     if (p.observacao) {
-      conteudo.appendChild(el('div', { style: 'font-size:12px;opacity:.75;background:var(--color-surface);padding:10px;margin-top:16px' }, p.observacao));
+      conteudo.appendChild(el('div', { style: 'font-size:12px;opacity:.75;background:var(--color-surface);padding:11px;margin-top:16px' }, p.observacao));
     }
 
     // — foto do componente pra ir junto no orçamento: nunca é enviada pro
@@ -790,13 +802,17 @@
       }
     });
     const fotoPreview = el('div', {});
-    const btnFoto = btnBlueprint('Anexar foto do componente', 'btn-secondary btn-block', { onclick: () => fotoInput.click() });
+    const btnFoto = btnBlueprint('Anexar foto do componente', 'btn-secondary btn-block', { style: 'gap:8px', onclick: () => fotoInput.click() });
+    // ícone antes do texto — o texto continua sendo o lastChild (atualizarFotoUI troca ele)
+    btnFoto.insertBefore(svgIcone('currentColor', 16, '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle>'), btnFoto.lastChild);
     function atualizarFotoUI() {
       btnFoto.lastChild.textContent = fotoSelecionada ? 'Trocar foto' : 'Anexar foto do componente';
       fotoPreview.innerHTML = '';
       if (fotoSelecionada) {
         fotoPreview.appendChild(el('div', { class: 'item-linha' },
-          el('span', null, '📷 ' + fotoSelecionada.name),
+          el('span', { style: 'display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;text-overflow:ellipsis' },
+            svgIcone('var(--color-accent-700)', 15, '<rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"></path>'),
+            fotoSelecionada.name),
           el('button', { onclick: () => { fotoSelecionada = null; pdfFotoPromise = null; fotoInput.value = ''; atualizarFotoUI(); } }, '✕')
         ));
         if (pdfJaEnviado) {
@@ -837,14 +853,14 @@
 
     // — barra fixa embaixo: total + ação primária (Gerar orçamento) —
     const rotuloDesconto = p.descontoTipo === 'PERCENTUAL' ? 'Desconto (' + p.descontoValor + '%)' : 'Desconto';
-    const barraTotal = el('div', { class: 'total-box', style: 'position:sticky;bottom:0;flex-direction:column;align-items:stretch;gap:10px;background:var(--color-surface);padding:var(--space-3);margin-top:16px' },
+    const barraTotal = el('div', { class: 'barra-total barra-total-view' },
       ...(p.descontoTipo && p.descontoValor ? [
         el('div', { style: 'display:flex;justify-content:space-between;font-size:13px;opacity:.7' }, el('span', null, 'Subtotal'), el('span', null, moeda(p.subtotal))),
         el('div', { style: 'display:flex;justify-content:space-between;font-size:13px;opacity:.7' }, el('span', null, rotuloDesconto), el('span', null, '- ' + moeda(p.subtotal - p.totalGeral))),
       ] : []),
-      el('div', { style: 'display:flex;justify-content:space-between;align-items:baseline' },
+      el('div', { class: 'linha-total' },
         el('span', null, 'Total'), el('span', { class: 'valor' }, moeda(p.totalGeral))),
-      el('div', { class: 'btn-group', style: 'margin:0' },
+      el('div', { class: 'btn-group', style: 'margin:2px 0 0' },
         btnBlueprint('Gerar orçamento', 'btn-primary', {
           style: 'flex:2', onclick: () => {
             // canShare() é síncrono — usa isso pra decidir ANTES de abrir
@@ -1034,7 +1050,7 @@
     const fldNovoComponenteNome = el('input', { class: 'input', type: 'text', placeholder: 'Nome / Motor' });
     const fldNovoComponenteMovel = el('input', { class: 'input', type: 'text', placeholder: 'Móvel (ex.: 25,045-27,070)' });
     const fldNovoComponenteFixo = el('input', { class: 'input', type: 'text', placeholder: 'Fixo (ex.: 29,990-30,015)' });
-    const novoComponenteBox = el('div', { hidden: true, style: 'margin-top:10px;display:flex;flex-direction:column;gap:12px' },
+    const novoComponenteBox = blueprintBox('div', { hidden: true, class: 'caixa-form', style: 'margin-top:10px' },
       campo('Categoria', fldNovoComponenteCategoria),
       campo('Nome / Motor', fldNovoComponenteNome),
       el('div', { class: 'row' }, campo('Móvel', fldNovoComponenteMovel), campo('Fixo', fldNovoComponenteFixo)),
@@ -1060,9 +1076,9 @@
       })
     );
     const btnNovoComponente = el('button', {
-      type: 'button', class: 'btn btn-secondary btn-block',
+      type: 'button', class: 'btn btn-ghost btn-block', style: 'gap:8px',
       onclick: () => { novoComponenteBox.hidden = !novoComponenteBox.hidden; }
-    }, 'Novo modelo');
+    }, svgIcone('currentColor', 15, '<path d="M12 5v14"></path><path d="M5 12h14"></path>'), 'Novo modelo');
 
     const camposComponenteAtivos = el('div', {},
       el('div', { class: 'field' },
@@ -1118,12 +1134,12 @@
     const fldEntrega = el('input', { class: 'input', type: 'date', value: pedido ? (pedido.datEntregaEstimada || '') : '' });
     const fldObservacao = el('textarea', { class: 'input', rows: '4', placeholder: 'Detalhes adicionais do serviço' }, pedido ? (pedido.observacao || '') : '');
 
-    const fldDescontoTipo = el('select', { class: 'input', style: 'width:150px' },
+    const fldDescontoTipo = el('select', { class: 'input', style: 'width:150px;flex:none' },
       el('option', { value: '' }, 'Sem desconto'),
       el('option', { value: 'VALOR' }, 'Valor (R$)'),
       el('option', { value: 'PERCENTUAL' }, 'Percentual (%)'),
     );
-    const fldDescontoValor = el('input', { class: 'input', type: 'number', min: '0', step: '0.01', placeholder: '0,00' });
+    const fldDescontoValor = el('input', { class: 'input', type: 'number', min: '0', step: '0.01', placeholder: '0,00', style: 'flex:1;min-width:0' });
     if (pedido && pedido.descontoTipo) {
       fldDescontoTipo.value = pedido.descontoTipo;
       fldDescontoValor.value = pedido.descontoValor != null ? pedido.descontoValor : '';
@@ -1161,8 +1177,8 @@
         const fldPecas = el('input', { class: 'input', type: 'number', min: '0', step: '0.01', placeholder: '0,00', value: valores.valorPecas || '' });
         fldServicos.addEventListener('input', () => { valores.valorServicos = fldServicos.value !== '' ? Number(fldServicos.value) : 0; recalcularResumo(); });
         fldPecas.addEventListener('input', () => { valores.valorPecas = fldPecas.value !== '' ? Number(fldPecas.value) : 0; recalcularResumo(); });
-        cardsPrecoEl.appendChild(blueprintBox('div', { style: 'padding:12px' },
-          el('div', { style: 'font-weight:600;margin-bottom:8px' }, catInfo ? catInfo.rotulo : cat),
+        cardsPrecoEl.appendChild(blueprintBox('div', { class: 'card-destaque elev-md', style: 'padding:14px' },
+          el('div', { class: 'card-destaque-titulo', style: 'margin-bottom:10px' }, catInfo ? catInfo.rotulo : cat),
           el('div', { class: 'row' }, campo('Valor serviços', fldServicos), campo('Valor peças', fldPecas))
         ));
       });
@@ -1171,7 +1187,7 @@
     // — Cliente: box do selecionado + busca/seleção + cadastro rápido —
     const clienteBoxSelecionado = el('div', { hidden: true });
     const fldBuscaCliente = el('input', { class: 'input', type: 'search', placeholder: 'Buscar por nome ou telefone...' });
-    const selCliente = el('select', { class: 'input', size: '6' });
+    const selCliente = el('div', { class: 'lista-escolha' });
 
     // Clientes usados nos últimos pedidos criados neste aparelho, pra não
     // precisar digitar busca pro caso comum de cliente recorrente.
@@ -1186,7 +1202,7 @@
       recentesBox.innerHTML = '';
       recentes.forEach(c => {
         recentesBox.appendChild(el('button', {
-          type: 'button', class: 'chip',
+          type: 'button', class: 'chip chip-outline',
           onclick: () => { clienteSelecionado = { id: c.id, nome: c.nome, telefone: c.telefone }; atualizarClienteUI(); }
         }, c.nome));
       });
@@ -1194,6 +1210,8 @@
     atualizarRecentes();
 
     const buscaClienteBox = el('div', {}, recentesField, campo('Buscar cliente', fldBuscaCliente), selCliente);
+    // campo() tem margin-bottom próprio; aqui a lista vem logo abaixo da busca
+    buscaClienteBox.children[1].style.marginBottom = '0';
 
     function atualizarClienteUI() {
       clienteBoxSelecionado.innerHTML = '';
@@ -1204,9 +1222,9 @@
         // aqui; pra trocar de cliente, usa o botão "Trocar" abaixo.
         btnNovoCliente.hidden = true;
         novoClienteBox.hidden = true;
-        clienteBoxSelecionado.appendChild(el('div', { class: 'cliente-selecionado' },
+        clienteBoxSelecionado.appendChild(blueprintBox('div', { class: 'cliente-selecionado card-destaque elev-sm' },
           el('div', null,
-            el('div', { style: 'font-weight:600' }, clienteSelecionado.nome),
+            el('div', { class: 'card-destaque-titulo' }, clienteSelecionado.nome),
             el('div', { style: 'font-size:12px;opacity:.7' }, clienteSelecionado.telefone || '')
           ),
           el('button', { type: 'button', onclick: () => { clienteSelecionado = null; atualizarClienteUI(); } }, 'Trocar')
@@ -1225,23 +1243,22 @@
         (c.nome || '').toLowerCase().includes(termo) || (c.telefone || '').toLowerCase().includes(termo));
       selCliente.innerHTML = '';
       if (!filtrados.length) {
-        selCliente.appendChild(el('option', { value: '', disabled: 'disabled' }, 'Nenhum cliente encontrado'));
+        selCliente.appendChild(el('div', { class: 'lista-escolha-vazia' }, 'Nenhum cliente encontrado'));
         return;
       }
       filtrados.forEach(c => {
-        selCliente.appendChild(el('option', { value: c.id }, c.nome + (c.telefone ? ' — ' + c.telefone : '')));
+        selCliente.appendChild(el('button', {
+          type: 'button',
+          onclick: () => { clienteSelecionado = { id: c.id, nome: c.nome, telefone: c.telefone }; atualizarClienteUI(); }
+        }, c.nome, c.telefone ? el('span', { class: 'tel' }, ' — ' + c.telefone) : null));
       });
     }
     fldBuscaCliente.addEventListener('input', atualizarListaClientes);
-    selCliente.addEventListener('change', () => {
-      const c = catalogoCache.clientes.find(x => String(x.id) === selCliente.value);
-      if (c) { clienteSelecionado = { id: c.id, nome: c.nome, telefone: c.telefone }; atualizarClienteUI(); }
-    });
     atualizarListaClientes();
 
     const fldNovoNome = el('input', { class: 'input', type: 'text', placeholder: 'Nome completo' });
     const fldNovoTelefone = el('input', { class: 'input', type: 'tel', placeholder: '(11) 90000-0000' });
-    const novoClienteBox = el('div', { hidden: true, style: 'margin-top:10px;display:flex;flex-direction:column;gap:12px' },
+    const novoClienteBox = blueprintBox('div', { hidden: true, class: 'caixa-form' },
       campo('Nome', fldNovoNome),
       campo('Telefone', fldNovoTelefone),
       btnBlueprint('Salvar cliente', 'btn-secondary btn-block', {
@@ -1374,7 +1391,7 @@
           fldCategoria.innerHTML = '';
           opcoes.forEach(c => fldCategoria.appendChild(el('option', { value: c.nome }, c.rotulo)));
         }
-        const boxNovo = el('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:12px' },
+        const boxNovo = blueprintBox('div', { hidden: true, class: 'caixa-form', style: 'margin-top:10px' },
           campo('Categoria', fldCategoria),
           campo('Nome', fldNome),
           fldQtd ? campo('Quantidade', fldQtd) : null,
@@ -1408,12 +1425,12 @@
           })
         );
         const btnNovo = el('button', {
-          type: 'button', class: 'btn btn-secondary btn-block',
+          type: 'button', class: 'btn btn-ghost btn-block', style: 'gap:8px',
           onclick: () => {
             boxNovo.hidden = !boxNovo.hidden;
             if (!boxNovo.hidden) { preencherCategorias(); fldNome.focus(); }
           }
-        }, cadastroInline.rotulo);
+        }, svgIcone('currentColor', 15, '<path d="M12 5v14"></path><path d="M5 12h14"></path>'), cadastroInline.rotulo);
         elemento.appendChild(btnNovo);
         elemento.appendChild(boxNovo);
       }
@@ -1438,7 +1455,7 @@
     // getValorDesconto/recalcularTotal) pra nunca mostrar um número que o
     // servidor depois recalcula diferente —
     const totalSubtotalEl = el('span', null, moeda(0));
-    const totalDescontoValorEl = el('span', null, moeda(0));
+    const totalDescontoValorEl = el('span', { style: 'font-size:13px;opacity:.7;white-space:nowrap' }, moeda(0));
     const totalFinalEl = el('span', { class: 'valor' }, moeda(0));
 
     function recalcularResumo() {
@@ -1459,12 +1476,12 @@
     redesenharServicos();
     redesenharPecas();
 
-    const barraTotal = el('div', { class: 'total-box', style: 'position:sticky;bottom:0;flex-direction:column;align-items:stretch;gap:8px;background:var(--color-surface);padding:var(--space-3);margin-top:8px' },
+    const barraTotal = el('div', { class: 'barra-total barra-total-form' },
       el('div', { style: 'display:flex;justify-content:space-between;font-size:13px;opacity:.7' },
         el('span', null, 'Subtotal'), totalSubtotalEl),
       el('div', { style: 'display:flex;gap:8px;align-items:center' },
         fldDescontoTipo, fldDescontoValor, totalDescontoValorEl),
-      el('div', { style: 'display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--color-divider);padding-top:8px' },
+      el('div', { class: 'linha-total' },
         el('span', null, 'Total'), totalFinalEl));
 
     // — sub-alternador Serviços/Peças dentro da aba Itens —
@@ -1501,7 +1518,7 @@
       id ? campo('Situação', fldStatus) : null,
       campo('Descrição', fldDescricao),
       campo('Entrega estimada', fldEntrega), campo('Observação', fldObservacao));
-    const painelCliente = el('div', { style: 'display:flex;flex-direction:column;gap:0' },
+    const painelCliente = el('div', { style: 'display:flex;flex-direction:column;gap:16px' },
       clienteBoxSelecionado, buscaClienteBox, btnNovoCliente, novoClienteBox);
     const painelComponentes = el('div', { style: 'display:flex;flex-direction:column;gap:14px' },
       el('div', { class: 'field' }, el('label', null, 'Categorias envolvidas'), painelCategorias),
@@ -1632,9 +1649,10 @@
   // item da lista abre o formulário já preenchido (modo edição) e rola até
   // ele — quem rola é o <main>, não a janela, por isso scrollIntoView.
   function formularioRecolhivel({ rotuloNovo, tituloNovo, tituloEditar, form, btnRemover, preencher, limpar }) {
-    const titulo = el('h2', { class: 'secao' }, tituloNovo);
-    const caixa = el('div', { hidden: true }, titulo, form);
-    const btnNovo = el('button', { type: 'button', class: 'btn btn-secondary btn-block', onclick: () => abrir(null) }, rotuloNovo);
+    const titulo = el('div', { class: 'caixa-form-titulo' }, tituloNovo);
+    const caixa = blueprintBox('div', { hidden: true, class: 'caixa-form elev-sm' }, titulo, form);
+    const btnNovo = el('button', { type: 'button', class: 'btn btn-secondary btn-block', style: 'gap:8px', onclick: () => abrir(null) },
+      svgIcone('currentColor', 15, '<path d="M12 5v14"></path><path d="M5 12h14"></path>'), rotuloNovo);
 
     function abrir(item) {
       if (item) preencher(item); else limpar();
@@ -2080,11 +2098,20 @@
 
       grupos.forEach(grupo => {
         const corpo = el('div', { class: 'accordion-body' }, ...grupo.pedidos.map(linhaPedido));
-        const cab = el('div', { class: 'accordion-cab' },
+        const chevron = svgIcone('currentColor', 15, '');
+        function atualizarChevron() {
+          chevron.innerHTML = corpo.hidden ? '<path d="m6 9 6 6 6-6"></path>' : '<path d="m18 15-6-6-6 6"></path>';
+        }
+        const cab = blueprintBox('button', { type: 'button', class: 'accordion-cab', 'aria-expanded': 'true' },
           el('span', { class: 'linha-titulo' }, grupo.mes),
-          el('span', { style: 'font-size:12px;opacity:.6' }, grupo.quantidade + ' · ' + moeda(grupo.total))
+          el('span', { class: 'accordion-meta' }, grupo.quantidade + ' · ' + moeda(grupo.total), chevron)
         );
-        cab.addEventListener('click', () => { corpo.hidden = !corpo.hidden; });
+        atualizarChevron();
+        cab.addEventListener('click', () => {
+          corpo.hidden = !corpo.hidden;
+          cab.setAttribute('aria-expanded', String(!corpo.hidden));
+          atualizarChevron();
+        });
         conteudo.appendChild(el('div', { style: 'margin-bottom:12px' }, cab, corpo));
       });
     }
@@ -2144,7 +2171,7 @@
         grupo.pedidos.forEach(p => corpo.appendChild(linhaPedido(p)));
 
         const segButtons = {};
-        const segAgregado = el('div', { class: 'seg', style: 'margin-top:8px' },
+        const segAgregado = el('div', { class: 'seg', style: 'margin-top:20px' },
           ...[['cliente', 'Por cliente'], ['categoria', 'Por categoria']].map(([k, rotulo]) => {
             const b = el('button', { type: 'button', onclick: () => { tipoAgregado = k; redesenhar(); } }, rotulo);
             segButtons[k] = b;
@@ -2167,7 +2194,7 @@
   // Bloco reaproveitado pra "valor por cliente" e "valor por serviço": gráfico
   // de barras horizontais + tabela + subtotal — mesma lógica pros dois.
   function blocoAgregado(itens, totalGeral, tituloTotal) {
-    const wrap = el('div', { style: 'margin-top:12px' });
+    const wrap = el('div', { style: 'margin-top:20px' });
     if (!itens || !itens.length) {
       wrap.appendChild(el('div', { class: 'empty' }, 'Sem dados.'));
       return wrap;
