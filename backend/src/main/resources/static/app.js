@@ -292,9 +292,71 @@
     }
   }
 
-  // A foto nunca é enviada pro servidor nem salva: passa direto do celular
-  // pro app escolhido. Chamada direto no toque (sem await antes), senão o
-  // navegador recusa por falta de gesto do usuário.
+  // pdf-lib (vendor/, MIT) só é baixada quando há foto pra juntar ao PDF.
+  let pdfLibPromise = null;
+  function carregarPdfLib() {
+    if (window.PDFLib) return Promise.resolve(window.PDFLib);
+    if (!pdfLibPromise) {
+      pdfLibPromise = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'vendor/pdf-lib.min.js';
+        s.onload = () => (window.PDFLib ? resolve(window.PDFLib) : reject(new Error('pdf-lib')));
+        s.onerror = () => { pdfLibPromise = null; s.remove(); reject(new Error('pdf-lib')); };
+        document.head.appendChild(s);
+      });
+    }
+    return pdfLibPromise;
+  }
+
+  // Foto da câmera tem vários MB: reduz pra no máximo 1600px, JPEG 80%.
+  async function reduzirFoto(foto) {
+    let origem;
+    if (window.createImageBitmap) {
+      origem = await createImageBitmap(foto, { imageOrientation: 'from-image' });
+    } else {
+      origem = await new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => res(img);
+        img.onerror = rej;
+        img.src = URL.createObjectURL(foto);
+      });
+    }
+    const w = origem.width, h = origem.height;
+    const escala = Math.min(1, 1600 / Math.max(w, h));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(w * escala);
+    canvas.height = Math.round(h * escala);
+    canvas.getContext('2d').drawImage(origem, 0, 0, canvas.width, canvas.height);
+    if (origem.close) origem.close();
+    const blob = await new Promise((res, rej) =>
+      canvas.toBlob(b => (b ? res(b) : rej(new Error('toBlob'))), 'image/jpeg', 0.8));
+    return { bytes: new Uint8Array(await blob.arrayBuffer()), largura: canvas.width, altura: canvas.height };
+  }
+
+  // Põe a foto como última página do PDF do orçamento, tudo no celular — a
+  // foto nunca vai pro servidor. Um arquivo só: PDF + JPG separados no mesmo
+  // share() fazem o WhatsApp do Android descartar tudo.
+  async function pdfComFoto(pdfPromise, foto) {
+    const [pdfBlob, PDFLib, img] = await Promise.all([pdfPromise, carregarPdfLib(), reduzirFoto(foto)]);
+    const doc = await PDFLib.PDFDocument.load(await pdfBlob.arrayBuffer());
+    const jpg = await doc.embedJpg(img.bytes);
+    const { width: largura, height: altura } = doc.getPage(0).getSize();
+    const pagina = doc.addPage([largura, altura]);
+    const fonte = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
+    const margem = 40, faixaTitulo = 40;
+    // mesmo fundo cinza-claro (#f2f2f3) das páginas do orçamento
+    pagina.drawRectangle({ x: 0, y: 0, width: largura, height: altura, color: PDFLib.rgb(0.949, 0.949, 0.953) });
+    pagina.drawText('Foto anexada ao orçamento', { x: margem, y: altura - margem - 12, size: 12, font: fonte });
+    const areaL = largura - 2 * margem, areaA = altura - 2 * margem - faixaTitulo;
+    const esc = Math.min(areaL / img.largura, areaA / img.altura);
+    const fw = img.largura * esc, fh = img.altura * esc;
+    pagina.drawImage(jpg, { x: (largura - fw) / 2, y: margem + (areaA - fh) / 2, width: fw, height: fh });
+    return new Blob([await doc.save()], { type: 'application/pdf' });
+  }
+
+  // Plano B (se não der pra juntar a foto no PDF): foto num segundo
+  // compartilhamento. Chamada direto no toque, senão o navegador recusa por
+  // falta de gesto do usuário. A foto também não passa pelo servidor aqui.
   async function compartilharFoto(foto) {
     if (compartilhamentoEmAndamento) return false;
     compartilhamentoEmAndamento = true;
@@ -710,12 +772,22 @@
     // — foto do componente pra ir junto no orçamento: nunca é enviada pro
     // servidor nem salva em lugar nenhum, só passa direto no compartilhamento —
     let fotoSelecionada = null;
-    // true depois que o PDF foi compartilhado: aí aparece o botão da foto
-    // (vai num segundo compartilhamento — ver compartilharOrcamento).
+    // PDF com a foto já embutida, montado assim que a foto é escolhida — no
+    // toque em "Gerar orçamento" ele já está pronto e o compartilhamento não
+    // perde a janela de gesto do usuário.
+    let pdfFotoPromise = null;
+    // Plano B: se não deu pra juntar, o PDF vai sozinho e depois aparece o
+    // botão pra mandar a foto num segundo compartilhamento.
     let pdfJaEnviado = false;
     const fotoInput = el('input', {
       type: 'file', accept: 'image/*', capture: 'environment', hidden: true,
-      onchange: (ev) => { fotoSelecionada = (ev.target.files && ev.target.files[0]) || null; atualizarFotoUI(); }
+      onchange: (ev) => {
+        fotoSelecionada = (ev.target.files && ev.target.files[0]) || null;
+        pdfJaEnviado = false;
+        pdfFotoPromise = fotoSelecionada ? pdfComFoto(pdfPromise || prepararOrcamento(id), fotoSelecionada) : null;
+        if (pdfFotoPromise) pdfFotoPromise.catch(() => {}); // tratado no toque
+        atualizarFotoUI();
+      }
     });
     const fotoPreview = el('div', {});
     const btnFoto = btnBlueprint('Anexar foto do componente', 'btn-secondary btn-block', { onclick: () => fotoInput.click() });
@@ -725,7 +797,7 @@
       if (fotoSelecionada) {
         fotoPreview.appendChild(el('div', { class: 'item-linha' },
           el('span', null, '📷 ' + fotoSelecionada.name),
-          el('button', { onclick: () => { fotoSelecionada = null; fotoInput.value = ''; atualizarFotoUI(); } }, '✕')
+          el('button', { onclick: () => { fotoSelecionada = null; pdfFotoPromise = null; fotoInput.value = ''; atualizarFotoUI(); } }, '✕')
         ));
         if (pdfJaEnviado) {
           const foto = fotoSelecionada;
@@ -737,7 +809,7 @@
           }));
         } else {
           fotoPreview.appendChild(el('div', { style: 'font-size:12px;opacity:.6;padding-top:6px' },
-            'A foto vai depois do orçamento, num segundo envio (o WhatsApp não aceita PDF e foto juntos).'));
+            'A foto vai junto, como última página do PDF do orçamento.'));
         }
       }
     }
@@ -783,12 +855,22 @@
             // ser tentado.
             const vaiTentarCompartilhar = temSuporteACompartilharArquivo();
             const novaAba = vaiTentarCompartilhar ? null : window.open('', '_blank');
-            compartilharOrcamento(pdfPromise || prepararOrcamento(id), 'orcamento-' + id + '.pdf', novaAba).then((r) => {
-              if (r === 'compartilhado' && fotoSelecionada) {
+            const pdfSimples = pdfPromise || prepararOrcamento(id);
+            let fotoFicouDeFora = false;
+            const pdfFinal = (fotoSelecionada && pdfFotoPromise)
+              ? pdfFotoPromise.catch(() => {
+                  // não deu pra juntar (ex.: sem internet pra baixar a
+                  // biblioteca na 1ª vez) — manda só o orçamento
+                  fotoFicouDeFora = true;
+                  return pdfSimples;
+                })
+              : pdfSimples;
+            compartilharOrcamento(pdfFinal, 'orcamento-' + id + '.pdf', novaAba).then((r) => {
+              if (r === 'compartilhado' && fotoFicouDeFora && fotoSelecionada) {
                 pdfJaEnviado = true;
                 atualizarFotoUI();
                 fotoPreview.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                toast('Orçamento enviado. Toque em "Enviar a foto também".');
+                toast('Não deu pra juntar a foto ao PDF. Toque em "Enviar a foto também".', true);
               }
             });
           }
