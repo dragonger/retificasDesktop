@@ -134,6 +134,55 @@
     return (nome || '').trim().toLowerCase();
   }
 
+  // ---------- telefone ----------
+
+  function soDigitos(v) {
+    return (v || '').replace(/\D/g, '');
+  }
+
+  // (31) 98556-5586 / (31) 3333-4444 — também serve pra formatar enquanto digita.
+  function formatarTelefone(v) {
+    const d = soDigitos(v).slice(0, 11);
+    if (!d) return '';
+    if (d.length <= 2) return '(' + d;
+    if (d.length <= 6) return '(' + d.slice(0, 2) + ') ' + d.slice(2);
+    if (d.length <= 10) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
+    return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
+  }
+
+  // Pra exibir o que já está gravado: formata só o que é telefone brasileiro
+  // com DDD (10/11 dígitos); o resto aparece como foi digitado.
+  function telefoneExibicao(v) {
+    const n = soDigitos(v).length;
+    return n === 10 || n === 11 ? formatarTelefone(v) : (v || '');
+  }
+
+  // Máscara ao digitar. Só reformata ao inserir: ao apagar, reformatar
+  // devolveria o "-"/")" na hora e a pessoa não conseguiria apagar.
+  function mascaraTelefone(input) {
+    input.setAttribute('inputmode', 'tel');
+    input.addEventListener('input', (ev) => {
+      if (ev.inputType && ev.inputType.startsWith('delete')) return;
+      input.value = formatarTelefone(input.value);
+    });
+    input.addEventListener('blur', () => { input.value = telefoneExibicao(input.value); });
+    return input;
+  }
+
+  // Busca por telefone ignorando a formatação ("3199" acha "(31) 99901-5257").
+  function telefoneCombina(telefone, termo) {
+    const d = soDigitos(termo);
+    return d.length > 0 && soDigitos(telefone).includes(d);
+  }
+
+  // Link wa.me pro número (DDI 55 se vier só com DDD); null se não parecer celular/fixo BR.
+  function linkWhatsApp(telefone, texto) {
+    let d = soDigitos(telefone);
+    if (d.length === 10 || d.length === 11) d = '55' + d;
+    else if (!(d.startsWith('55') && (d.length === 12 || d.length === 13))) return null;
+    return 'https://wa.me/' + d + (texto ? '?text=' + encodeURIComponent(texto) : '');
+  }
+
   // Mesmo serviço/peça no pedido: mesmo nome e mesma categoria. Item antigo
   // (gravado antes de guardar a categoria) casa com qualquer categoria.
   function mesmoItem(entrada, nome, categoria) {
@@ -522,7 +571,7 @@
 
   const rotas = [
     { re: /^#\/inicio$/, fn: () => telaInicio() },
-    { re: /^#\/pedidos(?:\?filtro=(\w+))?$/, fn: (m) => telaPedidos(m[1]) },
+    { re: /^#\/pedidos(?:\?(filtro|cliente)=(\w+))?$/, fn: (m) => (m[1] === 'cliente' ? telaPedidos(null, m[2]) : telaPedidos(m[2])) },
     { re: /^#\/pedidos\/novo$/, fn: () => telaFormPedido(null) },
     { re: /^#\/pedidos\/(\d+)\/editar$/, fn: (m) => telaFormPedido(m[1]) },
     { re: /^#\/pedidos\/(\d+)$/, fn: (m) => telaVisualizarPedido(m[1]) },
@@ -692,11 +741,77 @@
     return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
   }
 
-  async function telaPedidos(filtroChave) {
+  async function telaPedidos(filtroChave, clienteIdInicial) {
     tituloTopo.textContent = 'Pedidos';
+    // Campo de busca criado fora do render(): a revalidação em segundo plano
+    // redesenha a tela, e recriar o input tirava o foco/teclado no meio da digitação.
+    const fldBusca = el('input', { class: 'input', type: 'search', placeholder: 'Buscar por cliente, modelo ou nº do pedido...' });
+    // Filtro por cliente: pedidos abertos dele + os finalizados numa seção à parte.
+    const selCliente = el('select', { class: 'input', 'aria-label': 'Filtrar por cliente' },
+      el('option', { value: '' }, 'Todos os clientes'));
+    if (clienteIdInicial) selCliente.appendChild(el('option', { value: String(clienteIdInicial) }, 'Carregando...'));
+    selCliente.value = clienteIdInicial ? String(clienteIdInicial) : '';
+    carregarComCache(['/api/clientes']).then(([clientes]) => {
+      const escolhido = selCliente.value;
+      selCliente.innerHTML = '';
+      selCliente.appendChild(el('option', { value: '' }, 'Todos os clientes'));
+      clientes.slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'))
+        .forEach(c => selCliente.appendChild(el('option', { value: String(c.id) }, c.nome)));
+      selCliente.value = escolhido;
+    }).catch(() => {});
+    selCliente.addEventListener('change', desenharLista);
+    const buscaField = el('div', { style: 'display:flex;flex-direction:column;gap:8px;margin-bottom:6px' }, fldBusca, selCliente);
+    const listaEl = el('div', {});
+    let abertosAtuais = [];
+    let encerrados = null; // carregados só na primeira busca
+    let meuGenBusca = 0;
+
+    // sem acento e sem maiúscula: "cabecote" acha "Cabeçote"
+    const semAcento = (v) => chaveNome(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    function combina(p, termo) {
+      return semAcento(p.clienteNome).includes(termo)
+        || semAcento(p.componentesResumo).includes(termo)
+        || String(p.id) === termo.replace(/^#/, '').replace(/^0+/, '');
+    }
+
+    function desenharLista() {
+      const filtro = FILTROS_PEDIDOS[filtroChave];
+      const termo = semAcento(fldBusca.value);
+      const clienteId = selCliente.value;
+      const doCliente = (p) => !clienteId || String(p.clienteId) === clienteId;
+      let pedidos = filtro ? abertosAtuais.filter(filtro.fn) : abertosAtuais;
+      pedidos = pedidos.filter(p => doCliente(p) && (!termo || combina(p, termo)));
+      listaEl.innerHTML = '';
+      if (!pedidos.length) {
+        listaEl.appendChild(el('div', { class: 'empty' }, termo || clienteId ? 'Nenhum pedido em aberto encontrado.'
+          : filtro ? 'Nenhum pedido nessa situação.' : 'Nenhum pedido em aberto.'));
+      } else {
+        pedidos.forEach(p => listaEl.appendChild(linhaPedido(p)));
+      }
+      if (!termo && !clienteId) return;
+      // Finalizados também, numa seção à parte: buscar um cliente e achar o histórico dele.
+      if (encerrados === null) {
+        const gen = ++meuGenBusca;
+        const telaGen = renderGen;
+        api('GET', '/api/pedidos/encerrados').then(grupos => {
+          if (renderGen !== telaGen || gen !== meuGenBusca) return;
+          encerrados = (grupos || []).flatMap(g => g.pedidos);
+          desenharLista();
+        }).catch(() => {});
+        return;
+      }
+      const achados = encerrados.filter(p => doCliente(p) && (!termo || combina(p, termo)));
+      if (achados.length) {
+        listaEl.appendChild(el('h2', { class: 'secao', style: 'margin-top:24px' }, 'Finalizados'));
+        achados.forEach(p => listaEl.appendChild(linhaPedido(p)));
+      }
+    }
+    fldBusca.addEventListener('input', desenharLista);
+
     // Só os abertos: finalizados já ficam na aba Encerrados, e trazer todos
     // aqui fazia a lista (e o download) crescer sem limite mês a mês.
     function render(abertos) {
+      abertosAtuais = abertos;
       const filtro = FILTROS_PEDIDOS[filtroChave];
       const pedidos = filtro ? abertos.filter(filtro.fn) : abertos;
       conteudo.innerHTML = '';
@@ -711,11 +826,9 @@
         }));
       }
 
-      if (!pedidos.length) {
-        conteudo.appendChild(el('div', { class: 'empty' }, filtro ? 'Nenhum pedido nessa situação.' : 'Nenhum pedido em aberto.'));
-      } else {
-        pedidos.forEach(p => conteudo.appendChild(linhaPedido(p)));
-      }
+      conteudo.appendChild(buscaField);
+      conteudo.appendChild(listaEl);
+      desenharLista();
 
       if (!filtro) {
         conteudo.appendChild(btnBlueprint('Ver finalizados', 'btn-secondary btn-block', {
@@ -773,7 +886,7 @@
       el('div', { style: 'display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px' },
         el('div', { class: 'card-destaque-titulo', style: 'font-size:18px' }, p.cliente ? p.cliente.nome : '-'),
         svgIcone('var(--color-accent-700)', 18, '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>')),
-      p.cliente && p.cliente.telefone ? el('div', { class: 'linha-sub' }, p.cliente.telefone) : null,
+      p.cliente && p.cliente.telefone ? el('div', { class: 'linha-sub' }, telefoneExibicao(p.cliente.telefone)) : null,
       (p.cliente && (p.cliente.rua || p.cliente.municipio)) ? el('div', { class: 'linha-sub' },
         [p.cliente.rua, p.cliente.numero].filter(Boolean).join(', ') +
         (p.cliente.bairro ? ' – ' + p.cliente.bairro : '') +
@@ -829,6 +942,7 @@
     btnFoto.insertBefore(svgIcone('currentColor', 16, '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle>'), btnFoto.lastChild);
     function atualizarFotoUI() {
       btnFoto.lastChild.textContent = fotoSelecionada ? 'Trocar foto' : 'Anexar foto do componente';
+      resetarWhatsApp();
       fotoPreview.innerHTML = '';
       if (fotoSelecionada) {
         fotoPreview.appendChild(el('div', { class: 'item-linha' },
@@ -852,6 +966,79 @@
       }
     }
     conteudo.appendChild(el('div', { style: 'margin-top:16px' }, fotoInput, btnFoto, fotoPreview));
+
+    // — WhatsApp do cliente: abre a conversa com ele já com a mensagem e
+    // salva o PDF no aparelho pra anexar lá (link wa.me não leva arquivo) —
+    const numeroOrcamento = String(id).padStart(4, '0');
+    const nomeEmpresa = (getAuth() && getAuth().empresaNome) || 'Retífica Dih Soluções';
+    const primeiroNome = p.cliente && p.cliente.nome
+      ? p.cliente.nome.trim().split(/\s+/)[0].toLowerCase().replace(/^./, c => c.toUpperCase()) : '';
+    const linkWa = p.cliente ? linkWhatsApp(p.cliente.telefone,
+      'Olá' + (primeiroNome ? ', ' + primeiroNome : '') + '! Segue o orçamento nº ' + numeroOrcamento + ' da ' + nomeEmpresa + '.') : null;
+    // PDFs já prontos (por promise): com o PDF em mãos, baixar e abrir a
+    // conversa acontecem no mesmo toque — depois de um await o navegador
+    // pode bloquear a abertura do WhatsApp.
+    const pdfsProntos = new WeakMap();
+    function lembrarPdf(promessa) {
+      if (promessa && !pdfsProntos.has(promessa)) {
+        pdfsProntos.set(promessa, null);
+        promessa.then(b => pdfsProntos.set(promessa, b), () => {});
+      }
+      return promessa;
+    }
+    function pdfBase() {
+      if (!pdfPromise) pdfPromise = prepararOrcamento(id);
+      return lembrarPdf(pdfPromise);
+    }
+    function pdfAtual() {
+      return fotoSelecionada && pdfFotoPromise ? lembrarPdf(pdfFotoPromise) : pdfBase();
+    }
+    function baixarPdf(blob) {
+      const url = URL.createObjectURL(blob);
+      const a = el('a', { href: url, download: 'orcamento-' + numeroOrcamento + '.pdf' });
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+    function abrirWhatsApp() {
+      const a = el('a', { href: linkWa, target: '_blank', rel: 'noopener' });
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+    let pdfSalvoPraWa = false;
+    const btnWa = linkWa ? btnBlueprint('Enviar no WhatsApp do cliente', 'btn-secondary btn-block', {
+      style: 'gap:8px;margin-top:8px',
+      onclick: async (ev) => {
+        if (pdfSalvoPraWa) { abrirWhatsApp(); return; }
+        const promessa = pdfAtual();
+        const pronto = pdfsProntos.get(promessa);
+        if (pronto) {
+          baixarPdf(pronto);
+          toast('PDF salvo no aparelho — na conversa, anexe em 📎 › Documento.');
+          abrirWhatsApp();
+          return;
+        }
+        // PDF ainda gerando: salva quando ficar pronto e pede um segundo toque
+        const botao = ev.currentTarget;
+        const blob = await comBotaoOcupado(botao, 'Preparando o PDF…', () => promessa.catch(() => pdfBase()));
+        if (!blob) { toast('Não foi possível gerar o PDF.', true); return; }
+        baixarPdf(blob);
+        pdfSalvoPraWa = true;
+        botao.lastChild.textContent = 'Abrir conversa no WhatsApp';
+        toast('PDF salvo no aparelho. Toque de novo pra abrir a conversa.');
+      }
+    }) : null;
+    if (btnWa) {
+      btnWa.insertBefore(svgIcone('currentColor', 16, '<path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.5-1.2A9 9 0 1 0 12 3z"></path><path d="M8.5 9.5c0-.5.5-1 1-1h.5c.3 0 .5.2.6.5l.5 1.3c.1.3 0 .6-.2.8l-.5.5c.4.9 1.1 1.6 2 2l.5-.5c.2-.2.5-.3.8-.2l1.3.5c.3.1.5.3.5.6v.5c0 .5-.5 1-1 1-3 0-6-3-6-6z"></path>'), btnWa.lastChild);
+      conteudo.appendChild(btnWa);
+    }
+    // foto trocada/removida (chamado por atualizarFotoUI): o PDF salvo antes não vale mais
+    function resetarWhatsApp() {
+      if (pdfFotoPromise) lembrarPdf(pdfFotoPromise);
+      if (btnWa && pdfSalvoPraWa) { pdfSalvoPraWa = false; btnWa.lastChild.textContent = 'Enviar no WhatsApp do cliente'; }
+    }
 
     // — menu "⋮" no topo: Editar (só se não finalizado) e Excluir —
     btnMenuPedido.onclick = () => { menuPedidoPopover.hidden = !menuPedidoPopover.hidden; };
@@ -933,7 +1120,7 @@
     // mas só depois da tela pintada, e só se o usuário ainda estiver nela.
     const meuGen = renderGen;
     requestAnimationFrame(() => setTimeout(() => {
-      if (renderGen === meuGen && !pdfPromise) pdfPromise = prepararOrcamento(id);
+      if (renderGen === meuGen && !pdfPromise) pdfBase();
     }, 0));
   }
 
@@ -1256,7 +1443,7 @@
         clienteBoxSelecionado.appendChild(blueprintBox('div', { class: 'cliente-selecionado card-destaque elev-sm' },
           el('div', null,
             el('div', { class: 'card-destaque-titulo' }, clienteSelecionado.nome),
-            el('div', { style: 'font-size:12px;opacity:.7' }, clienteSelecionado.telefone || '')
+            el('div', { style: 'font-size:12px;opacity:.7' }, telefoneExibicao(clienteSelecionado.telefone))
           ),
           el('button', { type: 'button', onclick: () => { clienteSelecionado = null; atualizarClienteUI(); } }, 'Trocar')
         ));
@@ -1271,7 +1458,7 @@
     function atualizarListaClientes() {
       const termo = fldBuscaCliente.value.trim().toLowerCase();
       const filtrados = !termo ? catalogoCache.clientes : catalogoCache.clientes.filter(c =>
-        (c.nome || '').toLowerCase().includes(termo) || (c.telefone || '').toLowerCase().includes(termo));
+        (c.nome || '').toLowerCase().includes(termo) || telefoneCombina(c.telefone, termo));
       selCliente.innerHTML = '';
       if (!filtrados.length) {
         selCliente.appendChild(el('div', { class: 'lista-escolha-vazia' }, 'Nenhum cliente encontrado'));
@@ -1281,14 +1468,14 @@
         selCliente.appendChild(el('button', {
           type: 'button',
           onclick: () => { clienteSelecionado = { id: c.id, nome: c.nome, telefone: c.telefone }; atualizarClienteUI(); }
-        }, c.nome, c.telefone ? el('span', { class: 'tel' }, ' — ' + c.telefone) : null));
+        }, c.nome, c.telefone ? el('span', { class: 'tel' }, ' — ' + telefoneExibicao(c.telefone)) : null));
       });
     }
     fldBuscaCliente.addEventListener('input', atualizarListaClientes);
     atualizarListaClientes();
 
     const fldNovoNome = el('input', { class: 'input', type: 'text', placeholder: 'Nome completo' });
-    const fldNovoTelefone = el('input', { class: 'input', type: 'tel', placeholder: '(11) 90000-0000' });
+    const fldNovoTelefone = mascaraTelefone(el('input', { class: 'input', type: 'tel', placeholder: '(31) 90000-0000' }));
     const novoClienteBox = blueprintBox('div', { hidden: true, class: 'caixa-form' },
       campo('Nome', fldNovoNome),
       campo('Telefone', fldNovoTelefone),
@@ -1860,7 +2047,7 @@
 
     let emEdicaoId = null;
     const fldNome = el('input', { class: 'input', type: 'text', placeholder: 'Nome completo' });
-    const fldTelefone = el('input', { class: 'input', type: 'tel', placeholder: '(11) 90000-0000' });
+    const fldTelefone = mascaraTelefone(el('input', { class: 'input', type: 'tel', placeholder: '(31) 90000-0000' }));
     const fldRua = el('input', { class: 'input', type: 'text' });
     const fldNumero = el('input', { class: 'input', type: 'text' });
     const fldBairro = el('input', { class: 'input', type: 'text' });
@@ -1875,7 +2062,7 @@
       subtitulo.textContent = cadastrados(lista.length);
       const termo = fldBusca.value.trim().toLowerCase();
       const filtrados = !termo ? lista : lista.filter(c =>
-        (c.nome || '').toLowerCase().includes(termo) || (c.telefone || '').toLowerCase().includes(termo));
+        (c.nome || '').toLowerCase().includes(termo) || telefoneCombina(c.telefone, termo));
 
       listaEl.innerHTML = '';
       if (!filtrados.length) {
@@ -1885,7 +2072,7 @@
       filtrados.forEach(c => {
         listaEl.appendChild(el('div', { class: 'linha', onclick: () => cadastro.abrir(c) },
           el('div', { class: 'linha-titulo' }, c.nome),
-          el('div', { class: 'linha-sub' }, c.telefone || '-')
+          el('div', { class: 'linha-sub' }, telefoneExibicao(c.telefone) || '-')
         ));
       });
     }
@@ -1919,6 +2106,12 @@
       }
     }, 'Remover');
 
+    // Na edição: atalho pros pedidos deste cliente (abertos e finalizados).
+    const btnVerPedidos = el('button', {
+      type: 'button', class: 'btn btn-ghost btn-block', hidden: true,
+      onclick: () => { if (emEdicaoId) location.hash = '#/pedidos?cliente=' + emEdicaoId; }
+    }, 'Ver pedidos deste cliente');
+
     const form = el('form', {
       onsubmit: (ev) => {
         ev.preventDefault();
@@ -1949,6 +2142,7 @@
       el('div', { class: 'row' }, campo('Número', fldNumero), campo('Bairro', fldBairro)),
       el('div', { class: 'row' }, campo('CEP', fldCep), campo('UF', fldUf)),
       campo('Município', fldMunicipio),
+      btnVerPedidos,
       botoesCadastro(btnSalvar, btnRemover, () => cadastro.fechar())
     );
 
@@ -1956,8 +2150,9 @@
       rotuloNovo: 'Novo cliente', tituloNovo: 'Novo cliente', tituloEditar: 'Editar cliente', form, btnRemover,
       preencher: (c) => {
         emEdicaoId = c.id;
+        btnVerPedidos.hidden = false;
         fldNome.value = c.nome || '';
-        fldTelefone.value = c.telefone || '';
+        fldTelefone.value = telefoneExibicao(c.telefone);
         fldRua.value = c.rua || '';
         fldNumero.value = c.numero || '';
         fldBairro.value = c.bairro || '';
@@ -1967,6 +2162,7 @@
       },
       limpar: () => {
         emEdicaoId = null;
+        btnVerPedidos.hidden = true;
         fldNome.value = ''; fldTelefone.value = ''; fldRua.value = ''; fldNumero.value = '';
         fldBairro.value = ''; fldCep.value = ''; fldMunicipio.value = ''; fldUf.value = '';
       },

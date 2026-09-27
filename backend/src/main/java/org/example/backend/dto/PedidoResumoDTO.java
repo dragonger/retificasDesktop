@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 /** Linha da lista de pedidos (tela principal / encerrados). */
 public class PedidoResumoDTO {
     public Long id;
+    public Long clienteId;
     public String clienteNome;
     public String componentesResumo; // nomes dos componentes vinculados, separados por vírgula
     public String dataEntrega;      // dd/MM/yyyy — real se finalizado, senão estimada
