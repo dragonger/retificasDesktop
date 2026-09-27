@@ -854,7 +854,8 @@
       el('div', { class: 'linha-sub' }, p.componentesResumo || '-'),
       el('div', { class: 'linha-meta' },
         svgCalendario(),
-        el('span', null, (p.finalizado ? 'Entregue ' : 'Entrega ') + (p.dataEntrega || '-') + '  ·  ' + moeda(p.totalGeral))
+        // nº do pedido = nº do orçamento no PDF (ex.: 0137)
+        el('span', null, 'Nº ' + String(p.id).padStart(4, '0') + '  ·  ' + (p.finalizado ? 'Entregue ' : 'Entrega ') + (p.dataEntrega || '-') + '  ·  ' + moeda(p.totalGeral))
       )
     );
   }
