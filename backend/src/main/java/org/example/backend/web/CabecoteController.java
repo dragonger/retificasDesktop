@@ -53,7 +53,12 @@ public class CabecoteController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        repository.deletar(id, SecurityUtils.empresaAtual());
+        try {
+            repository.deletar(id, SecurityUtils.empresaAtual());
+        } catch (RuntimeException e) {
+            // Modelo ainda usado em algum pedido (FK de PEDIDO_COMPONENTE) — não deixa remover.
+            return ResponseEntity.status(409).build();
+        }
         return ResponseEntity.noContent().build();
     }
 

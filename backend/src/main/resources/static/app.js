@@ -1785,7 +1785,12 @@
         const alvo = emEdicaoId;
         if (!(await confirmar('Remover este produto?', 'Remover', true))) return;
         comBotaoOcupado(btnRemover, 'Removendo…', async () => {
-          await api('DELETE', PATH + '/' + alvo);
+          try {
+            await api('DELETE', PATH + '/' + alvo, undefined, [409]);
+          } catch (e) {
+            if (e.message === 'HTTP 409') toast('Não foi possível remover: esse modelo está em pedidos.', true);
+            return;
+          }
           cadastro.fechar();
           toast('Removido.');
           await recarregarLista();
