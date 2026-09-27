@@ -974,8 +974,13 @@
     const nomeEmpresa = (getAuth() && getAuth().empresaNome) || 'Retífica Dih Soluções';
     const primeiroNome = p.cliente && p.cliente.nome
       ? p.cliente.nome.trim().split(/\s+/)[0].toLowerCase().replace(/^./, c => c.toUpperCase()) : '';
+    // "Modelo" igual ao do PDF: os modelos do pedido, ou a descrição dele.
+    const modeloOrcamento = (p.componentes && p.componentes.length)
+      ? p.componentes.map(c => c.nome).filter(Boolean).join(', ')
+      : (p.pedidoDescricao || '').trim();
     const linkWa = p.cliente ? linkWhatsApp(p.cliente.telefone,
-      'Olá' + (primeiroNome ? ', ' + primeiroNome : '') + '! Segue o orçamento nº ' + numeroOrcamento + ' da ' + nomeEmpresa + '.') : null;
+      'Olá' + (primeiroNome ? ', ' + primeiroNome : '') + '! Segue o orçamento nº ' + numeroOrcamento + ' da ' + nomeEmpresa + '.'
+        + (modeloOrcamento ? '\nModelo: ' + modeloOrcamento : '')) : null;
     // PDFs já prontos (por promise): com o PDF em mãos, baixar e abrir a
     // conversa acontecem no mesmo toque — depois de um await o navegador
     // pode bloquear a abertura do WhatsApp.
