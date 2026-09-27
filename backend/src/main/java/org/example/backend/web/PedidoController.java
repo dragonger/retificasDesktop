@@ -3,16 +3,12 @@ package org.example.backend.web;
 import org.example.backend.dto.*;
 import org.example.backend.security.SecurityUtils;
 import org.example.model.*;
-import org.example.repository.PecaCatalogoRepository;
 import org.example.repository.PedidoRepository;
-import org.example.repository.ServicoCatalogoRepository;
-import org.example.service.PedidoPdfService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -20,7 +16,6 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -37,9 +32,11 @@ public class PedidoController {
     private static final DateTimeFormatter MES_FORMAT = DateTimeFormatter.ofPattern("MMMM 'de' yyyy", PT_BR);
 
     private final PedidoRepository pedidoRepository = new PedidoRepository();
-    private final PedidoPdfService pdfService = new PedidoPdfService();
-    private final ServicoCatalogoRepository servicoCatalogoRepository = new ServicoCatalogoRepository();
-    private final PecaCatalogoRepository pecaCatalogoRepository = new PecaCatalogoRepository();
+    private final OrcamentoPdfGerador orcamentoPdfGerador;
+
+    public PedidoController(OrcamentoPdfGerador orcamentoPdfGerador) {
+        this.orcamentoPdfGerador = orcamentoPdfGerador;
+    }
 
     @GetMapping
     public List<PedidoResumoDTO> listar(@RequestParam(name = "abertos", defaultValue = "false") boolean abertos) {
@@ -189,35 +186,15 @@ public class PedidoController {
 
     @GetMapping("/{id}/pdf")
     public ResponseEntity<byte[]> pdf(@PathVariable Long id) {
-        Long empresaId = SecurityUtils.empresaAtual();
-        // O orçamento agrupa serviços/peças por componente usando a categoria
-        // do item de mesmo nome no catálogo. As duas consultas do catálogo
-        // correm em paralelo com a do pedido (cada ida ao banco custa caro
-        // em produção — app e banco em regiões diferentes).
-        CompletableFuture<Map<String, CategoriaProduto>> categorias = CompletableFuture.supplyAsync(() -> {
-            Map<String, CategoriaProduto> mapa = new HashMap<>();
-            for (PecaCatalogoModel p : pecaCatalogoRepository.listarTodos(empresaId)) {
-                mapa.putIfAbsent(PedidoPdfService.chaveItem(p.getNome()), p.getCategoria());
-            }
-            return mapa;
-        }).thenCombine(CompletableFuture.supplyAsync(() -> servicoCatalogoRepository.listarTodos(empresaId)), (mapa, servicos) -> {
-            // serviço com o mesmo nome de uma peça: vale a categoria do serviço
-            for (ServicoCatalogoModel s : servicos) {
-                mapa.put(PedidoPdfService.chaveItem(s.getNome()), s.getCategoria());
-            }
-            return mapa;
-        }).exceptionally(erro -> Map.of()); // catálogo fora do ar: o orçamento sai sem agrupar, mas sai
-        PedidoModel pedido = pedidoRepository.buscarParaPdf(id, empresaId);
-        if (pedido == null) {
+        OrcamentoPdfGerador.Orcamento orcamento = orcamentoPdfGerador.gerar(id, SecurityUtils.empresaAtual());
+        if (orcamento == null) {
             return ResponseEntity.notFound().build();
         }
-        ByteArrayOutputStream saida = new ByteArrayOutputStream();
-        pdfService.gerar(pedido, categorias.join(), saida);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("inline", "orcamento-" + id + ".pdf");
-        return ResponseEntity.ok().headers(headers).body(saida.toByteArray());
+        return ResponseEntity.ok().headers(headers).body(orcamento.pdf());
     }
 
     /**

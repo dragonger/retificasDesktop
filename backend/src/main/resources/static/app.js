@@ -202,7 +202,9 @@
     if (auth && auth.token) {
       opts.headers['Authorization'] = 'Bearer ' + auth.token;
     }
-    if (body !== undefined) {
+    if (body instanceof FormData) {
+      opts.body = body; // multipart: o navegador põe o Content-Type com o boundary
+    } else if (body !== undefined) {
       opts.headers['Content-Type'] = 'application/json; charset=UTF-8';
       opts.body = JSON.stringify(body);
     }
@@ -227,7 +229,10 @@
       if (!(statusSemAviso && statusSemAviso.includes(resp.status))) {
         toast('Erro ao acessar ' + path + ' (' + resp.status + ')', true);
       }
-      throw new Error('HTTP ' + resp.status);
+      const erro = new Error('HTTP ' + resp.status);
+      // mensagem do servidor ({"erro": "..."}), pra quem trata o status sem o aviso genérico
+      try { const j = await resp.json(); erro.detalhe = j && j.erro; } catch (e) { /* sem corpo JSON */ }
+      throw erro;
     }
     const ct = resp.headers.get('content-type') || '';
     return ct.includes('application/json') ? resp.json() : resp;
@@ -306,6 +311,18 @@
   // Validade de 10 min: o app fica aberto dias no celular, e o PDF leva a
   // data de emissão/validade e as categorias do catálogo — um PDF de ontem
   // guardado sairia com a data errada.
+  // Envio automático pelo WhatsApp Business ligado no servidor? Consultado uma
+  // vez por sessão (recarregar o app pega uma configuração nova).
+  let whatsAppApiStatus = null;
+  function whatsAppApiHabilitada() {
+    if (!whatsAppApiStatus) {
+      whatsAppApiStatus = api('GET', '/api/whatsapp/status', undefined, [404, 500, 502, 503])
+        .then(r => !!(r && r.habilitado))
+        .catch(() => { whatsAppApiStatus = null; return false; });
+    }
+    return whatsAppApiStatus;
+  }
+
   const ORCAMENTO_CACHE_MS = 10 * 60 * 1000;
   const orcamentoCache = new Map();
   const orcamentoCacheEm = new Map();
@@ -1014,9 +1031,33 @@
       a.remove();
     }
     let pdfSalvoPraWa = false;
+    // Envio automático pela API do WhatsApp Business, quando o servidor tiver
+    // a API configurada (ver backend/WHATSAPP-API.md). Sem ela, ou se o envio
+    // falhar, o botão volta ao modo manual (salvar PDF + abrir a conversa).
+    let modoApi = false;
+    async function enviarPelaApi(botao) {
+      const tel = telefoneExibicao(p.cliente.telefone);
+      if (!(await confirmar('Enviar o orçamento nº ' + numeroOrcamento + ' pro WhatsApp de ' + p.cliente.nome + ' (' + tel + ')?', 'Enviar'))) return;
+      await comBotaoOcupado(botao, 'Enviando…', async () => {
+        // o PDF deste aparelho (com a foto, se tiver); se não sair, o servidor gera o padrão
+        const blob = await pdfAtual().catch(() => pdfBase()).catch(() => null);
+        const dados = new FormData();
+        if (blob) dados.append('pdf', blob, 'orcamento-' + numeroOrcamento + '.pdf');
+        try {
+          await api('POST', '/api/pedidos/' + id + '/whatsapp', dados, [422, 502, 503, 413, 400]);
+          toast('Orçamento enviado pro WhatsApp de ' + (primeiroNome || 'cliente') + '.');
+        } catch (e) {
+          if (e.message === 'HTTP 401') return;
+          toast((e.detalhe || 'Não foi possível enviar automático.') + ' Toque de novo pra enviar pela conversa.', true);
+          modoApi = false;
+          botao.lastChild.textContent = 'Enviar no WhatsApp do cliente';
+        }
+      });
+    }
     const btnWa = linkWa ? btnBlueprint('Enviar no WhatsApp do cliente', 'btn-secondary btn-block', {
       style: 'gap:8px;margin-top:8px',
       onclick: async (ev) => {
+        if (modoApi) { await enviarPelaApi(ev.currentTarget); return; }
         if (pdfSalvoPraWa) { abrirWhatsApp(); return; }
         const promessa = pdfAtual();
         const pronto = pdfsProntos.get(promessa);
@@ -1039,11 +1080,17 @@
     if (btnWa) {
       btnWa.insertBefore(svgIcone('currentColor', 16, '<path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.5-1.2A9 9 0 1 0 12 3z"></path><path d="M8.5 9.5c0-.5.5-1 1-1h.5c.3 0 .5.2.6.5l.5 1.3c.1.3 0 .6-.2.8l-.5.5c.4.9 1.1 1.6 2 2l.5-.5c.2-.2.5-.3.8-.2l1.3.5c.3.1.5.3.5.6v.5c0 .5-.5 1-1 1-3 0-6-3-6-6z"></path>'), btnWa.lastChild);
       conteudo.appendChild(btnWa);
+      const telaGenWa = renderGen;
+      whatsAppApiHabilitada().then(ligada => {
+        if (!ligada || renderGen !== telaGenWa) return;
+        modoApi = true;
+        btnWa.lastChild.textContent = 'Enviar orçamento no WhatsApp do cliente';
+      });
     }
     // foto trocada/removida (chamado por atualizarFotoUI): o PDF salvo antes não vale mais
     function resetarWhatsApp() {
       if (pdfFotoPromise) lembrarPdf(pdfFotoPromise);
-      if (btnWa && pdfSalvoPraWa) { pdfSalvoPraWa = false; btnWa.lastChild.textContent = 'Enviar no WhatsApp do cliente'; }
+      if (btnWa && pdfSalvoPraWa && !modoApi) { pdfSalvoPraWa = false; btnWa.lastChild.textContent = 'Enviar no WhatsApp do cliente'; }
     }
 
     // — menu "⋮" no topo: Editar (só se não finalizado) e Excluir —
