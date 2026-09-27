@@ -433,6 +433,7 @@ public class PedidoController {
     private PedidoResumoDTO toResumo(PedidoModel pedido) {
         PedidoResumoDTO dto = new PedidoResumoDTO();
         dto.id = pedido.getId();
+        dto.clienteId = pedido.getCliente() != null ? pedido.getCliente().getId() : null;
         dto.clienteNome = pedido.getCliente() != null ? pedido.getCliente().getNome() : null;
         dto.componentesResumo = resumoComponentes(pedido);
         dto.finalizado = pedido.isFinalizado();
