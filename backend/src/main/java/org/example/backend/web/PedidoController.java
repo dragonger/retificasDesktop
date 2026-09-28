@@ -206,10 +206,21 @@ public class PedidoController {
      * O resultado final e a ordem são os mesmos de antes (ordem = id, ver
      * @OrderBy em PedidoModel), com bem menos DELETE/INSERT.
      */
-    /** Valores negativos (ou quantidade menor que 1) nunca fazem sentido num orçamento. */
+    /**
+     * Valores negativos (ou quantidade menor que 1) nunca fazem sentido num
+     * orçamento; texto maior que a coluna faria o banco recusar com erro 500.
+     */
     private static boolean temValorInvalido(PedidoRequestDTO request) {
         if (negativo(request.descontoValor)) {
             return true;
+        }
+        if (longo(request.pedidoDescricao, 255) || longo(request.observacao, 2000)) {
+            return true;
+        }
+        for (List<ItemRequestDTO> itens : Arrays.asList(request.servicos, request.pecas)) {
+            if (itens != null && itens.stream().anyMatch(i -> i != null && longo(i.descricao, 255))) {
+                return true;
+            }
         }
         if (request.categoriaValores != null) {
             for (CategoriaValorRequestDTO cv : request.categoriaValores) {
@@ -226,6 +237,10 @@ public class PedidoController {
             }
         }
         return false;
+    }
+
+    private static boolean longo(String texto, int maximo) {
+        return texto != null && texto.length() > maximo;
     }
 
     private static boolean negativo(BigDecimal valor) {

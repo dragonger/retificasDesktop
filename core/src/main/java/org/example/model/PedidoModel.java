@@ -22,6 +22,10 @@ public class PedidoModel {
     private Long id;
 
     private String pedido;
+    // 2000: anotação de oficina passa fácil dos 255 do padrão (texto maior
+    // que a coluna fazia o salvar falhar). O hbm2ddl=update do Hibernate 7
+    // aumenta a coluna existente sozinho — testado num Postgres local.
+    @Column(length = 2000)
     private String observacao;
 
     @Column(precision = 19, scale = 2)
