@@ -787,6 +787,8 @@
     selCliente.addEventListener('change', desenharLista);
     const buscaField = el('div', { style: 'display:flex;flex-direction:column;gap:8px;margin-bottom:6px' }, fldBusca, selCliente);
     const listaEl = el('div', {});
+    const subtituloEl = el('div', { class: 'subtitulo' });
+    let subtituloPadrao = '';
     let abertosAtuais = [];
     let encerrados = null; // carregados só na primeira busca
     let meuGenBusca = 0;
@@ -807,6 +809,9 @@
       let pedidos = filtro ? abertosAtuais.filter(filtro.fn) : abertosAtuais;
       pedidos = pedidos.filter(p => doCliente(p) && (!termo || combina(p, termo)));
       listaEl.innerHTML = '';
+      subtituloEl.textContent = termo || clienteId
+        ? pedidos.length + (pedidos.length === 1 ? ' em aberto encontrado' : ' em aberto encontrados')
+        : subtituloPadrao;
       if (!pedidos.length) {
         listaEl.appendChild(el('div', { class: 'empty' }, termo || clienteId ? 'Nenhum pedido em aberto encontrado.'
           : filtro ? 'Nenhum pedido nessa situação.' : 'Nenhum pedido em aberto.'));
@@ -842,8 +847,9 @@
       conteudo.innerHTML = '';
 
       conteudo.appendChild(el('h2', { class: 'titulo' }, 'Pedidos'));
-      conteudo.appendChild(el('div', { class: 'subtitulo' },
-        filtro ? filtro.rotulo + ' — ' + pedidos.length : pedidos.length + ' em aberto'));
+      subtituloPadrao = filtro ? filtro.rotulo + ' — ' + pedidos.length : pedidos.length + ' em aberto';
+      subtituloEl.textContent = subtituloPadrao;
+      conteudo.appendChild(subtituloEl);
 
       if (filtro) {
         conteudo.appendChild(btnBlueprint('Ver todos os pedidos', 'btn-secondary btn-block', {
@@ -1304,6 +1310,9 @@
       return c ? c.rotulo : nome;
     }
     const selComponente = el('select', { class: 'input' });
+    const fldBuscaModelo = el('input', { class: 'input', type: 'search', placeholder: 'Buscar modelo (ex.: AP 1.8, Fire, OM 366)...', 'aria-label': 'Buscar modelo' });
+    const semAcentoModelo = (v) => chaveNome(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    fldBuscaModelo.addEventListener('input', () => preencherSelectModelos());
     const listaComponentesEl = el('div', {});
 
     function redesenharComponentes() {
@@ -1364,7 +1373,9 @@
     const camposComponenteAtivos = el('div', {},
       el('div', { class: 'field' },
         el('label', null, 'Adicionar modelo'),
-        el('div', { style: 'display:flex;gap:8px' }, selComponente)
+        // o catálogo de modelos é grande (centenas de motores) — a busca
+        // filtra a lista antes de abrir o seletor
+        el('div', { style: 'display:flex;flex-direction:column;gap:8px' }, fldBuscaModelo, selComponente)
       ),
       btnBlueprint('Adicionar modelo', 'btn-secondary btn-block', {
         onclick: () => {
@@ -1372,7 +1383,8 @@
           if (!item) { toast('Selecione um modelo.', true); return; }
           if (linhasComponentes.some(c => c.id === item.id)) { toast('Esse modelo já foi adicionado.', true); return; }
           linhasComponentes.push({ id: item.id, nome: item.nome });
-          selComponente.value = '';
+          fldBuscaModelo.value = '';
+          preencherSelectModelos();
           redesenharComponentes();
         }
       }),
@@ -1390,17 +1402,33 @@
       msgSemCategoriaComponente.hidden = temCategoria;
       camposComponenteAtivos.hidden = !temCategoria;
       if (!temCategoria) return;
-      selComponente.appendChild(el('option', { value: '' }, 'Selecione'));
-      const filtrado = catalogoCache.cabecotes.filter(c => relevantes.includes(c.categoria));
+      preencherSelectModelos();
+      relevantes.forEach(cat => {
+        const info = catalogoCache.categorias.find(c => c.nome === cat);
+        fldNovoComponenteCategoria.appendChild(el('option', { value: cat }, info ? info.rotulo : cat));
+      });
+    }
+
+    // Opções do seletor de modelo: categorias marcadas + texto da busca (cada
+    // palavra precisa aparecer no nome, sem acento/maiúscula). Um resultado só
+    // já fica selecionado.
+    function preencherSelectModelos() {
+      const relevantes = CATEGORIAS_COMPONENTE.filter(cat => categoriaValores.has(cat));
+      const palavras = semAcentoModelo(fldBuscaModelo.value).split(/\s+/).filter(Boolean);
+      const filtrado = catalogoCache.cabecotes
+        .filter(c => relevantes.includes(c.categoria))
+        .filter(c => { const n = semAcentoModelo(c.nome); return palavras.every(pal => n.includes(pal)); })
+        .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { numeric: true }));
+      selComponente.innerHTML = '';
+      selComponente.appendChild(el('option', { value: '' }, filtrado.length
+        ? (palavras.length ? filtrado.length + (filtrado.length === 1 ? ' modelo encontrado' : ' modelos encontrados') : 'Selecione')
+        : 'Nenhum modelo com esse nome'));
       agruparPorCategoria(filtrado).forEach(grupo => {
         selComponente.appendChild(el('optgroup', { label: grupo.rotulo },
           ...grupo.itens.map(i => el('option', { value: i.id }, i.nome))
         ));
       });
-      relevantes.forEach(cat => {
-        const info = catalogoCache.categorias.find(c => c.nome === cat);
-        fldNovoComponenteCategoria.appendChild(el('option', { value: cat }, info ? info.rotulo : cat));
-      });
+      if (filtrado.length === 1) selComponente.value = String(filtrado[0].id);
     }
     redesenharComponentes();
 
@@ -1998,6 +2026,11 @@
     const fldFixo = el('input', { class: 'input', type: 'text', placeholder: 'Fixo (ex.: 29,990-30,015)' });
 
     const listaEl = el('div', {});
+    // Busca: o catálogo tem centenas de motores. Cada palavra precisa aparecer
+    // no nome (sem acento/maiúscula) — "ap 1.8", "om 366", "fire 16v".
+    const fldBusca = el('input', { class: 'input', type: 'search', placeholder: 'Buscar por motor ou veículo...', 'aria-label': 'Buscar produto' });
+    const semAcento = (v) => chaveNome(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    fldBusca.addEventListener('input', () => redesenhar());
 
     function redesenhar() {
       subtitulo.textContent = 'Cabeçotes, blocos, bielas e virabrequins — ' + cadastrados(lista.length);
@@ -2006,14 +2039,22 @@
         listaEl.appendChild(el('div', { class: 'empty' }, 'Nada cadastrado ainda.'));
         return;
       }
-      agruparPorCategoria(lista).forEach(grupo => {
+      const palavras = semAcento(fldBusca.value).split(/\s+/).filter(Boolean);
+      const visiveis = lista
+        .filter(c => { const n = semAcento(c.nome); return palavras.every(pal => n.includes(pal)); })
+        .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { numeric: true }));
+      if (!visiveis.length) {
+        listaEl.appendChild(el('div', { class: 'empty' }, 'Nenhum produto com esse nome.'));
+        return;
+      }
+      agruparPorCategoria(visiveis).forEach(grupo => {
         listaEl.appendChild(el('div', { class: 'grupo-categoria' },
           el('h3', null, grupo.rotulo),
           ...grupo.itens.map(c => el('div', { class: 'linha', onclick: () => cadastro.abrir(c) },
             el('div', { class: 'linha-titulo' }, c.nome),
             el('div', { style: 'display:flex;gap:18px;font-size:12px' },
-              el('div', null, el('span', { style: 'opacity:.55' }, 'Móvel '), el('strong', null, (c.movelFaixa || '-') + ' mm')),
-              el('div', null, el('span', { style: 'opacity:.55' }, 'Fixo '), el('strong', null, (c.fixoFaixa || '-') + ' mm')),
+              el('div', null, el('span', { style: 'opacity:.55' }, 'Móvel '), el('strong', null, c.movelFaixa ? c.movelFaixa + ' mm' : '—')),
+              el('div', null, el('span', { style: 'opacity:.55' }, 'Fixo '), el('strong', null, c.fixoFaixa ? c.fixoFaixa + ' mm' : '—')),
             )
           ))
         ));
@@ -2091,6 +2132,7 @@
     redesenhar();
     conteudo.appendChild(cadastro.elemento);
     conteudo.appendChild(el('h2', { class: 'secao' }, 'Cadastrados'));
+    conteudo.appendChild(el('div', { class: 'field', style: 'margin-bottom:6px' }, fldBusca));
     conteudo.appendChild(listaEl);
   }
 
