@@ -319,6 +319,22 @@ public class PedidoRepository {
         }
     }
 
+    /**
+     * PEDIDO_CATEGORIA é a tabela antiga de "categorias do pedido" (só a lista,
+     * de antes do valor por categoria — hoje em PEDIDO_CATEGORIA_VALOR). O
+     * sistema não usa mais, mas pedidos criados naquela época ainda têm linhas
+     * lá presas pela chave estrangeira, e aí excluir o pedido falhava (erro
+     * 500). Em banco criado depois, a tabela nem existe — por isso a checagem.
+     */
+    private static void apagarCategoriasLegadas(EntityManager em, Long pedidoId) {
+        Object tabela = em.createNativeQuery("SELECT CAST(to_regclass('pedido_categoria') AS text)").getSingleResult();
+        if (tabela != null) {
+            em.createNativeQuery("DELETE FROM pedido_categoria WHERE pedido_id = ?1")
+                    .setParameter(1, pedidoId)
+                    .executeUpdate();
+        }
+    }
+
     public void deletar(Long id, Long empresaId) {
         EntityManager em = JPAUtil.getEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -330,6 +346,7 @@ public class PedidoRepository {
                     .setParameter("empresaId", empresaId)
                     .getResultStream().findFirst().orElse(null);
             if (pedido != null) {
+                apagarCategoriasLegadas(em, pedido.getId());
                 em.remove(pedido);
             }
             tx.commit();
