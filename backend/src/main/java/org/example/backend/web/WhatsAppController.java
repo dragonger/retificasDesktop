@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -29,6 +31,14 @@ public class WhatsAppController {
     /** PDF que o aparelho manda (com a foto já embutida) — bem acima de um orçamento com foto reduzida. */
     private static final long PDF_MAX_BYTES = 15L * 1024 * 1024;
     private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
+
+    // Freio contra envio repetido/abusivo — cada mensagem custa dinheiro e
+    // chega no celular do cliente. Importante enquanto o login do app está
+    // desligado (qualquer um com a URL chega nesta rota).
+    private static final long INTERVALO_MESMO_PEDIDO_MS = 60_000;
+    private static final int MAX_ENVIOS_POR_HORA = 30;
+    private final Map<Long, Long> ultimoEnvioPorPedido = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Deque<Long> enviosUltimaHora = new ArrayDeque<>();
 
     private final WhatsAppService whatsApp;
     private final OrcamentoPdfGerador orcamentoPdfGerador;
@@ -87,6 +97,11 @@ public class WhatsAppController {
             return erro(422, "O cliente não tem um telefone válido com DDD.");
         }
 
+        String bloqueio = reservarEnvio(pedido.getId());
+        if (bloqueio != null) {
+            return erro(429, bloqueio);
+        }
+
         String numeroOrcamento = String.format("%04d", pedido.getId());
         // Corpo do modelo "orcamento": {{1}} nome, {{2}} nº do orçamento, {{3}} modelo (ver WHATSAPP-API.md)
         List<String> parametros = List.of(primeiroNome(pedido), numeroOrcamento, modeloTexto(pedido));
@@ -94,8 +109,32 @@ public class WhatsAppController {
             String mensagemId = whatsApp.enviarOrcamento(numero, bytes, "orcamento-" + numeroOrcamento + ".pdf", parametros);
             return ResponseEntity.ok(Map.of("mensagemId", mensagemId));
         } catch (WhatsAppService.WhatsAppException e) {
+            liberarEnvio(pedido.getId()); // não saiu: pode tentar de novo na hora
             return erro(502, e.getMessage());
         }
+    }
+
+    /** Reserva um envio; devolve o motivo se ainda não pode, ou null se liberado. */
+    private synchronized String reservarEnvio(Long pedidoId) {
+        long agora = System.currentTimeMillis();
+        Long ultimo = ultimoEnvioPorPedido.get(pedidoId);
+        if (ultimo != null && agora - ultimo < INTERVALO_MESMO_PEDIDO_MS) {
+            return "Esse orçamento acabou de ser enviado. Espere um minuto pra mandar de novo.";
+        }
+        while (!enviosUltimaHora.isEmpty() && agora - enviosUltimaHora.peekFirst() > 3_600_000) {
+            enviosUltimaHora.pollFirst();
+        }
+        if (enviosUltimaHora.size() >= MAX_ENVIOS_POR_HORA) {
+            return "Limite de " + MAX_ENVIOS_POR_HORA + " envios por hora atingido. Tente mais tarde.";
+        }
+        ultimoEnvioPorPedido.put(pedidoId, agora);
+        enviosUltimaHora.addLast(agora);
+        return null;
+    }
+
+    private synchronized void liberarEnvio(Long pedidoId) {
+        ultimoEnvioPorPedido.remove(pedidoId);
+        enviosUltimaHora.pollLast();
     }
 
     private static boolean ehPdf(byte[] bytes) {

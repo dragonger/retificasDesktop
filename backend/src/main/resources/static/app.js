@@ -171,6 +171,7 @@
 
   // Busca por telefone ignorando a formatação ("3199" acha "(31) 99901-5257").
   function telefoneCombina(telefone, termo) {
+    if (/[a-zà-ú]/i.test(termo || '')) return false; // "rua 12" é busca por nome, não telefone
     const d = soDigitos(termo);
     return d.length > 0 && soDigitos(telefone).includes(d);
   }
@@ -514,9 +515,10 @@
     return 'fallback';
   }
 
+  // R$ 4.760,00 — com separador de milhar, igual ao PDF do orçamento.
+  const FORMATO_MOEDA = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   function moeda(v) {
-    const n = Number(v || 0);
-    return 'R$ ' + n.toFixed(2).replace('.', ',');
+    return 'R$ ' + FORMATO_MOEDA.format(Number(v || 0));
   }
 
   function el(tag, attrs, ...filhos) {
@@ -526,6 +528,12 @@
       else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
       else if (k === 'html') e.innerHTML = attrs[k];
       else e.setAttribute(k, attrs[k]);
+    }
+    // Texto livre sem limite passava do tamanho da coluna no banco (255) e o
+    // salvar falhava com erro genérico; campos que precisam de mais (ex.:
+    // observação) declaram o próprio maxlength.
+    if (tag === 'input' && (e.type === 'text' || e.type === 'tel') && !e.hasAttribute('maxlength')) {
+      e.maxLength = 255;
     }
     for (const f of filhos.flat()) {
       if (f === null || f === undefined) continue;
@@ -1044,10 +1052,12 @@
         const dados = new FormData();
         if (blob) dados.append('pdf', blob, 'orcamento-' + numeroOrcamento + '.pdf');
         try {
-          await api('POST', '/api/pedidos/' + id + '/whatsapp', dados, [422, 502, 503, 413, 400]);
+          await api('POST', '/api/pedidos/' + id + '/whatsapp', dados, [422, 429, 502, 503, 413, 400]);
           toast('Orçamento enviado pro WhatsApp de ' + (primeiroNome || 'cliente') + '.');
         } catch (e) {
           if (e.message === 'HTTP 401') return;
+          // limite de envios: só avisa, sem trocar pro modo manual
+          if (e.message === 'HTTP 429') { toast(e.detalhe || 'Espere um pouco pra enviar de novo.', true); return; }
           toast((e.detalhe || 'Não foi possível enviar automático.') + ' Toque de novo pra enviar pela conversa.', true);
           modoApi = false;
           botao.lastChild.textContent = 'Enviar no WhatsApp do cliente';
@@ -1403,7 +1413,7 @@
     );
     const fldDescricao = el('input', { class: 'input', type: 'text', placeholder: 'Ex.: Retífica completa', value: pedido ? (pedido.pedidoDescricao || '') : '' });
     const fldEntrega = el('input', { class: 'input', type: 'date', value: pedido ? (pedido.datEntregaEstimada || '') : '' });
-    const fldObservacao = el('textarea', { class: 'input', rows: '4', placeholder: 'Detalhes adicionais do serviço' }, pedido ? (pedido.observacao || '') : '');
+    const fldObservacao = el('textarea', { class: 'input', rows: '4', maxlength: '2000', placeholder: 'Detalhes adicionais do serviço' }, pedido ? (pedido.observacao || '') : '');
 
     const fldDescontoTipo = el('select', { class: 'input', style: 'width:150px;flex:none' },
       el('option', { value: '' }, 'Sem desconto'),
