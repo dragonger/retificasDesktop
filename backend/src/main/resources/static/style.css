@@ -1,8 +1,8 @@
 /* Tema "blueprint" (desenho técnico) — baseado no design compartilhado
    (claude.ai/design, projeto "Protótipo app mobile pedidos").
-   A fonte (Barlow) é carregada via <link> no index.html, não @import aqui
-   — @import bloquearia um round-trip serial extra (só é descoberto depois
-   que este arquivo inteiro já baixou e foi parseado). */
+   As fontes (Barlow) ficam em fonts/ e são carregadas pelo <link> do index.html,
+   não por @import aqui: o @import só é descoberto depois que este arquivo
+   inteiro já baixou e foi parseado. */
 
 :root {
   --color-bg: #f2f2f3;
