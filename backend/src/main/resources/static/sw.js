@@ -8,11 +8,12 @@
 // rede no caminho crítico da abertura.
 // Nunca cacheia /api/* (dados sempre frescos) nem requisições de outras
 // origens (Google Fonts etc. ficam com o cache HTTP do próprio navegador).
+// v8: a logo vem da empresa logada (/api/empresa/logo), nao mais de um arquivo fixo.
 // v7: fontes Barlow passam a ser servidas pelo app (fonts/), sem Google Fonts.
 // v6: a v5 tinha o bug de nunca atualizar o cache (ver comentário no fetch);
 // trocar o nome força instalar do zero e resgata quem ficou preso nela.
-const CACHE = 'retifica-shell-v7';
-const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'assets/logo-dih.png', 'fonts/fonts.css', 'fonts/barlow-latin-400-normal.woff2', 'fonts/barlow-latin-ext-400-normal.woff2', 'fonts/barlow-latin-500-normal.woff2', 'fonts/barlow-latin-ext-500-normal.woff2', 'fonts/barlow-latin-700-normal.woff2', 'fonts/barlow-latin-ext-700-normal.woff2', 'fonts/barlow-condensed-latin-400-normal.woff2', 'fonts/barlow-condensed-latin-ext-400-normal.woff2', 'fonts/barlow-condensed-latin-600-normal.woff2', 'fonts/barlow-condensed-latin-ext-600-normal.woff2'];
+const CACHE = 'retifica-shell-v8';
+const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'fonts/fonts.css', 'fonts/barlow-latin-400-normal.woff2', 'fonts/barlow-latin-ext-400-normal.woff2', 'fonts/barlow-latin-500-normal.woff2', 'fonts/barlow-latin-ext-500-normal.woff2', 'fonts/barlow-latin-700-normal.woff2', 'fonts/barlow-latin-ext-700-normal.woff2', 'fonts/barlow-condensed-latin-400-normal.woff2', 'fonts/barlow-condensed-latin-ext-400-normal.woff2', 'fonts/barlow-condensed-latin-600-normal.woff2', 'fonts/barlow-condensed-latin-ext-600-normal.woff2'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));

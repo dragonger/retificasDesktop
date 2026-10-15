@@ -13,6 +13,7 @@ import org.example.model.CabecoteModel;
 import org.example.model.CategoriaProduto;
 import org.example.model.PecaModel;
 import org.example.model.PedidoCategoriaModel;
+import org.example.model.EmpresaModel;
 import org.example.model.PedidoModel;
 import org.example.model.ServicoModel;
 import org.example.model.TipoDesconto;
@@ -174,6 +175,14 @@ public class PedidoPdfService {
      * @throws RuntimeException se ocorrer erro de escrita
      */
     public void gerar(PedidoModel pedido, Map<String, CategoriaProduto> categoriaPorItem, OutputStream saida) {
+        gerar(pedido, categoriaPorItem, LOGO_EMPRESA_BYTES, saida);
+    }
+
+    /**
+     * Gera o PDF com a logo informada no cabeçalho (a da empresa dona do
+     * pedido); {@code null} sai sem logo, com o nome ocupando o espaço dela.
+     */
+    public void gerar(PedidoModel pedido, Map<String, CategoriaProduto> categoriaPorItem, byte[] logo, OutputStream saida) {
         // 34px/44px de padding do design ≈ 25,5pt/33pt; embaixo sobra espaço pro rodapé fixo.
         Document documento = new Document(PageSize.A4, 33, 33, 25.5f, 40);
         try {
@@ -181,7 +190,7 @@ public class PedidoPdfService {
             writer.setPageEvent(new FundoERodapeEvent());
             documento.open();
 
-            documento.add(cabecalho(pedido));
+            documento.add(cabecalho(pedido, logo));
             documento.add(linhaDivisoria());
             documento.add(titulo());
             documento.add(faixaInfo(pedido));
@@ -227,41 +236,69 @@ public class PedidoPdfService {
 
     // ---------- cabeçalho ----------
 
-    private PdfPTable cabecalho(PedidoModel pedido) {
-        PdfPTable tabela = new PdfPTable(new float[]{84f, 340f, 105f});
-        tabela.setWidthPercentage(100);
-
-        PdfPCell logo = semBorda(new PdfPCell());
-        if (LOGO_EMPRESA_BYTES != null) {
+    private PdfPTable cabecalho(PedidoModel pedido, byte[] logoBytes) {
+        Image imagemLogo = null;
+        if (logoBytes != null) {
             try {
-                logo = semBorda(new PdfPCell(Image.getInstance(LOGO_EMPRESA_BYTES), true));
+                imagemLogo = Image.getInstance(logoBytes);
             } catch (IOException | BadElementException e) {
-                // sem logo
+                // logo ilegível: sai sem ela
             }
         }
-        logo.setFixedHeight(63f);
-        logo.setHorizontalAlignment(Element.ALIGN_LEFT);
-        tabela.addCell(logo);
+        // Sem empresa carregada (app desktop) valem os dados fixos antigos; com empresa,
+        // só o que ela preencheu aparece (nulo ou vazio = omitido).
+        EmpresaModel empresa = pedido.getEmpresa();
+        String telefone = empresa != null ? preenchido(empresa.getTelefone()) : TELEFONE;
+        String instagram = empresa != null ? preenchido(empresa.getInstagram()) : INSTAGRAM;
+        String slogan = empresa != null ? preenchido(empresa.getSlogan()) : SLOGAN;
+        boolean temContatos = telefone != null || instagram != null;
+
+        float larguraLogo = imagemLogo != null ? 84f : 0f;
+        float larguraContatos = temContatos ? 105f : 0f;
+        float larguraNome = 529f - larguraLogo - larguraContatos;
+        java.util.List<Float> larguras = new java.util.ArrayList<>();
+        if (imagemLogo != null) larguras.add(larguraLogo);
+        larguras.add(larguraNome);
+        if (temContatos) larguras.add(larguraContatos);
+        float[] colunas = new float[larguras.size()];
+        for (int i = 0; i < colunas.length; i++) colunas[i] = larguras.get(i);
+        PdfPTable tabela = new PdfPTable(colunas);
+        tabela.setWidthPercentage(100);
+
+        if (imagemLogo != null) {
+            PdfPCell logo = semBorda(new PdfPCell(imagemLogo, true));
+            logo.setFixedHeight(63f);
+            logo.setHorizontalAlignment(Element.ALIGN_LEFT);
+            tabela.addCell(logo);
+        }
 
         String nomeEmpresa = pedido.getEmpresa() != null && pedido.getEmpresa().getNome() != null
                 ? pedido.getEmpresa().getNome().toUpperCase(PT_BR)
                 : "RETÍFICA";
         PdfPCell meio = semBorda(new PdfPCell());
-        meio.setPaddingLeft(12f);
+        meio.setPaddingLeft(imagemLogo != null ? 12f : 0f);
         Paragraph nome = new Paragraph(nomeEmpresa, FONTE_EMPRESA);
         nome.setLeading(21f);
         meio.addElement(nome);
-        Paragraph slogan = new Paragraph(SLOGAN, FONTE_SLOGAN);
-        slogan.setSpacingBefore(2f);
-        meio.addElement(slogan);
+        if (slogan != null) {
+            Paragraph paragrafoSlogan = new Paragraph(slogan, FONTE_SLOGAN);
+            paragrafoSlogan.setSpacingBefore(2f);
+            meio.addElement(paragrafoSlogan);
+        }
         tabela.addCell(meio);
 
-        PdfPCell contatos = semBorda(new PdfPCell());
-        contatos.setPaddingTop(3f);
-        contatos.addElement(linhaContato(ICONE_WHATSAPP_BYTES, TELEFONE));
-        contatos.addElement(linhaContato(ICONE_INSTAGRAM_BYTES, INSTAGRAM));
-        tabela.addCell(contatos);
+        if (temContatos) {
+            PdfPCell contatos = semBorda(new PdfPCell());
+            contatos.setPaddingTop(3f);
+            if (telefone != null) contatos.addElement(linhaContato(ICONE_WHATSAPP_BYTES, telefone));
+            if (instagram != null) contatos.addElement(linhaContato(ICONE_INSTAGRAM_BYTES, instagram));
+            tabela.addCell(contatos);
+        }
         return tabela;
+    }
+
+    private static String preenchido(String texto) {
+        return texto == null || texto.isBlank() ? null : texto.trim();
     }
 
     private Paragraph linhaContato(byte[] icone, String texto) {

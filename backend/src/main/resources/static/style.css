@@ -108,6 +108,8 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; margin: 0; 
 .app-bar h1 { font-size: 20px; flex: 1; }
 /* Logo em destaque no topo (redesign "Retifica App", claude.ai/design). */
 .app-bar-logo { height: 84px; max-width: 97px; width: auto; object-fit: contain; flex: none; display: block; }
+.app-bar-logo[hidden] { display: none; }
+.logo-previa { display: block; max-width: 220px; max-height: 190px; margin: 0 auto var(--space-3); object-fit: contain; }
 /* 44x44 minimo de area de toque (recomendacao Apple/Material) */
 .icon-btn {
   background: none; border: none; color: var(--color-text);

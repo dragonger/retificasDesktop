@@ -20,6 +20,7 @@
   // navigator.share() rejeita com InvalidStateError se for chamado de novo
   // antes do anterior terminar (ex.: duplo toque no botão) — trava evita isso.
   let compartilhamentoEmAndamento = false;
+  let identidadeCarregada = false;
 
   // ---------- autenticação ----------
 
@@ -32,6 +33,64 @@
   }
   function limparAuth() {
     localStorage.removeItem('retifica_auth');
+    localStorage.removeItem(LOGO_KEY);
+    identidadeCarregada = false;
+    mostrarLogo(null);
+  }
+
+  // ---------- identidade da empresa (logo na barra do app) ----------
+  // Cada empresa tem a sua logo. Ela fica guardada no aparelho (junto da
+  // versão que o servidor informou) para aparecer na hora, sem esperar rede;
+  // a cada abertura o app só confere a versão e baixa de novo se mudou.
+
+  const LOGO_KEY = 'retifica_logo';
+  const logoBarra = document.querySelector('.app-bar-logo');
+
+  function logoGuardada() {
+    try { return JSON.parse(localStorage.getItem(LOGO_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function mostrarLogo(dataUrl) {
+    if (dataUrl) {
+      logoBarra.src = dataUrl;
+      logoBarra.hidden = false;
+    } else {
+      logoBarra.removeAttribute('src');
+      logoBarra.hidden = true;
+    }
+  }
+  function lerComoDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const leitor = new FileReader();
+      leitor.onload = () => resolve(leitor.result);
+      leitor.onerror = () => reject(leitor.error);
+      leitor.readAsDataURL(blob);
+    });
+  }
+
+  async function carregarIdentidade() {
+    const guardada = logoGuardada();
+    mostrarLogo(guardada && guardada.dataUrl);
+    try {
+      const dados = await api('GET', '/api/empresa');
+      const auth = getAuth();
+      if (auth && dados.nome && auth.empresaNome !== dados.nome) {
+        localStorage.setItem('retifica_auth', JSON.stringify({ ...auth, empresaNome: dados.nome }));
+      }
+      if (!dados.logoVersao) {
+        localStorage.removeItem(LOGO_KEY);
+        mostrarLogo(null);
+        return;
+      }
+      if (guardada && guardada.versao === dados.logoVersao) return;
+      const resp = await api('GET', '/api/empresa/logo');
+      const dataUrl = await lerComoDataUrl(await resp.blob());
+      try {
+        localStorage.setItem(LOGO_KEY, JSON.stringify({ versao: dados.logoVersao, dataUrl }));
+      } catch (e) { /* sem espaço guardado: aparece só nesta abertura */ }
+      mostrarLogo(dataUrl);
+    } catch (e) {
+      // sem conexão: continua com a logo guardada
+    }
   }
 
   // Tela de login desativada temporariamente (a pedido do usuário): sem
@@ -359,6 +418,11 @@
   function orcamentoInvalidar(id) {
     orcamentoCache.delete(String(id));
   }
+  // a logo faz parte do PDF: trocar a logo invalida os orçamentos já preparados
+  function orcamentoInvalidarTodos() {
+    orcamentoCache.clear();
+    orcamentoCacheEm.clear();
+  }
   function prepararOrcamento(id) {
     const chave = String(id);
     if (orcamentoCache.has(chave) && Date.now() - orcamentoCacheEm.get(chave) < ORCAMENTO_CACHE_MS) {
@@ -638,6 +702,7 @@
     { re: /^#\/dashboard$/, fn: () => telaDashboardEncerrados() },
     { re: /^#\/login$/, fn: () => telaLogin() },
     { re: /^#\/trocar-senha$/, fn: () => telaTrocarSenha() },
+    { re: /^#\/empresa$/, fn: () => telaEmpresa() },
   ];
 
   function rotear() {
@@ -646,6 +711,7 @@
     // Tela de login desativada: sem auth (ex.: auto-login falhou por falta
     // de conexão), tenta de novo em vez de mostrar #/login.
     if (!getAuth()) { garantirAutoLogin().then(rotear); return; }
+    if (!identidadeCarregada) { identidadeCarregada = true; carregarIdentidade(); }
     if (hash === '#/login') { location.hash = '#/inicio'; return; }
 
     renderGen++; // invalida qualquer revalidação de cache pendente de uma tela anterior
@@ -696,7 +762,7 @@
   // ---------- Início (dashboard) ----------
 
   async function telaInicio() {
-    tituloTopo.textContent = 'Retífica Dih Soluções';
+    tituloTopo.textContent = (getAuth() && getAuth().empresaNome) || 'Retífica';
     function render(dash) {
       conteudo.innerHTML = '';
 
@@ -2379,7 +2445,131 @@
       menuCard('Clientes', 'accent', svgPessoa(), '#/clientes'),
       menuCard('Serviços', 'neutral', svgChave(), '#/servicos'),
       menuCard('Peças', 'accent-2', svgPeca(), '#/pecas'),
+      menuCard('Minha empresa', 'neutral', svgEmpresa(), '#/empresa'),
     ));
+  }
+
+  function svgEmpresa() {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', '16'); s.setAttribute('height', '16'); s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '1.5');
+    s.innerHTML = '<path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 9h1"></path><path d="M14 9h1"></path><path d="M9 13h1"></path><path d="M14 13h1"></path><path d="M10 21v-4h4v4"></path>';
+    return s;
+  }
+
+  // ---------- Minha empresa (logo) ----------
+
+  const LOGO_BYTES_MAX = 5 * 1024 * 1024;
+
+  function telaEmpresa() {
+    tituloTopo.textContent = 'Minha empresa';
+    conteudo.innerHTML = '';
+    conteudo.appendChild(el('h2', { class: 'titulo' }, 'Minha empresa'));
+    conteudo.appendChild(el('div', { class: 'subtitulo' }, 'A logo aparece no topo do app e nos orçamentos em PDF'));
+
+    const previa = el('img', { class: 'logo-previa', alt: 'Logo da empresa' });
+    const semLogo = el('div', { class: 'empty' }, 'Nenhuma logo enviada. Os orçamentos saem só com o nome da empresa.');
+    const seletor = el('input', { type: 'file', accept: 'image/png,image/jpeg' });
+    seletor.style.display = 'none';
+    const btnEnviar = btnBlueprint('Escolher imagem', 'btn-primary btn-block', { onclick: () => seletor.click() });
+    const btnRemover = btnBlueprint('Remover logo', 'btn-danger btn-block', { onclick: () => remover() });
+
+    function desenhar() {
+      const guardada = logoGuardada();
+      previa.hidden = !guardada;
+      if (guardada) previa.src = guardada.dataUrl;
+      semLogo.hidden = !!guardada;
+      btnRemover.hidden = !guardada;
+    }
+
+    async function atualizarTudo() {
+      orcamentoInvalidarTodos();
+      await carregarIdentidade();
+      desenhar();
+    }
+
+    seletor.addEventListener('change', async () => {
+      const arquivo = seletor.files && seletor.files[0];
+      seletor.value = '';
+      if (!arquivo) return;
+      if (!/^image\/(png|jpeg)$/.test(arquivo.type)) { toast('Use uma imagem PNG ou JPG.', true); return; }
+      if (arquivo.size > LOGO_BYTES_MAX) { toast('A imagem passa de 5 MB.', true); return; }
+      const dados = new FormData();
+      dados.append('logo', arquivo);
+      // comBotaoOcupado engole o erro e devolve undefined: o resultado diz se deu certo
+      let motivo = null;
+      const enviada = await comBotaoOcupado(btnEnviar, 'Enviando…', async () => {
+        try {
+          return await api('PUT', '/api/empresa/logo', dados, [400, 413]);
+        } catch (e) {
+          motivo = e && e.detalhe;
+          throw e;
+        }
+      });
+      if (!enviada) { toast(motivo || 'Não foi possível enviar a logo.', true); return; }
+      await atualizarTudo();
+      toast('Logo atualizada.');
+    });
+
+    async function remover() {
+      if (!(await confirmar('Remover a logo da empresa?', 'Remover', true))) return;
+      const removida = await comBotaoOcupado(btnRemover, 'Removendo…', async () => {
+        await api('DELETE', '/api/empresa/logo');
+        return true;
+      });
+      if (!removida) return; // api() já avisou
+      await atualizarTudo();
+      toast('Logo removida.');
+    }
+
+    conteudo.appendChild(previa);
+    conteudo.appendChild(semLogo);
+    conteudo.appendChild(el('div', { class: 'subtitulo', style: 'text-align:center;margin-bottom:var(--space-3)' }, 'PNG ou JPG, até 5 MB. PNG com fundo transparente fica melhor no orçamento (um JPG leva o fundo branco junto).'));
+    conteudo.appendChild(seletor);
+    conteudo.appendChild(btnEnviar);
+    conteudo.appendChild(btnRemover);
+    desenhar();
+
+    // — dados que aparecem no cabeçalho do orçamento —
+    conteudo.appendChild(el('h2', { class: 'secao', style: 'margin-top:28px' }, 'Dados no orçamento'));
+    const fldNome = el('input', { class: 'input', type: 'text', maxlength: '120', placeholder: 'Nome da empresa' });
+    const fldTelefone = mascaraTelefone(el('input', { class: 'input', type: 'tel', maxlength: '40', placeholder: 'WhatsApp / telefone' }));
+    const fldInstagram = el('input', { class: 'input', type: 'text', maxlength: '60', placeholder: 'Instagram (sem @)', autocapitalize: 'none', autocomplete: 'off' });
+    const fldSlogan = el('input', { class: 'input', type: 'text', maxlength: '120', placeholder: 'Frase abaixo do nome (opcional)' });
+    conteudo.appendChild(campo('Nome da empresa', fldNome));
+    conteudo.appendChild(campo('WhatsApp / telefone', fldTelefone));
+    conteudo.appendChild(campo('Instagram', fldInstagram));
+    conteudo.appendChild(campo('Slogan', fldSlogan));
+    conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Telefone, Instagram e slogan em branco não aparecem no orçamento.'));
+
+    const btnSalvarDados = btnBlueprint('Salvar dados', 'btn-primary btn-block', {
+      onclick: async () => {
+        let motivo = null;
+        const salvo = await comBotaoOcupado(btnSalvarDados, 'Salvando…', async () => {
+          try {
+            await api('PUT', '/api/empresa', {
+              nome: fldNome.value, telefone: fldTelefone.value, instagram: fldInstagram.value, slogan: fldSlogan.value,
+            }, [400]);
+            return true;
+          } catch (e) {
+            motivo = e && e.detalhe;
+            throw e;
+          }
+        });
+        if (!salvo) { toast(motivo || 'Não foi possível salvar.', true); return; }
+        orcamentoInvalidarTodos();
+        await carregarIdentidade();
+        toast('Dados salvos.');
+      },
+    });
+    conteudo.appendChild(btnSalvarDados);
+
+    api('GET', '/api/empresa').then((d) => {
+      fldNome.value = d.nome || '';
+      fldTelefone.value = telefoneExibicao(d.telefone || '');
+      fldInstagram.value = d.instagram || '';
+      fldSlogan.value = d.slogan || '';
+    }).catch(() => { /* api() já avisou */ });
   }
 
   // ---------- Serviços / Peças (catálogo com categoria) ----------

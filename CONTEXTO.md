@@ -184,3 +184,15 @@ Branch `feature/fase1b-tenant-isolation` (a partir de `feature/fase1a-auth-login
 - Vários arquivos de `core/` (models, repositories, JPAUtil) tinham mojibake pré-existente (UTF-8 lido como Windows-1252 e re-salvo) nos comentários e num regex de parsing — corrigido revertendo o round-trip (reencodar como cp1252, decodificar como UTF-8). Não era causado por mim nem pelo upgrade; provavelmente um editor salvou errado em algum momento anterior.
 - PowerShell 5.1 com `Set-Content -Encoding utf8` grava BOM por padrão — se for reescrever arquivo `.java` via PowerShell, usar `New-Object System.Text.UTF8Encoding $false` + `[System.IO.File]::WriteAllText`, senão o `javac` quebra com `illegal character: '\ufeff'`.
 - O prefixo `!` pra rodar comando no chat é só uma instrução do Claude Code — se o usuário for colar o comando direto num terminal PowerShell separado, não incluir o `!` nem o `& ` antes de um caminho (no PowerShell, `&` só é necessário se o comando começar com uma string entre aspas).
+
+## Identidade da empresa (logo e contatos) — 2026-10-15
+
+Cada empresa (tenant) tem a sua logo e os dados do cabeçalho do orçamento, editáveis em **Catálogo → Minha empresa** (`#/empresa`).
+
+- **Logo**: tabela `EMPRESA_LOGO` (chave = `empresa_id`, PNG em `bytea`), separada de `EMPRESA` para a logo não vir junto toda vez que cliente/pedido carrega a empresa. `PUT /api/empresa/logo` (multipart `logo`) aceita só PNG/JPEG de verdade (conferido pelo conteúdo), até 5 MB e 8000 px de lado, e regrava como PNG de no máximo 400 px (`LogoNormalizador`). `DELETE` deixa a linha com `imagem = null` ("sem logo de propósito") — é isso que impede a semeadura de devolver a logo removida.
+- **Semeadura**: na primeira subida com o recurso, a primeira empresa (a Dih) recebe a logo embutida em `core/.../images/logo-empresa.png` e os contatos que o PDF já mostrava. Só roda com a tabela vazia / campos nulos; depois cada empresa cuida dos seus.
+- **Dados do cabeçalho**: `EMPRESA.telefone/instagram/slogan` (nulo = nunca preenchido; vazio = em branco de propósito, o PDF omite). `GET/PUT /api/empresa`.
+- **PDF**: `PedidoPdfService.gerar(pedido, categorias, logo, saida)` usa a logo da empresa do pedido; sem logo o nome ocupa o espaço dela; sem telefone e Instagram a coluna de contatos some. `OrcamentoPdfGerador` busca a logo em paralelo com o pedido.
+- **App**: a barra do topo mostra a logo da empresa logada (guardada em `localStorage` com a versão do servidor; a cada abertura só confere a versão). O título da tela inicial é o nome da empresa. Trocar logo/dados invalida o cache de orçamentos preparados. O arquivo fixo `assets/logo-dih.png` foi removido; service worker em v8.
+- **Fora do escopo (continuam da plataforma)**: ícone do PWA/APK e as condições do orçamento (pagamento, prazo, garantia — constantes em `PedidoPdfService`).
+- **Login**: hoje o auto-login entra sempre como usuário 1; quando o login normal voltar, cada usuário já cai na logo da própria empresa (tudo é resolvido pela empresa do token).
