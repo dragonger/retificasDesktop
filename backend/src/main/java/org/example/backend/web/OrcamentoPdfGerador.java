@@ -39,12 +39,24 @@ public class OrcamentoPdfGerador {
 
     /** Carrega o pedido e gera o PDF; null se o pedido não existe nessa empresa. */
     public Orcamento gerar(Long id, Long empresaId) {
-        // O orçamento agrupa serviços/peças por componente usando a categoria
-        // do item de mesmo nome no catálogo (itens antigos, sem categoria
-        // gravada). As duas consultas do catálogo correm em paralelo com a do
-        // pedido (cada ida ao banco custa caro em produção — app e banco em
-        // regiões diferentes).
-        CompletableFuture<Map<String, CategoriaProduto>> categorias = CompletableFuture.supplyAsync(() -> {
+        PedidoModel pedido = pedidoRepository.buscarParaPdf(id, empresaId);
+        if (pedido == null) {
+            return null;
+        }
+        // O catálogo só serve de fallback para itens antigos sem categoria
+        // gravada. Pedidos novos não precisam dele: pula as consultas (cada
+        // ida ao banco custa caro — app e banco em regiões diferentes).
+        Map<String, CategoriaProduto> categorias = PedidoPdfService.precisaCatalogoParaAgrupar(pedido)
+                ? carregarCategoriasDoCatalogo(empresaId)
+                : Map.of();
+        ByteArrayOutputStream saida = new ByteArrayOutputStream();
+        pdfService.gerar(pedido, categorias, saida);
+        return new Orcamento(pedido, saida.toByteArray());
+    }
+
+    /** Peças e serviços do catálogo consultados em paralelo (uma ida ao banco no total). */
+    private Map<String, CategoriaProduto> carregarCategoriasDoCatalogo(Long empresaId) {
+        return CompletableFuture.supplyAsync(() -> {
             Map<String, CategoriaProduto> mapa = new HashMap<>();
             for (PecaCatalogoModel p : pecaCatalogoRepository.listarTodos(empresaId)) {
                 mapa.putIfAbsent(PedidoPdfService.chaveItem(p.getNome()), p.getCategoria());
@@ -56,13 +68,7 @@ public class OrcamentoPdfGerador {
                 mapa.put(PedidoPdfService.chaveItem(s.getNome()), s.getCategoria());
             }
             return mapa;
-        }).exceptionally(erro -> Map.of()); // catálogo fora do ar: o orçamento sai sem agrupar, mas sai
-        PedidoModel pedido = pedidoRepository.buscarParaPdf(id, empresaId);
-        if (pedido == null) {
-            return null;
-        }
-        ByteArrayOutputStream saida = new ByteArrayOutputStream();
-        pdfService.gerar(pedido, categorias.join(), saida);
-        return new Orcamento(pedido, saida.toByteArray());
+        }).exceptionally(erro -> Map.<String, CategoriaProduto>of()) // catálogo fora do ar: o orçamento sai sem agrupar, mas sai
+          .join();
     }
 }
