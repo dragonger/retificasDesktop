@@ -47,12 +47,15 @@ public final class JPAUtil {
      * DATABASE_URL/DATABASE_USER/DATABASE_PASSWORD, se essas variáveis de
      * ambiente existirem (produção). Sem elas, valem os defaults do
      * persistence.xml (Postgres local do docker-compose.yml).
+     * HIBERNATE_HBM2DDL (opcional) troca o hibernate.hbm2ddl.auto; sem ela vale
+     * o "update" do persistence.xml. Ver backend/SCHEMA-STARTUP.md.
      */
     private static Map<String, Object> conexaoOverrides() {
         Map<String, Object> overrides = new HashMap<>();
         putSeExistir(overrides, "jakarta.persistence.jdbc.url", "DATABASE_URL");
         putSeExistir(overrides, "jakarta.persistence.jdbc.user", "DATABASE_USER");
         putSeExistir(overrides, "jakarta.persistence.jdbc.password", "DATABASE_PASSWORD");
+        putHbm2ddlSeValido(overrides);
         return overrides;
     }
 
@@ -60,6 +63,20 @@ public final class JPAUtil {
         String valor = System.getenv(variavelAmbiente);
         if (valor != null && !valor.isBlank()) {
             overrides.put(propriedade, valor);
+        }
+    }
+
+    /** So aceita valores nao destrutivos: create/create-drop/drop apagariam as tabelas de producao. */
+    private static void putHbm2ddlSeValido(Map<String, Object> overrides) {
+        String valor = System.getenv("HIBERNATE_HBM2DDL");
+        if (valor == null || valor.isBlank()) {
+            return;
+        }
+        String normalizado = valor.trim().toLowerCase();
+        if (normalizado.equals("update") || normalizado.equals("validate") || normalizado.equals("none")) {
+            overrides.put("hibernate.hbm2ddl.auto", normalizado);
+        } else {
+            System.err.println("HIBERNATE_HBM2DDL=\"" + valor + "\" ignorado (aceitos: update, validate, none); vale o persistence.xml.");
         }
     }
 }
