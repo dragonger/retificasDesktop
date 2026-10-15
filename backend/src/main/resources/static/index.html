@@ -7,12 +7,10 @@
 <meta name="theme-color" content="#f2f2f3">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<!-- preconnect + link (em vez de @import dentro do style.css) deixa a fonte
-     baixar em paralelo com o CSS, sem round-trip serial extra (o @import só
-     é descoberto depois que o style.css inteiro já chegou e foi parseado). -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;700&family=Barlow+Condensed:wght@400;600&display=swap">
+<!-- Fontes servidas pelo próprio app (fonts/): sem ida a outro servidor antes da primeira tela. -->
+<link rel="preload" href="fonts/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/barlow-condensed-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
