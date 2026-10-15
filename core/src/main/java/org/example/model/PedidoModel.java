@@ -73,7 +73,11 @@ public class PedidoModel {
     @ManyToMany
     @JoinTable(name = "PEDIDO_COMPONENTE",
             joinColumns = @JoinColumn(name = "pedido_id"),
-            inverseJoinColumns = @JoinColumn(name = "cabecote_id"))
+            inverseJoinColumns = @JoinColumn(name = "cabecote_id"),
+            indexes = {
+                    @Index(name = "idx_pedido_componente_pedido", columnList = "pedido_id"),
+                    @Index(name = "idx_pedido_componente_cabecote", columnList = "cabecote_id")
+            })
     private List<CabecoteModel> componentes = new ArrayList<>();
 
     /*

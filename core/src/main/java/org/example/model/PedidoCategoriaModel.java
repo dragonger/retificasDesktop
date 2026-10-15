@@ -8,7 +8,9 @@ import java.math.BigDecimal;
  * pedido — em vez de precificar cada serviço/peça individualmente.
  */
 @Entity
-@Table(name = "PEDIDO_CATEGORIA_VALOR")
+@Table(name = "PEDIDO_CATEGORIA_VALOR", indexes = {
+        @Index(name = "idx_pedido_categoria_valor_pedido", columnList = "pedido_id")
+})
 public class PedidoCategoriaModel {
 
     @Id

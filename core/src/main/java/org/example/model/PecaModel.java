@@ -3,7 +3,9 @@ package org.example.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "PECA")
+@Table(name = "PECA", indexes = {
+        @Index(name = "idx_peca_pedido", columnList = "pedido_id")
+})
 public class PecaModel {
 
     @Id
