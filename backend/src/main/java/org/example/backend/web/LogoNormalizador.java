@@ -1,6 +1,7 @@
 package org.example.backend.web;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import java.awt.Graphics2D;
@@ -25,6 +26,8 @@ final class LogoNormalizador {
     static final int LADO_MAXIMO = 400;
     private static final int LADO_ORIGINAL_MAXIMO = 8000;
     private static final long PIXELS_ORIGINAIS_MAXIMO = 40_000_000L;
+    /** O servidor tem pouca memória: imagens grandes são lidas já reduzidas (a cada N pixels), nunca inteiras. */
+    private static final int LADO_LEITURA = LADO_MAXIMO * 2;
     private static final Set<String> FORMATOS = Set.of("png", "jpeg");
 
     static final class LogoInvalidaException extends Exception {
@@ -74,7 +77,10 @@ final class LogoNormalizador {
                         || (long) largura * altura > PIXELS_ORIGINAIS_MAXIMO) {
                     throw new LogoInvalidaException("A imagem é grande demais (máximo 8000 px de lado).");
                 }
-                BufferedImage imagem = leitor.read(0);
+                int passo = Math.max(1, Math.max(largura, altura) / LADO_LEITURA);
+                ImageReadParam parametros = leitor.getDefaultReadParam();
+                parametros.setSourceSubsampling(passo, passo, 0, 0);
+                BufferedImage imagem = leitor.read(0, parametros);
                 if (imagem == null) {
                     throw new LogoInvalidaException("Não foi possível ler a imagem.");
                 }
