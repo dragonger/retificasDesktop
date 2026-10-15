@@ -134,6 +134,35 @@
     return (nome || '').trim().toLowerCase();
   }
 
+  // Busca no catálogo (centenas de motores): o nome sem acento é calculado uma
+  // vez por nome, e a ordenação usa um Collator reaproveitado. Sem isso cada
+  // tecla refazia a normalização e o sort de todo o catálogo.
+  const colecaoNomes = new Intl.Collator('pt-BR', { numeric: true });
+  const semAcentoCache = new Map();
+  function semAcentoBusca(v) {
+    const texto = v || '';
+    let r = semAcentoCache.get(texto);
+    if (r === undefined) {
+      r = chaveNome(texto).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      semAcentoCache.set(texto, r);
+    }
+    return r;
+  }
+  function filtrarPorPalavras(lista, termo) {
+    const palavras = semAcentoBusca(termo).split(/\s+/).filter(Boolean);
+    return lista
+      .filter(c => { const n = semAcentoBusca(c.nome); return palavras.every(pal => n.includes(pal)); })
+      .sort((a, b) => colecaoNomes.compare(a.nome || '', b.nome || ''));
+  }
+  // Espera a digitação parar antes de filtrar (não redesenha a cada tecla).
+  function aoDigitar(campo, fn, atraso = 120) {
+    let timer = null;
+    campo.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(fn, atraso);
+    });
+  }
+
   // ---------- telefone ----------
 
   function soDigitos(v) {
@@ -1311,8 +1340,7 @@
     }
     const selComponente = el('select', { class: 'input' });
     const fldBuscaModelo = el('input', { class: 'input', type: 'search', placeholder: 'Buscar modelo (ex.: AP 1.8, Fire, OM 366)...', 'aria-label': 'Buscar modelo' });
-    const semAcentoModelo = (v) => chaveNome(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    fldBuscaModelo.addEventListener('input', () => preencherSelectModelos());
+    aoDigitar(fldBuscaModelo, () => preencherSelectModelos());
     const listaComponentesEl = el('div', {});
 
     function redesenharComponentes() {
@@ -1412,23 +1440,29 @@
     // Opções do seletor de modelo: categorias marcadas + texto da busca (cada
     // palavra precisa aparecer no nome, sem acento/maiúscula). Um resultado só
     // já fica selecionado.
+    // Sem texto na busca o seletor mostra só os primeiros modelos (o catálogo tem
+    // mais de mil); com texto, todos os que casam.
+    const LIMITE_MODELOS_SEM_BUSCA = 150;
     function preencherSelectModelos() {
       const relevantes = CATEGORIAS_COMPONENTE.filter(cat => categoriaValores.has(cat));
-      const palavras = semAcentoModelo(fldBuscaModelo.value).split(/\s+/).filter(Boolean);
-      const filtrado = catalogoCache.cabecotes
-        .filter(c => relevantes.includes(c.categoria))
-        .filter(c => { const n = semAcentoModelo(c.nome); return palavras.every(pal => n.includes(pal)); })
-        .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { numeric: true }));
+      const palavras = semAcentoBusca(fldBuscaModelo.value).split(/\s+/).filter(Boolean);
+      const casam = filtrarPorPalavras(catalogoCache.cabecotes.filter(c => relevantes.includes(c.categoria)), fldBuscaModelo.value);
+      const mostrados = palavras.length ? casam
+        : agruparPorCategoria(casam).flatMap(g => g.itens).slice(0, LIMITE_MODELOS_SEM_BUSCA);
       selComponente.innerHTML = '';
-      selComponente.appendChild(el('option', { value: '' }, filtrado.length
-        ? (palavras.length ? filtrado.length + (filtrado.length === 1 ? ' modelo encontrado' : ' modelos encontrados') : 'Selecione')
+      selComponente.appendChild(el('option', { value: '' }, casam.length
+        ? (palavras.length
+          ? casam.length + (casam.length === 1 ? ' modelo encontrado' : ' modelos encontrados')
+          : (casam.length > LIMITE_MODELOS_SEM_BUSCA
+            ? 'Selecione · digite para buscar entre ' + casam.length + ' modelos'
+            : 'Selecione'))
         : 'Nenhum modelo com esse nome'));
-      agruparPorCategoria(filtrado).forEach(grupo => {
+      agruparPorCategoria(mostrados).forEach(grupo => {
         selComponente.appendChild(el('optgroup', { label: grupo.rotulo },
           ...grupo.itens.map(i => el('option', { value: i.id }, i.nome))
         ));
       });
-      if (filtrado.length === 1) selComponente.value = String(filtrado[0].id);
+      if (casam.length === 1) selComponente.value = String(casam[0].id);
     }
     redesenharComponentes();
 
@@ -2029,25 +2063,34 @@
     // Busca: o catálogo tem centenas de motores. Cada palavra precisa aparecer
     // no nome (sem acento/maiúscula) — "ap 1.8", "om 366", "fire 16v".
     const fldBusca = el('input', { class: 'input', type: 'search', placeholder: 'Buscar por motor ou veículo...', 'aria-label': 'Buscar produto' });
-    const semAcento = (v) => chaveNome(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    fldBusca.addEventListener('input', () => redesenhar());
+    // Só os primeiros itens aparecem; "Mostrar mais" acrescenta o próximo lote.
+    const LOTE_PRODUTOS = 100;
+    let limiteProdutos = LOTE_PRODUTOS;
+    let termoAnterior = '';
+
+    aoDigitar(fldBusca, () => {
+      if (fldBusca.value !== termoAnterior) limiteProdutos = LOTE_PRODUTOS;
+      redesenhar();
+    });
 
     function redesenhar() {
+      termoAnterior = fldBusca.value;
       subtitulo.textContent = 'Cabeçotes, blocos, bielas e virabrequins — ' + cadastrados(lista.length);
       listaEl.innerHTML = '';
       if (!lista.length) {
         listaEl.appendChild(el('div', { class: 'empty' }, 'Nada cadastrado ainda.'));
         return;
       }
-      const palavras = semAcento(fldBusca.value).split(/\s+/).filter(Boolean);
-      const visiveis = lista
-        .filter(c => { const n = semAcento(c.nome); return palavras.every(pal => n.includes(pal)); })
-        .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { numeric: true }));
+      const visiveis = filtrarPorPalavras(lista, fldBusca.value);
       if (!visiveis.length) {
         listaEl.appendChild(el('div', { class: 'empty' }, 'Nenhum produto com esse nome.'));
         return;
       }
-      agruparPorCategoria(visiveis).forEach(grupo => {
+      // Agrupa antes de cortar: assim o corte não intercala categorias e
+      // "Mostrar mais" só acrescenta itens ao fim da lista.
+      const ordenados = agruparPorCategoria(visiveis).flatMap(g => g.itens);
+      const exibidos = ordenados.slice(0, limiteProdutos);
+      agruparPorCategoria(exibidos).forEach(grupo => {
         listaEl.appendChild(el('div', { class: 'grupo-categoria' },
           el('h3', null, grupo.rotulo),
           ...grupo.itens.map(c => el('div', { class: 'linha', onclick: () => cadastro.abrir(c) },
@@ -2059,6 +2102,13 @@
           ))
         ));
       });
+      const restantes = visiveis.length - exibidos.length;
+      if (restantes > 0) {
+        listaEl.appendChild(el('button', {
+          type: 'button', class: 'btn btn-secondary btn-block',
+          onclick: () => { limiteProdutos += LOTE_PRODUTOS; redesenhar(); },
+        }, 'Mostrar mais (' + restantes + ' restantes)'));
+      }
     }
 
     async function recarregarLista() {
