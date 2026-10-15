@@ -156,36 +156,235 @@
     }
   }
 
-  // Confirmação no visual do app (o confirm() nativo destoa e, no Android,
-  // mostra o domínio do site no título). Resolve true/false.
-  function confirmar(mensagem, rotuloConfirmar, perigoso) {
+  // Diálogo de escolha no visual do app (o confirm() nativo destoa e, no Android,
+  // mostra o domínio do site no título). Resolve com o `valor` da opção tocada;
+  // Esc ou toque fora escolhem a PRIMEIRA opção, que deve ser sempre a segura.
+  // opcoes: [{ rotulo, valor, estilo }]; foco: índice do botão focado (padrão 0);
+  // linha: botões lado a lado (2 opções curtas) em vez de empilhados.
+  function escolher(mensagem, opcoes, { foco = 0, linha = false } = {}) {
     return new Promise(resolve => {
-      function fechar(resposta) {
+      function fechar(valor) {
         document.removeEventListener('keydown', teclado);
         fundo.remove();
-        resolve(resposta);
+        resolve(valor);
       }
-      function teclado(ev) { if (ev.key === 'Escape') fechar(false); }
-      const btnOk = el('button', {
-        type: 'button', class: 'btn ' + (perigoso ? 'btn-danger' : 'btn-primary'), onclick: () => fechar(true)
-      }, rotuloConfirmar || 'Confirmar');
-      const btnCancelar = el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => fechar(false) }, 'Cancelar');
+      function teclado(ev) { if (ev.key === 'Escape') fechar(opcoes[0].valor); }
+      const botoes = opcoes.map(o => el('button', {
+        type: 'button', class: 'btn ' + (o.estilo || 'btn-secondary'), onclick: () => fechar(o.valor)
+      }, o.rotulo));
+      const grupo = linha
+        ? el('div', { class: 'btn-group', style: 'margin:0' }, ...botoes)
+        : el('div', { style: 'display:flex;flex-direction:column;gap:8px' }, ...botoes);
       const caixa = blueprintBox('div', {
         role: 'dialog', 'aria-modal': 'true',
         style: 'background:var(--color-bg);padding:20px;width:100%;max-width:394px;box-shadow:var(--shadow-lg)'
       },
         el('div', { style: 'font-size:15px;line-height:1.4;margin-bottom:18px' }, mensagem),
-        el('div', { class: 'btn-group', style: 'margin:0' }, btnCancelar, btnOk));
+        grupo);
       const fundo = el('div', {
         style: 'position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;' +
           'padding:16px;background:color-mix(in srgb, var(--color-text) 45%, transparent)',
-        onclick: (ev) => { if (ev.target === fundo) fechar(false); }
+        onclick: (ev) => { if (ev.target === fundo) fechar(opcoes[0].valor); }
       }, caixa);
       document.addEventListener('keydown', teclado);
       document.body.appendChild(fundo);
-      // ação destrutiva: Enter cancela em vez de apagar
-      (perigoso ? btnCancelar : btnOk).focus();
+      botoes[foco].focus();
     });
+  }
+
+  // Confirmação sim/não. Resolve true/false.
+  function confirmar(mensagem, rotuloConfirmar, perigoso) {
+    return escolher(mensagem, [
+      { rotulo: 'Cancelar', valor: false },
+      { rotulo: rotuloConfirmar || 'Confirmar', valor: true, estilo: perigoso ? 'btn-danger' : 'btn-primary' },
+    ], { linha: true, foco: perigoso ? 0 : 1 }); // ação destrutiva: Enter cancela em vez de apagar
+  }
+
+  // ---------- guarda de saída (dados não salvos) ----------
+  // Cada tela com formulário registra uma guarda; qualquer mudança de rota
+  // (abas, logo, voltar, Cancelar, botão voltar do aparelho) passa por
+  // aoMudarHash, que pergunta antes de largar o que ainda não foi salvo.
+  // { sujo(): boolean, tipo: 'pedido' | 'formulario', aoGuardar?(), aoDescartar?() }
+
+  let guarda = null;
+  let indiceAtual = 0;
+  let maiorIndice = 0;
+  let revertendo = false;
+  let perguntandoSaida = false;
+
+  function definirGuarda(g) { guarda = g; }
+  function limparGuarda() { guarda = null; }
+  function guardaSuja() {
+    try { return !!(guarda && guarda.sujo()); } catch (e) { return false; }
+  }
+  // Para navegações que não são do usuário (ex.: sessão expirada): sem pergunta.
+  function navegarSemGuarda(hash) {
+    limparGuarda();
+    location.hash = hash;
+  }
+
+  // Cada entrada do histórico recebe um número (history.state.i). É o que
+  // permite desfazer um voltar/avançar do aparelho sem embaralhar o histórico.
+  function marcarEntradaDoHistorico() {
+    const atual = history.state && typeof history.state.i === 'number' ? history.state.i : ++maiorIndice;
+    maiorIndice = Math.max(maiorIndice, atual);
+    try { history.replaceState({ i: atual }, ''); } catch (e) { /* sem history.state: só perde o desfazer exato */ }
+    indiceAtual = atual;
+  }
+
+  function desfazerNavegacao() {
+    const novo = history.state && typeof history.state.i === 'number' ? history.state.i : null;
+    // entrada sem número = empurrada por location.hash = ...: volta uma
+    const delta = novo === null ? -1 : indiceAtual - novo;
+    if (delta === 0) return;
+    revertendo = true; // o hashchange provocado por este desfazer não deve rotear
+    history.go(delta);
+  }
+
+  async function perguntarSaida(destino) {
+    if (perguntandoSaida) return;
+    perguntandoSaida = true;
+    const g = guarda;
+    const ehPedido = g.tipo === 'pedido';
+    const resposta = await escolher(
+      ehPedido
+        ? 'Este pedido ainda não foi salvo. Se sair, suas alterações ficam guardadas como rascunho neste aparelho, e você volta a ele pelo aviso "Pedido incompleto" na tela inicial.'
+        : (g.mensagem || 'Você tem alterações que ainda não foram salvas. Se sair agora, elas serão perdidas.'),
+      ehPedido
+        ? [
+          { rotulo: 'Continuar editando', valor: 'ficar', estilo: 'btn-primary' },
+          { rotulo: 'Sair e guardar rascunho', valor: 'guardar' },
+          { rotulo: 'Descartar', valor: 'descartar', estilo: 'btn-danger' },
+        ]
+        : [
+          { rotulo: 'Continuar editando', valor: 'ficar', estilo: 'btn-primary' },
+          { rotulo: g.rotuloSair || 'Sair sem salvar', valor: 'descartar', estilo: 'btn-danger' },
+        ]);
+    perguntandoSaida = false;
+    if (resposta === 'ficar') return;
+    if (resposta === 'guardar' && g.aoGuardar) g.aoGuardar();
+    if (resposta === 'descartar' && g.aoDescartar) g.aoDescartar();
+    limparGuarda();
+    location.hash = destino;
+  }
+
+  function aoMudarHash() {
+    if (revertendo) { revertendo = false; return; }
+    if (guardaSuja()) {
+      const destino = location.hash;
+      desfazerNavegacao();
+      perguntarSaida(destino);
+      return;
+    }
+    rotear();
+  }
+
+  // Fechar/recarregar a aba: pedido já está em rascunho (grava na hora); os
+  // outros formulários mostram o aviso nativo do navegador.
+  function aoSairDaPagina(ev) {
+    if (!guardaSuja()) return;
+    if (guarda.tipo === 'pedido') {
+      if (guarda.aoGuardar) guarda.aoGuardar();
+    } else if (ev && ev.type === 'beforeunload') {
+      ev.preventDefault();
+      ev.returnValue = '';
+    }
+  }
+  window.addEventListener('beforeunload', aoSairDaPagina);
+  window.addEventListener('pagehide', aoSairDaPagina);
+
+  // ---------- rascunhos do pedido ----------
+  // O que foi digitado num pedido novo (ou na edição de um pedido) fica guardado
+  // neste aparelho e dá pra voltar a ele depois. Separado por usuário/empresa
+  // (lidos do JWT) e mantido mesmo se o token expirar no meio da edição.
+
+  const RASCUNHOS_KEY = 'retifica_rascunhos';
+  const RASCUNHOS_MAX = 5;
+  const RASCUNHO_VALIDADE_MS = 14 * 24 * 60 * 60 * 1000;
+  let rascunhoARetomar = null; // chave do rascunho que a pessoa mandou continuar
+
+  function donoDosRascunhos() {
+    try {
+      const partes = getAuth().token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const claims = JSON.parse(atob(partes));
+      return claims.usuarioId + '|' + claims.empresaId;
+    } catch (e) {
+      return 'anonimo';
+    }
+  }
+  function lerTodosRascunhos() {
+    try { return JSON.parse(localStorage.getItem(RASCUNHOS_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function gravarTodosRascunhos(todos) {
+    try { localStorage.setItem(RASCUNHOS_KEY, JSON.stringify(todos)); } catch (e) { /* sem espaço/modo privado: segue sem rascunho */ }
+  }
+  // Rascunhos do dono atual, sem os vencidos, do mais recente para o mais antigo.
+  function listarRascunhos() {
+    const meus = lerTodosRascunhos()[donoDosRascunhos()] || {};
+    const agora = Date.now();
+    return Object.entries(meus)
+      .filter(([, r]) => r && agora - r.quando < RASCUNHO_VALIDADE_MS)
+      .map(([chave, r]) => ({ chave, ...r }))
+      .sort((a, b) => b.quando - a.quando);
+  }
+  function lerRascunho(chave) {
+    return listarRascunhos().find(r => r.chave === chave) || null;
+  }
+  function gravarRascunho(chave, titulo, dados) {
+    const todos = lerTodosRascunhos();
+    const dono = donoDosRascunhos();
+    if (dono === 'anonimo') return; // sem sessão não há de quem guardar (evita rascunho órfão)
+    const meus = { ...(todos[dono] || {}), [chave]: { quando: Date.now(), titulo, dados } };
+    const maisRecentes = Object.entries(meus).sort((a, b) => b[1].quando - a[1].quando).slice(0, RASCUNHOS_MAX);
+    todos[dono] = Object.fromEntries(maisRecentes);
+    gravarTodosRascunhos(todos);
+  }
+  function removerRascunho(chave) {
+    const todos = lerTodosRascunhos();
+    const dono = donoDosRascunhos();
+    if (todos[dono] && chave in todos[dono]) {
+      delete todos[dono][chave];
+      gravarTodosRascunhos(todos);
+    }
+  }
+  function rotaDoRascunho(chave) {
+    return chave === 'novo' ? '#/pedidos/novo' : '#/pedidos/' + chave.slice('pedido:'.length) + '/editar';
+  }
+  function haQuanto(ms) {
+    const min = Math.max(0, Math.round((Date.now() - ms) / 60000));
+    if (min < 1) return 'agora há pouco';
+    if (min < 60) return 'há ' + min + ' min';
+    const h = Math.round(min / 60);
+    if (h < 24) return 'há ' + h + ' h';
+    const d = Math.round(h / 24);
+    return 'há ' + d + (d === 1 ? ' dia' : ' dias');
+  }
+
+  // Cartões "Pedido incompleto" (Início e Pedidos); null quando não há rascunho.
+  function secaoRascunhos() {
+    const lista = listarRascunhos();
+    if (!lista.length) return null;
+    const caixa = el('div', { style: 'display:flex;flex-direction:column;gap:10px;margin-bottom:22px' });
+    lista.forEach(r => {
+      const editando = r.chave !== 'novo';
+      caixa.appendChild(blueprintBox('div', { class: 'card-destaque elev-md', style: 'padding:14px' },
+        el('div', { class: 'card-destaque-titulo', style: 'margin-bottom:4px' },
+          editando ? 'Alterações não salvas · pedido #' + r.chave.slice('pedido:'.length) : 'Pedido incompleto'),
+        el('div', { style: 'font-size:14px' }, r.titulo || 'Sem cliente'),
+        el('div', { style: 'font-size:12px;opacity:.6;margin:2px 0 12px' }, 'Guardado ' + haQuanto(r.quando) + ' neste aparelho'),
+        el('div', { class: 'btn-group', style: 'margin:0' },
+          btnBlueprint('Continuar', 'btn-primary', {
+            onclick: () => { rascunhoARetomar = r.chave; location.hash = rotaDoRascunho(r.chave); }
+          }),
+          btnBlueprint('Descartar', 'btn-secondary', {
+            onclick: async () => {
+              if (!(await confirmar('Descartar este rascunho? O que foi digitado será perdido.', 'Descartar', true))) return;
+              removerRascunho(r.chave);
+              rotear();
+            }
+          }))));
+    });
+    return caixa;
   }
 
   // Comparação de nomes de itens (serviço/peça) sem diferenciar maiúsculas/espaços.
@@ -305,8 +504,10 @@
       throw e;
     }
     if (resp.status === 401) {
+      // grava o rascunho do pedido ANTES de limpar a sessão (é ela que diz de quem é o rascunho)
+      if (guardaSuja() && guarda.aoGuardar) guarda.aoGuardar();
       limparAuth();
-      location.hash = '#/login';
+      navegarSemGuarda('#/login');
       throw new Error('HTTP 401');
     }
     const tokenRenovado = resp.headers.get('X-Auth-Refresh');
@@ -706,6 +907,7 @@
   ];
 
   function rotear() {
+    limparGuarda();
     const hash = location.hash || '#/inicio';
 
     // Tela de login desativada: sem auth (ex.: auto-login falhou por falta
@@ -715,6 +917,7 @@
     if (hash === '#/login') { location.hash = '#/inicio'; return; }
 
     renderGen++; // invalida qualquer revalidação de cache pendente de uma tela anterior
+    marcarEntradaDoHistorico();
     const logado = true;
     tabBarEl.hidden = !logado;
 
@@ -761,7 +964,7 @@
   btnSair.addEventListener('click', () => { limparAuth(); location.hash = '#/login'; });
   btnSenha.addEventListener('click', () => { location.hash = '#/trocar-senha'; });
   tabs.forEach(t => t.addEventListener('click', () => { location.hash = '#/' + t.dataset.tab; }));
-  window.addEventListener('hashchange', rotear);
+  window.addEventListener('hashchange', aoMudarHash);
   document.addEventListener('click', (ev) => {
     if (!menuPedidoPopover.hidden && ev.target !== btnMenuPedido && !btnMenuPedido.contains(ev.target) && !menuPedidoPopover.contains(ev.target)) {
       menuPedidoPopover.hidden = true;
@@ -777,6 +980,8 @@
 
       const hoje = new Date();
       conteudo.appendChild(el('div', { class: 'data-hoje' }, hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })));
+      const rascunhos = secaoRascunhos();
+      if (rascunhos) conteudo.appendChild(rascunhos);
 
       conteudo.appendChild(el('div', { class: 'stat-grid' },
         statCard('Em aberto', dash.abertos, 'pedidos', () => { location.hash = '#/pedidos?filtro=abertos'; }, 'accent', svgCaixa('var(--color-accent-700)')),
@@ -961,6 +1166,8 @@
         }));
       }
 
+      const rascunhos = secaoRascunhos();
+      if (rascunhos) conteudo.appendChild(rascunhos);
       conteudo.appendChild(buscaField);
       conteudo.appendChild(listaEl);
       desenharLista();
@@ -1062,11 +1269,20 @@
     // Plano B: se não deu pra juntar, o PDF vai sozinho e depois aparece o
     // botão pra mandar a foto num segundo compartilhamento.
     let pdfJaEnviado = false;
+    // A foto só existe neste aparelho e na tela: sair antes de enviá-la a descarta.
+    let fotoUsada = false;
+    definirGuarda({
+      tipo: 'formulario',
+      sujo: () => !!fotoSelecionada && !fotoUsada,
+      mensagem: 'Você escolheu uma foto para o orçamento, mas ainda não a enviou. Se sair agora, a escolha será descartada.',
+      rotuloSair: 'Sair e descartar a foto',
+    });
     const fotoInput = el('input', {
       type: 'file', accept: 'image/*', capture: 'environment', hidden: true,
       onchange: (ev) => {
         fotoSelecionada = (ev.target.files && ev.target.files[0]) || null;
         pdfJaEnviado = false;
+        fotoUsada = false;
         pdfFotoPromise = fotoSelecionada ? pdfComFoto(pdfPromise || prepararOrcamento(id), fotoSelecionada) : null;
         if (pdfFotoPromise) pdfFotoPromise.catch(() => {}); // tratado no toque
         atualizarFotoUI();
@@ -1092,7 +1308,7 @@
           fotoPreview.appendChild(btnBlueprint('Enviar a foto também', 'btn-primary btn-block', {
             style: 'margin-top:8px',
             onclick: async () => {
-              if (await compartilharFoto(foto)) toast('Foto compartilhada.');
+              if (await compartilharFoto(foto)) { fotoUsada = true; toast('Foto compartilhada.'); }
             }
           }));
         } else {
@@ -1132,6 +1348,7 @@
       return lembrarPdf(pdfPromise);
     }
     function pdfAtual() {
+      if (fotoSelecionada) fotoUsada = true;
       return fotoSelecionada && pdfFotoPromise ? lembrarPdf(pdfFotoPromise) : pdfBase();
     }
     function baixarPdf(blob) {
@@ -1264,6 +1481,7 @@
                 })
               : pdfSimples;
             compartilharOrcamento(pdfFinal, 'orcamento-' + id + '.pdf', novaAba).then((r) => {
+              if (r === 'compartilhado' && !fotoFicouDeFora) fotoUsada = true;
               if (r === 'compartilhado' && fotoFicouDeFora && fotoSelecionada) {
                 pdfJaEnviado = true;
                 atualizarFotoUI();
@@ -1579,6 +1797,7 @@
           recalcularResumo();
         }
       }, cat.rotulo);
+      btn.dataset.categoria = cat.nome;
       return btn;
     });
     const painelCategorias = el('div', { class: 'chip-group' }, ...chipsCategoria);
@@ -2054,12 +2273,117 @@
         cacheInvalidar(PEDIDOS_ABERTOS, '/api/pedidos/dashboard', '/api/pedidos/encerrados');
         orcamentoInvalidar(salvo.id);
         registrarClienteRecente(clienteSelecionado.id);
+        encerrarRascunho();
         toast('Pedido salvo.');
         location.hash = '#/pedidos/' + salvo.id;
       }
     }, dicaSalvarMinimo, painelBox, navegacaoPassos);
 
     conteudo.appendChild(form);
+
+    // — rascunho: o que for digitado fica guardado neste aparelho e dá pra
+    // voltar ao pedido incompleto; sair com dados não salvos pergunta antes —
+    const chaveRascunho = id ? 'pedido:' + id : 'novo';
+    function dadosDoRascunho(comAba) {
+      const d = {
+        cliente: clienteSelecionado,
+        status: fldStatus.value,
+        descricao: fldDescricao.value,
+        entrega: fldEntrega.value,
+        observacao: fldObservacao.value,
+        descontoTipo: fldDescontoTipo.value,
+        descontoValor: fldDescontoValor.value,
+        categorias: Array.from(categoriaValores.entries()),
+        componentes: linhasComponentes,
+        servicos: linhasServicos,
+        pecas: linhasPecas,
+      };
+      if (comAba) d.aba = abaAtual; // a etapa só serve pra voltar de onde parou; não conta como alteração
+      return d;
+    }
+    const fotografia = () => JSON.stringify(dadosDoRascunho(false));
+    const linhaBase = fotografia();
+    let encerrado = false;
+    let timerRascunho = null;
+
+    function tituloDoRascunho() {
+      const nome = clienteSelecionado ? clienteSelecionado.nome : 'Sem cliente';
+      const descricao = fldDescricao.value.trim();
+      return descricao ? nome + ' · ' + descricao : nome;
+    }
+    function guardarRascunhoAgora() {
+      clearTimeout(timerRascunho);
+      if (encerrado) return;
+      if (fotografia() === linhaBase) removerRascunho(chaveRascunho);
+      else gravarRascunho(chaveRascunho, tituloDoRascunho(), dadosDoRascunho(true));
+    }
+    function agendarRascunho() {
+      if (encerrado) return;
+      clearTimeout(timerRascunho);
+      timerRascunho = setTimeout(guardarRascunhoAgora, 400);
+    }
+    function encerrarRascunho() {
+      encerrado = true;
+      clearTimeout(timerRascunho);
+      removerRascunho(chaveRascunho);
+      limparGuarda();
+    }
+    ['input', 'change', 'click'].forEach(tipo => form.addEventListener(tipo, agendarRascunho));
+
+    function aplicarRascunho(d) {
+      clienteSelecionado = d.cliente || null;
+      fldStatus.value = d.status || fldStatus.value;
+      fldDescricao.value = d.descricao || '';
+      fldEntrega.value = d.entrega || '';
+      fldObservacao.value = d.observacao || '';
+      fldDescontoTipo.value = d.descontoTipo || '';
+      fldDescontoValor.value = d.descontoValor != null ? d.descontoValor : '';
+      // as listas e o mapa são capturados por vários closures: troca o conteúdo, não a referência
+      linhasComponentes.splice(0, linhasComponentes.length, ...(d.componentes || []));
+      linhasServicos.splice(0, linhasServicos.length, ...(d.servicos || []));
+      linhasPecas.splice(0, linhasPecas.length, ...(d.pecas || []));
+      categoriaValores.clear();
+      (d.categorias || []).forEach(([cat, v]) => {
+        categoriaValores.set(cat, { valorServicos: (v && v.valorServicos) || 0, valorPecas: (v && v.valorPecas) || 0 });
+      });
+      chipsCategoria.forEach(b => b.classList.toggle('active', categoriaValores.has(b.dataset.categoria)));
+      atualizarOpcoesComponente();
+      atualizarCardsPreco();
+      redesenharComponentes();
+      redesenharServicos();
+      redesenharPecas();
+      atualizarClienteUI();
+      recalcularResumo();
+      if (d.aba && paineis[d.aba]) selecionarAba(d.aba);
+    }
+
+    const guardado = lerRascunho(chaveRascunho);
+    if (guardado) {
+      let usar = rascunhoARetomar === chaveRascunho;
+      rascunhoARetomar = null;
+      if (!usar) {
+        const quando = haQuanto(guardado.quando);
+        const resposta = await escolher(
+          id
+            ? 'Há alterações não salvas deste pedido, guardadas ' + quando + ' neste aparelho.'
+            : 'Você tem um pedido incompleto, guardado ' + quando + ' neste aparelho' + (guardado.titulo ? ' (' + guardado.titulo + ')' : '') + '.',
+          [
+            { rotulo: id ? 'Continuar de onde parei' : 'Continuar pedido incompleto', valor: 'continuar', estilo: 'btn-primary' },
+            { rotulo: id ? 'Descartar e usar o pedido salvo' : 'Começar um novo (descarta o rascunho)', valor: 'descartar', estilo: 'btn-danger' },
+          ]);
+        if (renderGen !== genTela) return; // saiu da tela com o aviso aberto: não decide nada por conta própria
+        usar = resposta === 'continuar';
+        if (!usar) removerRascunho(chaveRascunho);
+      }
+      if (usar) aplicarRascunho(guardado.dados);
+    }
+
+    definirGuarda({
+      tipo: 'pedido',
+      sujo: () => !encerrado && fotografia() !== linhaBase,
+      aoGuardar: guardarRascunhoAgora,
+      aoDescartar: () => { encerrado = true; clearTimeout(timerRascunho); removerRascunho(chaveRascunho); },
+    });
   }
 
   function clonarItem(i) {
@@ -2091,20 +2415,42 @@
     const btnNovo = el('button', { type: 'button', class: 'btn btn-secondary btn-block', style: 'gap:8px', onclick: () => abrir(null) },
       svgIcone('currentColor', 15, '<path d="M12 5v14"></path><path d="M5 12h14"></path>'), rotuloNovo);
 
-    function abrir(item) {
+    // Alterações não salvas: compara os campos com o que havia ao abrir o formulário.
+    const fotografia = () => Array.from(form.querySelectorAll('input, select, textarea'))
+      .map(c => (c.type === 'checkbox' || c.type === 'radio') ? String(c.checked) : c.value).join('\u0001');
+    let linhaBase = '';
+    const guardaDoFormulario = { tipo: 'formulario', sujo: () => !caixa.hidden && fotografia() !== linhaBase };
+    // true = pode seguir (nada a perder, ou a pessoa aceitou descartar)
+    async function podeDescartar() {
+      if (guardaDoFormulario.sujo() === false) return true;
+      return escolher('Você tem alterações que ainda não foram salvas neste formulário. Se continuar, elas serão perdidas.', [
+        { rotulo: 'Continuar editando', valor: false, estilo: 'btn-primary' },
+        { rotulo: 'Descartar alterações', valor: true, estilo: 'btn-danger' },
+      ]);
+    }
+
+    async function abrir(item) {
+      if (!(await podeDescartar())) return;
       if (item) preencher(item); else limpar();
       titulo.textContent = item ? tituloEditar : tituloNovo;
       btnRemover.hidden = !item;
       caixa.hidden = false;
       btnNovo.hidden = true;
+      linhaBase = fotografia();
+      definirGuarda(guardaDoFormulario);
       caixa.scrollIntoView({ block: 'start', behavior: 'smooth' });
     }
     function fechar() {
       limpar();
       caixa.hidden = true;
       btnNovo.hidden = false;
+      if (guarda === guardaDoFormulario) limparGuarda();
     }
-    return { elemento: el('div', { style: 'margin-bottom:8px' }, btnNovo, caixa), abrir, fechar };
+    // botão "Cancelar": pergunta antes de jogar fora o que foi digitado
+    async function cancelar() {
+      if (await podeDescartar()) fechar();
+    }
+    return { elemento: el('div', { style: 'margin-bottom:8px' }, btnNovo, caixa), abrir, fechar, cancelar };
   }
 
   function botoesCadastro(btnSalvar, btnRemover, cancelar) {
@@ -2237,7 +2583,7 @@
       campo('Categoria', fldCategoria),
       campo('Nome / Motor', fldNome),
       el('div', { class: 'row' }, campo('Móvel', fldMovel), campo('Fixo', fldFixo)),
-      botoesCadastro(btnSalvar, btnRemover, () => cadastro.fechar())
+      botoesCadastro(btnSalvar, btnRemover, () => cadastro.cancelar())
     );
 
     const cadastro = formularioRecolhivel({
@@ -2373,7 +2719,7 @@
       el('div', { class: 'row' }, campo('CEP', fldCep), campo('UF', fldUf)),
       campo('Município', fldMunicipio),
       btnVerPedidos,
-      botoesCadastro(btnSalvar, btnRemover, () => cadastro.fechar())
+      botoesCadastro(btnSalvar, btnRemover, () => cadastro.cancelar())
     );
 
     const cadastro = formularioRecolhivel({
@@ -2551,6 +2897,11 @@
     conteudo.appendChild(campo('Slogan', fldSlogan));
     conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Telefone, Instagram e slogan em branco não aparecem no orçamento.'));
 
+    // alterações não salvas: só vale depois que os dados do servidor chegaram
+    const fotografiaDados = () => [fldNome, fldTelefone, fldInstagram, fldSlogan].map(f => f.value).join('\u0001');
+    let baseDados = null;
+    definirGuarda({ tipo: 'formulario', sujo: () => baseDados !== null && fotografiaDados() !== baseDados });
+
     const btnSalvarDados = btnBlueprint('Salvar dados', 'btn-primary btn-block', {
       onclick: async () => {
         let motivo = null;
@@ -2568,6 +2919,7 @@
         if (!salvo) { toast(motivo || 'Não foi possível salvar.', true); return; }
         orcamentoInvalidarTodos();
         await carregarIdentidade();
+        baseDados = fotografiaDados();
         toast('Dados salvos.');
       },
     });
@@ -2578,6 +2930,7 @@
       fldTelefone.value = telefoneExibicao(d.telefone || '');
       fldInstagram.value = d.instagram || '';
       fldSlogan.value = d.slogan || '';
+      baseDados = fotografiaDados();
     }).catch(() => { /* api() já avisou */ });
   }
 
@@ -2670,7 +3023,7 @@
       campo('Categoria', fldCategoria),
       campo('Nome', fldNome),
       campo('Valor (R$) — pode deixar 0 e ajustar depois', fldValor),
-      botoesCadastro(btnSalvar, btnRemover, () => cadastro.fechar())
+      botoesCadastro(btnSalvar, btnRemover, () => cadastro.cancelar())
     );
 
     const novo = isServico ? 'Novo serviço' : 'Nova peça';
@@ -2891,6 +3244,7 @@
     const fldAtual = el('input', { class: 'input', type: 'password', placeholder: 'Senha atual', autocomplete: 'current-password' });
     const fldNova = el('input', { class: 'input', type: 'password', placeholder: 'Nova senha (mín. 6 caracteres)', autocomplete: 'new-password' });
     const fldConfirma = el('input', { class: 'input', type: 'password', placeholder: 'Confirmar nova senha', autocomplete: 'new-password' });
+    definirGuarda({ tipo: 'formulario', sujo: () => !!(fldAtual.value || fldNova.value || fldConfirma.value) });
 
     conteudo.appendChild(el('h2', { class: 'titulo' }, 'Trocar senha'));
     conteudo.appendChild(campo('Senha atual', fldAtual));
@@ -2909,6 +3263,7 @@
         if (resp.status === 401) { toast('Senha atual incorreta.', true); return; }
         if (!resp.ok) { toast('Não foi possível trocar a senha.', true); return; }
         toast('Senha alterada.');
+        limparGuarda();
         location.hash = '#/inicio';
       }
     }));
