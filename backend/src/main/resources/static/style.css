@@ -109,6 +109,8 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; margin: 0; 
 /* Logo em destaque no topo (redesign "Retifica App", claude.ai/design). */
 .app-bar-logo { height: 84px; max-width: 97px; width: auto; object-fit: contain; flex: none; display: block; }
 .app-bar-logo[hidden] { display: none; }
+.app-bar-logo { cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: var(--radius-sm, 6px); }
+.app-bar-logo:focus-visible { outline: 2px solid var(--color-accent-700); outline-offset: 2px; }
 .logo-previa { display: block; max-width: 220px; max-height: 190px; margin: 0 auto var(--space-3); object-fit: contain; }
 /* 44x44 minimo de area de toque (recomendacao Apple/Material) */
 .icon-btn {

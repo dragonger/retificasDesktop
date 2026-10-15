@@ -749,6 +749,15 @@
     else location.hash = '#/inicio';
   });
   btnCatalogo.addEventListener('click', () => { location.hash = '#/catalogo'; });
+  // A logo é o botão "início": em qualquer tela volta para a tela inicial (já na inicial, só sobe ao topo).
+  function irParaInicio() {
+    if (location.hash === '#/inicio') conteudo.scrollTop = 0;
+    else location.hash = '#/inicio';
+  }
+  logoBarra.addEventListener('click', irParaInicio);
+  logoBarra.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); irParaInicio(); }
+  });
   btnSair.addEventListener('click', () => { limparAuth(); location.hash = '#/login'; });
   btnSenha.addEventListener('click', () => { location.hash = '#/trocar-senha'; });
   tabs.forEach(t => t.addEventListener('click', () => { location.hash = '#/' + t.dataset.tab; }));
