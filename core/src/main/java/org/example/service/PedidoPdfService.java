@@ -199,6 +199,32 @@ public class PedidoPdfService {
         return nome == null ? "" : nome.trim().toLowerCase(PT_BR);
     }
 
+    /**
+     * Diz se o mapa de categorias do catálogo pode mudar o PDF deste pedido.
+     * O mapa só serve de fallback para item sem categoria gravada, e só altera
+     * o agrupamento com 2+ componentes distintos (com 0 ou 1 o destino do item
+     * é o mesmo com ou sem mapa). Espelha {@code agruparItens}.
+     */
+    public static boolean precisaCatalogoParaAgrupar(PedidoModel pedido) {
+        if (pedido.getCategoriaValores() == null) return false;
+        java.util.Set<CategoriaProduto> componentes = new java.util.HashSet<>();
+        for (PedidoCategoriaModel cv : pedido.getCategoriaValores()) {
+            componentes.add(cv.getCategoria());
+        }
+        if (componentes.size() < 2) return false;
+        if (pedido.getServicoList() != null) {
+            for (ServicoModel s : pedido.getServicoList()) {
+                if (s.getCategoria() == null) return true;
+            }
+        }
+        if (pedido.getPecaList() != null) {
+            for (PecaModel p : pedido.getPecaList()) {
+                if (p.getCategoria() == null) return true;
+            }
+        }
+        return false;
+    }
+
     // ---------- cabeçalho ----------
 
     private PdfPTable cabecalho(PedidoModel pedido) {
