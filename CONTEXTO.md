@@ -196,3 +196,13 @@ Cada empresa (tenant) tem a sua logo e os dados do cabeçalho do orçamento, edi
 - **App**: a barra do topo mostra a logo da empresa logada (guardada em `localStorage` com a versão do servidor; a cada abertura só confere a versão). O título da tela inicial é o nome da empresa. Trocar logo/dados invalida o cache de orçamentos preparados. O arquivo fixo `assets/logo-dih.png` foi removido; service worker em v8.
 - **Fora do escopo (continuam da plataforma)**: ícone do PWA/APK e as condições do orçamento (pagamento, prazo, garantia — constantes em `PedidoPdfService`).
 - **Login**: hoje o auto-login entra sempre como usuário 1; quando o login normal voltar, cada usuário já cai na logo da própria empresa (tudo é resolvido pela empresa do token).
+
+## Aviso de dados não salvos e rascunho do pedido — 2026-10-15
+
+Tudo em `static/app.js` (sem mudança de API/banco).
+
+- **Guarda de saída**: cada tela com formulário chama `definirGuarda({ tipo, sujo, ... })`; `rotear()` limpa a guarda a cada rota. `aoMudarHash` intercepta qualquer mudança de hash (abas, logo, voltar, Cancelar, voltar do aparelho): se a guarda está suja, desfaz a mudança de histórico (entradas numeradas em `history.state.i` + `history.go`) e abre `escolher(...)`. Navegações que não são do usuário (401) usam `navegarSemGuarda`.
+- **Diálogo**: `escolher(mensagem, opcoes, { foco, linha })`; Esc/toque fora = primeira opção (a segura). `confirmar` é um caso dela.
+- **Rascunho do pedido** (`telaFormPedido`): autosave em `localStorage['retifica_rascunhos']`, separado por `usuarioId|empresaId` do JWT, chave `novo` ou `pedido:<id>`; máx. 5, vence em 14 dias; sem sessão legível (`anonimo`) não grava. "Sujo" = estado diferente da linha de base (voltar ao original apaga o rascunho). Cartão "Pedido incompleto" no Início e em Pedidos (`secaoRascunhos`); abrir Novo pedido/editar com rascunho pergunta se continua. O 401 grava o rascunho ANTES de `limparAuth` (é a sessão que diz de quem ele é).
+- **Só aviso** (sem rascunho): cadastros (`formularioRecolhivel`: Cancelar e trocar de item), Trocar senha, Minha empresa (dados) e foto escolhida na visualização do pedido. `beforeunload` nativo nesses; no pedido o rascunho é gravado em `beforeunload`/`pagehide`.
+- Armadilhas: salvar com sucesso precisa `encerrarRascunho()`/`limparGuarda()` ANTES de navegar, senão a guarda pergunta; `comBotaoOcupado` engole erros; a primeira entrada do histórico do documento não é interceptável (a página sai), mas o rascunho já está gravado.
