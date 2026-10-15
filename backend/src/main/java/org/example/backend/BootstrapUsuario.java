@@ -3,6 +3,7 @@ package org.example.backend;
 import org.example.model.EmpresaModel;
 import org.example.model.UsuarioModel;
 import org.example.persistence.JPAUtil;
+import org.example.repository.EmpresaLogoRepository;
 import org.example.repository.EmpresaRepository;
 import org.example.repository.UsuarioRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,6 +37,7 @@ public class BootstrapUsuario implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository = new UsuarioRepository();
     private final EmpresaRepository empresaRepository = new EmpresaRepository();
+    private final EmpresaLogoRepository empresaLogoRepository = new EmpresaLogoRepository();
     private final PasswordEncoder passwordEncoder;
 
     public BootstrapUsuario(PasswordEncoder passwordEncoder) {
@@ -45,6 +48,41 @@ public class BootstrapUsuario implements CommandLineRunner {
     public void run(String... args) {
         EmpresaModel empresa = obterOuCriarEmpresa();
         backfillEmpresaId(empresa);
+        semearLogoDaPrimeiraEmpresa(empresa);
+        semearContatosDaPrimeiraEmpresa(empresa);
+    }
+
+    /**
+     * A primeira empresa (a Dih) mantém no orçamento os contatos que ele já mostrava.
+     * Só quando nunca foram preenchidos (nulos); depois disso cada empresa edita os seus.
+     */
+    private void semearContatosDaPrimeiraEmpresa(EmpresaModel empresa) {
+        if (empresa.getTelefone() != null || empresa.getInstagram() != null || empresa.getSlogan() != null) {
+            return;
+        }
+        empresa.setTelefone("(31) 98556-5586");
+        empresa.setInstagram("dih_solucoes_retifica");
+        empresa.setSlogan("Precisão que move seu motor.");
+        empresaRepository.salvar(empresa);
+    }
+
+    /**
+     * Na primeira subida com logo por empresa, a primeira empresa (a Dih)
+     * recebe a logo que já usava, embutida no core — sem precisar enviar.
+     * Só roda com a tabela vazia: depois disso cada empresa cuida da sua, e
+     * remover a logo deixa a linha marcada, então ela não volta sozinha.
+     */
+    private void semearLogoDaPrimeiraEmpresa(EmpresaModel empresa) {
+        if (!empresaLogoRepository.nenhumaRegistrada()) {
+            return;
+        }
+        try (InputStream in = BootstrapUsuario.class.getResourceAsStream("/images/logo-empresa.png")) {
+            if (in != null) {
+                empresaLogoRepository.salvar(empresa.getId(), in.readAllBytes());
+            }
+        } catch (IOException e) {
+            // sem a logo padrão a empresa só fica sem logo até enviar uma
+        }
     }
 
     private EmpresaModel obterOuCriarEmpresa() {

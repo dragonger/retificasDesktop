@@ -4,6 +4,7 @@ import org.example.model.CategoriaProduto;
 import org.example.model.PecaCatalogoModel;
 import org.example.model.PedidoModel;
 import org.example.model.ServicoCatalogoModel;
+import org.example.repository.EmpresaLogoRepository;
 import org.example.repository.PecaCatalogoRepository;
 import org.example.repository.PedidoRepository;
 import org.example.repository.ServicoCatalogoRepository;
@@ -31,6 +32,7 @@ public class OrcamentoPdfGerador {
     private final PedidoPdfService pdfService = new PedidoPdfService();
     private final ServicoCatalogoRepository servicoCatalogoRepository = new ServicoCatalogoRepository();
     private final PecaCatalogoRepository pecaCatalogoRepository = new PecaCatalogoRepository();
+    private final EmpresaLogoRepository empresaLogoRepository = new EmpresaLogoRepository();
 
     /** Só carrega o pedido (sem gerar PDF) — quando o PDF já veio pronto do aparelho. */
     public PedidoModel carregar(Long id, Long empresaId) {
@@ -39,6 +41,10 @@ public class OrcamentoPdfGerador {
 
     /** Carrega o pedido e gera o PDF; null se o pedido não existe nessa empresa. */
     public Orcamento gerar(Long id, Long empresaId) {
+        // a logo vem em paralelo com o pedido; sem ela (ou com falha) o PDF sai sem logo
+        CompletableFuture<byte[]> logo = CompletableFuture
+                .supplyAsync(() -> empresaLogoRepository.buscarImagem(empresaId))
+                .exceptionally(erro -> null);
         PedidoModel pedido = pedidoRepository.buscarParaPdf(id, empresaId);
         if (pedido == null) {
             return null;
@@ -50,7 +56,7 @@ public class OrcamentoPdfGerador {
                 ? carregarCategoriasDoCatalogo(empresaId)
                 : Map.of();
         ByteArrayOutputStream saida = new ByteArrayOutputStream();
-        pdfService.gerar(pedido, categorias, saida);
+        pdfService.gerar(pedido, categorias, logo.join(), saida);
         return new Orcamento(pedido, saida.toByteArray());
     }
 
