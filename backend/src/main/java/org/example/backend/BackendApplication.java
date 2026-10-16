@@ -3,6 +3,7 @@ package org.example.backend;
 import org.example.persistence.JPAUtil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.TimeZone;
 
@@ -12,6 +13,7 @@ import java.util.TimeZone;
  * modo AUTO_SERVER) — desktop e mobile enxergam os mesmos pedidos.
  */
 @SpringBootApplication
+@EnableScheduling
 public class BackendApplication {
 
     public static void main(String[] args) {

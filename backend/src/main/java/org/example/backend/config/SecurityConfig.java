@@ -50,6 +50,8 @@ public class SecurityConfig {
                 .exceptionHandling(eh -> eh.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        // máquina a máquina (Cloud Function do Alto Medidas): o controller confere a chave X-Api-Key
+                        .requestMatchers("/api/integracoes/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
