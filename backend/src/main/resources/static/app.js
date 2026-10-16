@@ -2963,9 +2963,16 @@
   function textoQuantidade(n) {
     return n + (n === 1 ? ' virabrequim' : ' virabrequins');
   }
+  // "2026-10" -> "Outubro de 2026"
+  function rotuloMes(aaaamm) {
+    const [ano, mes] = String(aaaamm).split('-').map(Number);
+    if (!ano || !mes) return aaaamm;
+    const t = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
 
   // Cartão "Você deve ao Daniel" — grande na tela própria, menor no Início (toque abre a tela).
-  function cartaoDevidoAoDaniel(valor, quantidade, grande, aoTocar) {
+  function cartaoDevidoAoDaniel(valor, quantidade, grande, aoTocar, linhaExtra) {
     return blueprintBox('div', {
       class: 'card-destaque elev-md', style: 'padding:' + (grande ? '18px' : '14px') + (aoTocar ? ';cursor:pointer' : ''),
       onclick: aoTocar || null,
@@ -2973,7 +2980,8 @@
       el('div', { class: 'card-destaque-titulo', style: 'margin-bottom:4px' }, 'Você deve ao Daniel'),
       el('div', { style: 'font-size:' + (grande ? '30px' : '24px') + ';font-weight:700;line-height:1.1' }, moeda(valor)),
       el('div', { style: 'font-size:12px;opacity:.65;margin-top:4px' },
-        textoQuantidade(quantidade) + ' que o cliente já pagou' + (aoTocar ? ' · toque para conferir' : '')));
+        textoQuantidade(quantidade) + ' que o cliente já pagou' + (aoTocar ? ' · toque para conferir' : '')),
+      linhaExtra ? el('div', { style: 'font-size:12px;margin-top:6px;padding-top:6px;border-top:1px solid color-mix(in srgb, var(--color-text) 14%, transparent)' }, linhaExtra) : null);
   }
 
   // A integração só vale para a empresa dona dela (a DIH): consultado uma vez por sessão.
@@ -2997,6 +3005,15 @@
       container.appendChild(cartaoDevidoAoDaniel(r.devidoAoDaniel, r.quantidadeDevida, false, () => { location.hash = '#/alto-medidas'; }));
       container.hidden = false;
     }).catch(() => { /* sem integração ou sem conexão: o Início segue normal */ });
+  }
+
+  // Mês escolhido (AAAA-MM ou "todos"); null = o servidor escolhe (mês de hoje, ou o mais recente com OS).
+  let altoMesEscolhido = null;
+  const altoCaminhos = new Set([ALTO_OS]);
+  function altoCaminho() {
+    const c = altoMesEscolhido ? ALTO_OS + '?mes=' + altoMesEscolhido : ALTO_OS;
+    altoCaminhos.add(c);
+    return c;
   }
 
   async function telaAltoMedidas() {
@@ -3047,7 +3064,7 @@
         }
       });
       if (!feito) { toast(motivo || 'Não foi possível salvar. Tente de novo.', true); return; }
-      cacheInvalidar(ALTO_OS, ALTO_RESUMO);
+      cacheInvalidar(ALTO_RESUMO, ...altoCaminhos);
       telaAltoMedidas();
     }
 
@@ -3055,14 +3072,34 @@
       conteudo.innerHTML = '';
       conteudo.appendChild(el('h2', { class: 'titulo' }, 'Virabrequins do Daniel'));
       conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Finalizados no Alto Medidas — marque quando o cliente pagar'));
-      conteudo.appendChild(el('div', { style: 'margin-bottom:22px' },
-        cartaoDevidoAoDaniel(d.devidoAoDaniel, d.quantidadeDevida, true, null)));
-      conteudo.appendChild(secao('Pago pelo cliente — a repassar ao Daniel', d.aRepassar, 'Nenhum virabrequim pago aguardando repasse.'));
-      conteudo.appendChild(secao('Aguardando o cliente pagar', d.aguardando, 'Nenhum virabrequim aguardando pagamento.'));
-      conteudo.appendChild(secao('Já repassado ao Daniel', d.repassado, 'Nenhum repasse confirmado ainda.'));
+
+      // o total devido é SEMPRE o geral (todos os meses); o mês só filtra as listas
+      const doMes = d.mes !== 'todos';
+      const diferente = doMes && Math.abs(Number(d.devidoAoDaniel) - Number(d.devidoNoPeriodo)) > 0.004;
+      const extra = diferente
+        ? 'Em ' + rotuloMes(d.mes) + ': ' + moeda(d.devidoNoPeriodo) + ' (' + textoQuantidade(d.quantidadeDevidaNoPeriodo) + ') · o resto é de outros meses'
+        : null;
+      conteudo.appendChild(el('div', { style: 'margin-bottom:18px' },
+        cartaoDevidoAoDaniel(d.devidoAoDaniel, d.quantidadeDevida, true, null, extra)));
+
+      // filtro de meses (pelo mês em que o virabrequim foi finalizado)
+      if (d.meses && d.meses.length) {
+        const fldMes = el('select', { class: 'input', 'aria-label': 'Mês de finalização' },
+          el('option', { value: 'todos' }, 'Todos os meses'),
+          ...d.meses.map(m => el('option', { value: m.mes }, rotuloMes(m.mes) + ' · ' + textoQuantidade(m.quantidade))));
+        fldMes.value = d.mes;
+        fldMes.addEventListener('change', () => { altoMesEscolhido = fldMes.value; telaAltoMedidas(); });
+        conteudo.appendChild(el('div', { class: 'field', style: 'margin-bottom:22px' },
+          el('label', null, 'Mês de finalização'), fldMes));
+      }
+
+      const sufixo = doMes ? ' — ' + rotuloMes(d.mes) : '';
+      conteudo.appendChild(secao('Pago pelo cliente — a repassar ao Daniel' + sufixo, d.aRepassar, doMes ? 'Nenhum virabrequim deste mês pago aguardando repasse.' : 'Nenhum virabrequim pago aguardando repasse.'));
+      conteudo.appendChild(secao('Aguardando o cliente pagar' + sufixo, d.aguardando, doMes ? 'Nenhum virabrequim deste mês aguardando pagamento.' : 'Nenhum virabrequim aguardando pagamento.'));
+      conteudo.appendChild(secao('Já repassado ao Daniel' + sufixo, d.repassado, doMes ? 'Nenhum repasse confirmado neste mês.' : 'Nenhum repasse confirmado ainda.'));
     }
 
-    await comCache(ALTO_OS, render);
+    await comCache(altoCaminho(), render);
   }
 
   // ---------- Serviços / Peças (catálogo com categoria) ----------

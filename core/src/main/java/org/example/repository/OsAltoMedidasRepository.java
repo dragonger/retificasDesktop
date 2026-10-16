@@ -19,7 +19,7 @@ public class OsAltoMedidasRepository {
     /** Dados que o Alto Medidas manda; {@code repassadoEm == null} = ainda não repassado. */
     public record DadosOs(String osId, String numero, String cliente, String modelo, String medidas,
                           boolean polir, BigDecimal valorPolir, BigDecimal valor,
-                          String dataRecebimento, String finalizadoEm,
+                          String dataRecebimento, String finalizadoEm, String mesRef,
                           LocalDateTime repassadoEm, String repassadoPor) {
     }
 
@@ -59,6 +59,7 @@ public class OsAltoMedidasRepository {
             os.setValor(d.valor());
             os.setDataRecebimento(d.dataRecebimento());
             os.setFinalizadoEm(d.finalizadoEm());
+            os.setMesRef(d.mesRef());
             os.setRepassadoEm(d.repassadoEm());
             os.setRepassadoPor(d.repassadoPor());
             os.setAtualizadoEm(agora);
@@ -66,14 +67,41 @@ public class OsAltoMedidasRepository {
         });
     }
 
-    /** Todas as OS da empresa, as finalizadas mais recentemente primeiro. */
-    public List<OsAltoMedidasModel> listar(Long empresaId) {
+    /** OS da empresa (de um mês AAAA-MM, ou todas se {@code mesRef} for nulo), as finalizadas mais recentemente primeiro. */
+    public List<OsAltoMedidasModel> listar(Long empresaId, String mesRef) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.createQuery(
+            var consulta = em.createQuery(
                     "SELECT o FROM OsAltoMedidasModel o WHERE o.empresaId = :e " +
+                            (mesRef != null ? "AND o.mesRef = :mes " : "") +
                             "ORDER BY o.finalizadoEm DESC, o.id DESC", OsAltoMedidasModel.class)
-                    .setParameter("e", empresaId).getResultList();
+                    .setParameter("e", empresaId);
+            if (mesRef != null) {
+                consulta.setParameter("mes", mesRef);
+            }
+            return consulta.getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /** Um mês com OS e quantas são (para o seletor de meses da tela). */
+    public record MesComOs(String mes, long quantidade) {
+    }
+
+    /** Meses que têm OS, do mais recente para o mais antigo. */
+    public List<MesComOs> meses(Long empresaId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            List<Object[]> linhas = em.createQuery(
+                    "SELECT o.mesRef, COUNT(o) FROM OsAltoMedidasModel o " +
+                            "WHERE o.empresaId = :e AND o.mesRef IS NOT NULL GROUP BY o.mesRef ORDER BY o.mesRef DESC",
+                    Object[].class).setParameter("e", empresaId).getResultList();
+            List<MesComOs> meses = new java.util.ArrayList<>();
+            for (Object[] l : linhas) {
+                meses.add(new MesComOs((String) l[0], ((Number) l[1]).longValue()));
+            }
+            return meses;
         } finally {
             em.close();
         }

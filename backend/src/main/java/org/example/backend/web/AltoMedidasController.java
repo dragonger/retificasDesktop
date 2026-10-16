@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,10 +51,26 @@ public class AltoMedidasController {
         return Map.of("habilitado", entradaLigada && daEmpresa);
     }
 
+    /**
+     * Lista as OS em três grupos. {@code mes} (AAAA-MM, pelo mês de finalização) filtra a lista e os
+     * subtotais; {@code todos} traz tudo; sem o parâmetro vale o mês de hoje (ou, se ele não tem OS, o
+     * mais recente que tem). O total devido ao Daniel ({@code devidoAoDaniel}) é SEMPRE o geral, de
+     * todos os meses: filtrar não pode esconder uma dívida antiga.
+     */
     @GetMapping("/os")
-    public Map<String, Object> listar() {
+    public ResponseEntity<Object> listar(@RequestParam(name = "mes", required = false) String mes) {
+        if (mes != null && !mes.equals("todos") && !mes.matches("\\d{4}-(0[1-9]|1[0-2])")) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "mes deve ser AAAA-MM ou \"todos\"."));
+        }
         Long empresaId = SecurityUtils.empresaAtual();
-        List<OsAltoMedidasModel> todas = repositorio.listar(empresaId);
+        List<OsAltoMedidasRepository.MesComOs> meses = repositorio.meses(empresaId);
+        String escolhido = mes;
+        if (escolhido == null) {
+            String hoje = YearMonth.now().toString();
+            escolhido = meses.stream().anyMatch(m -> m.mes().equals(hoje)) ? hoje
+                    : (meses.isEmpty() ? "todos" : meses.get(0).mes());
+        }
+        List<OsAltoMedidasModel> doPeriodo = repositorio.listar(empresaId, escolhido.equals("todos") ? null : escolhido);
 
         List<Map<String, Object>> aguardando = new ArrayList<>();
         List<Map<String, Object>> aRepassar = new ArrayList<>();
@@ -60,7 +78,7 @@ public class AltoMedidasController {
         BigDecimal totalAguardando = BigDecimal.ZERO;
         BigDecimal totalRepassar = BigDecimal.ZERO;
         BigDecimal totalRepassado = BigDecimal.ZERO;
-        for (OsAltoMedidasModel os : todas) {
+        for (OsAltoMedidasModel os : doPeriodo) {
             Map<String, Object> dto = paraMapa(os);
             if (os.isRepassado()) {
                 repassado.add(dto);
@@ -73,19 +91,32 @@ public class AltoMedidasController {
                 totalAguardando = totalAguardando.add(os.getValorTotal());
             }
         }
+        OsAltoMedidasRepository.Devido devidoGeral = repositorio.devido(empresaId);
         long pendentes = repositorio.contarNaoSincronizadas(empresaId);
         if (pendentes > 0 && sincronizador.isHabilitado()) {
             CompletableFuture.runAsync(sincronizador::sincronizarPendentes); // repete o que falhou
         }
 
+        List<Map<String, Object>> listaMeses = new ArrayList<>();
+        for (OsAltoMedidasRepository.MesComOs m : meses) {
+            Map<String, Object> mm = new LinkedHashMap<>();
+            mm.put("mes", m.mes());
+            mm.put("quantidade", m.quantidade());
+            listaMeses.add(mm);
+        }
+
         Map<String, Object> resposta = new LinkedHashMap<>();
-        resposta.put("devidoAoDaniel", totalRepassar);
-        resposta.put("quantidadeDevida", aRepassar.size());
+        resposta.put("mes", escolhido);
+        resposta.put("meses", listaMeses);
+        resposta.put("devidoAoDaniel", devidoGeral.total());
+        resposta.put("quantidadeDevida", devidoGeral.quantidade());
+        resposta.put("devidoNoPeriodo", totalRepassar);
+        resposta.put("quantidadeDevidaNoPeriodo", aRepassar.size());
         resposta.put("aguardando", grupo(aguardando, totalAguardando));
         resposta.put("aRepassar", grupo(aRepassar, totalRepassar));
         resposta.put("repassado", grupo(repassado, totalRepassado));
         resposta.put("naoSincronizadas", pendentes);
-        return resposta;
+        return ResponseEntity.ok(resposta);
     }
 
     /** Leve, para o cartão da tela inicial: só o que a DIH deve ao Daniel agora. */
