@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.Map;
 
 /**
@@ -93,8 +94,28 @@ public class AltoMedidasEntradaController {
                 polir, valorPolir, valor,
                 texto(c, "dataRecebimento", 20, false),
                 texto(c, "finalizadoEm", 40, false),
+                mesDeReferencia(texto(c, "finalizadoEm", 40, false), texto(c, "dataRecebimento", 20, false)),
                 repassadoEm,
                 repassadoEm != null ? texto(c, "repassadoPor", 120, false) : null);
+    }
+
+    /**
+     * Mês (AAAA-MM) em que o virabrequim foi finalizado, no horário de Brasília — é o que o filtro
+     * de meses da tela usa. A data do Alto Medidas vem em UTC, então perto da virada do mês o dia
+     * muda ao converter. Sem data de finalização usa a de recebimento; sem nenhuma, o mês de hoje.
+     */
+    static String mesDeReferencia(String finalizadoEm, String dataRecebimento) {
+        if (finalizadoEm != null) {
+            try {
+                return YearMonth.from(AltoMedidasCliente.lerDataHora(finalizadoEm)).toString();
+            } catch (Exception e) {
+                if (finalizadoEm.matches("\\d{4}-(0[1-9]|1[0-2])-\\d{2}")) return finalizadoEm.substring(0, 7);
+            }
+        }
+        if (dataRecebimento != null && dataRecebimento.matches("\\d{4}-(0[1-9]|1[0-2])-\\d{2}.*")) {
+            return dataRecebimento.substring(0, 7);
+        }
+        return YearMonth.now().toString();
     }
 
     private static String texto(Map<String, Object> c, String campo, int max, boolean obrigatorio) throws DadoInvalido {

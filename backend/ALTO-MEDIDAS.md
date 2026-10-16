@@ -51,6 +51,9 @@ firebase deploy --only functions                  # na pasta do alto-medidas
 2. Toque em **Cliente pagou** → no Alto Medidas a OS ganha o selo **PAGO**.
 3. No Alto Medidas, o Daniel toca em **Confirmar recebimento** → na DIH ela vai para *Já repassado* e sai do total devido.
 
+## Filtro de meses
+A tela tem um seletor **Mês de finalização** (o mês, no horário de Brasília, em que o Daniel finalizou o virabrequim). As três listas e os subtotais são do mês escolhido; abre no mês de hoje (ou no mais recente que tem OS) e há a opção **Todos os meses**. O total **"Você deve ao Daniel"** é **sempre o geral**, de todos os meses (o mesmo do cartão do Início), e quando o mês escolhido tem só uma parte dele a tela mostra as duas — filtrar nunca esconde uma dívida antiga. API: `GET /api/alto-medidas/os?mes=AAAA-MM|todos`.
+
 ## Como o total é calculado
 `valor` + `valorPolir` (só se a OS tem polimento) de cada OS **paga pelo cliente e ainda não repassada**. `valor` negativo (abatimento) entra subtraindo, como no PDF do Alto Medidas. A conta é feita no servidor.
 

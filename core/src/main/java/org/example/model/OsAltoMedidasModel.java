@@ -16,7 +16,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "OS_ALTO_MEDIDAS", indexes = {
         @Index(name = "idx_os_alto_medidas_empresa", columnList = "empresa_id"),
-        @Index(name = "uk_os_alto_medidas_empresa_os", columnList = "empresa_id, os_id", unique = true)
+        @Index(name = "uk_os_alto_medidas_empresa_os", columnList = "empresa_id, os_id", unique = true),
+        @Index(name = "idx_os_alto_medidas_empresa_mes", columnList = "empresa_id, mes_ref")
 })
 public class OsAltoMedidasModel {
 
@@ -51,6 +52,9 @@ public class OsAltoMedidasModel {
     private String dataRecebimento;
     @Column(length = 40)
     private String finalizadoEm;
+    /** Mês da finalização (AAAA-MM, horário de Brasília): base do filtro de meses da tela. */
+    @Column(name = "mes_ref", length = 7)
+    private String mesRef;
     private LocalDateTime recebidoEm;
     private LocalDateTime atualizadoEm;
 
@@ -105,6 +109,8 @@ public class OsAltoMedidasModel {
     public void setValor(BigDecimal valor) { this.valor = valor; }
     public String getDataRecebimento() { return dataRecebimento; }
     public void setDataRecebimento(String dataRecebimento) { this.dataRecebimento = dataRecebimento; }
+    public String getMesRef() { return mesRef; }
+    public void setMesRef(String mesRef) { this.mesRef = mesRef; }
     public String getFinalizadoEm() { return finalizadoEm; }
     public void setFinalizadoEm(String finalizadoEm) { this.finalizadoEm = finalizadoEm; }
     public LocalDateTime getRecebidoEm() { return recebidoEm; }
