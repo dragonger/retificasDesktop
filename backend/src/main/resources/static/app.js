@@ -904,6 +904,7 @@
     { re: /^#\/login$/, fn: () => telaLogin() },
     { re: /^#\/trocar-senha$/, fn: () => telaTrocarSenha() },
     { re: /^#\/empresa$/, fn: () => telaEmpresa() },
+    { re: /^#\/alto-medidas$/, fn: () => telaAltoMedidas() },
   ];
 
   function rotear() {
@@ -982,6 +983,10 @@
       conteudo.appendChild(el('div', { class: 'data-hoje' }, hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })));
       const rascunhos = secaoRascunhos();
       if (rascunhos) conteudo.appendChild(rascunhos);
+      const areaDaniel = el('div', { style: 'margin-bottom:22px' });
+      areaDaniel.hidden = true;
+      conteudo.appendChild(areaDaniel);
+      cartaoDaniel(areaDaniel);
 
       conteudo.appendChild(el('div', { class: 'stat-grid' },
         statCard('Em aberto', dash.abertos, 'pedidos', () => { location.hash = '#/pedidos?filtro=abertos'; }, 'accent', svgCaixa('var(--color-accent-700)')),
@@ -2796,10 +2801,18 @@
     conteudo.innerHTML = '';
     conteudo.appendChild(el('h2', { class: 'titulo' }, 'Catálogo'));
     conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Clientes, serviços e peças usados nos orçamentos'));
+    const slotDaniel = el('div', {});
+    slotDaniel.hidden = true; // só aparece para a empresa com a integração do Alto Medidas
+    altoMedidasHabilitado().then(ok => {
+      if (!ok) return;
+      slotDaniel.appendChild(menuCard('Virabrequins do Daniel', 'accent', svgPeca(), '#/alto-medidas'));
+      slotDaniel.hidden = false;
+    });
     conteudo.appendChild(el('div', { class: 'catalogo-menu' },
       menuCard('Clientes', 'accent', svgPessoa(), '#/clientes'),
       menuCard('Serviços', 'neutral', svgChave(), '#/servicos'),
       menuCard('Peças', 'accent-2', svgPeca(), '#/pecas'),
+      slotDaniel,
       menuCard('Minha empresa', 'neutral', svgEmpresa(), '#/empresa'),
     ));
   }
@@ -2932,6 +2945,124 @@
       fldSlogan.value = d.slogan || '';
       baseDados = fotografiaDados();
     }).catch(() => { /* api() já avisou */ });
+  }
+
+  // ---------- Virabrequins do Daniel (conferência com o Alto Medidas) ----------
+  // O Daniel finaliza o virabrequim no app dele (Alto Medidas) e a OS chega aqui.
+  // A DIH marca "cliente pagou"; quando repassa ao Daniel, ele confirma lá e a OS
+  // vira "repassado". O total devido é calculado no servidor.
+
+  const ALTO_OS = '/api/alto-medidas/os';
+  const ALTO_RESUMO = '/api/alto-medidas/resumo';
+
+  function textoDataIso(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso).slice(0, 10) : d.toLocaleDateString('pt-BR');
+  }
+  function textoQuantidade(n) {
+    return n + (n === 1 ? ' virabrequim' : ' virabrequins');
+  }
+
+  // Cartão "Você deve ao Daniel" — grande na tela própria, menor no Início (toque abre a tela).
+  function cartaoDevidoAoDaniel(valor, quantidade, grande, aoTocar) {
+    return blueprintBox('div', {
+      class: 'card-destaque elev-md', style: 'padding:' + (grande ? '18px' : '14px') + (aoTocar ? ';cursor:pointer' : ''),
+      onclick: aoTocar || null,
+    },
+      el('div', { class: 'card-destaque-titulo', style: 'margin-bottom:4px' }, 'Você deve ao Daniel'),
+      el('div', { style: 'font-size:' + (grande ? '30px' : '24px') + ';font-weight:700;line-height:1.1' }, moeda(valor)),
+      el('div', { style: 'font-size:12px;opacity:.65;margin-top:4px' },
+        textoQuantidade(quantidade) + ' que o cliente já pagou' + (aoTocar ? ' · toque para conferir' : '')));
+  }
+
+  // A integração só vale para a empresa dona dela (a DIH): consultado uma vez por sessão.
+  let altoMedidasStatus = null;
+  function altoMedidasHabilitado() {
+    if (!altoMedidasStatus) {
+      altoMedidasStatus = api('GET', '/api/alto-medidas/status', undefined, [403, 404, 500, 502, 503])
+        .then(r => !!(r && r.habilitado))
+        .catch(() => { altoMedidasStatus = null; return false; });
+    }
+    return altoMedidasStatus;
+  }
+
+  // Início: só mostra quando há algo a repassar; falha silenciosa (não atrapalha o resto da tela).
+  function cartaoDaniel(container) {
+    altoMedidasHabilitado().then(ok => {
+      if (!ok) return null;
+      return api('GET', ALTO_RESUMO, undefined, [403, 404, 500, 502, 503]);
+    }).then(r => {
+      if (!r || !(Number(r.quantidadeDevida) > 0)) return;
+      container.appendChild(cartaoDevidoAoDaniel(r.devidoAoDaniel, r.quantidadeDevida, false, () => { location.hash = '#/alto-medidas'; }));
+      container.hidden = false;
+    }).catch(() => { /* sem integração ou sem conexão: o Início segue normal */ });
+  }
+
+  async function telaAltoMedidas() {
+    tituloTopo.textContent = 'Virabrequins do Daniel';
+
+    function linhaOs(os) {
+      const detalhes = [os.cliente, os.modelo, os.medidas].filter(Boolean).join(' · ');
+      const datas = os.repassadoEm
+        ? 'Repassado em ' + textoDataIso(os.repassadoEm)
+        : os.pago
+          ? 'Cliente pagou em ' + textoDataIso(os.pagoEm)
+          : (os.finalizadoEm ? 'Finalizado em ' + textoDataIso(os.finalizadoEm) : '');
+      const valor = moeda(os.valorTotal) + (os.polir ? ' (com polimento)' : '');
+      const acao = os.repassadoEm ? null : btnBlueprint(os.pago ? 'Desfazer' : 'Cliente pagou', os.pago ? 'btn-secondary' : 'btn-primary', {
+        onclick: (ev) => alternarPagamento(os, ev.currentTarget),
+      });
+      return el('div', { class: 'linha', style: 'cursor:default' },
+        el('div', { style: 'display:flex;justify-content:space-between;gap:10px;align-items:baseline' },
+          el('div', { class: 'linha-titulo' }, 'OS #' + (os.numero || '—')),
+          el('strong', null, valor)),
+        el('div', { style: 'font-size:13px;opacity:.75' }, detalhes),
+        datas ? el('div', { style: 'font-size:12px;opacity:.6' }, datas) : null,
+        !os.pagoSincronizado
+          ? el('div', { style: 'font-size:12px;color:var(--color-danger)' }, 'Ainda não avisado ao Alto Medidas — vai tentar de novo sozinho.')
+          : null,
+        acao ? el('div', { style: 'margin-top:8px' }, acao) : null);
+    }
+
+    function secao(titulo, g, vazio) {
+      return el('div', { style: 'margin-bottom:22px' },
+        el('h2', { class: 'secao' }, titulo + ' — ' + moeda(g.total)),
+        g.itens.length ? el('div', null, ...g.itens.map(linhaOs)) : el('div', { class: 'empty' }, vazio));
+    }
+
+    async function alternarPagamento(os, botao) {
+      const marcar = !os.pago;
+      const pergunta = marcar
+        ? 'Marcar a OS #' + os.numero + ' como paga pelo cliente? Ela passa a contar no que você deve ao Daniel (' + moeda(os.valorTotal) + ').'
+        : 'Desfazer o "cliente pagou" da OS #' + os.numero + '? Ela deixa de contar no que você deve ao Daniel.';
+      if (!(await confirmar(pergunta, marcar ? 'Cliente pagou' : 'Desfazer', !marcar))) return;
+      let motivo = null;
+      const feito = await comBotaoOcupado(botao, 'Salvando…', async () => {
+        try {
+          return await api('PUT', ALTO_OS + '/' + os.id + '/pagamento', { pago: marcar }, [404, 409]);
+        } catch (e) {
+          motivo = e && e.detalhe;
+          throw e;
+        }
+      });
+      if (!feito) { toast(motivo || 'Não foi possível salvar. Tente de novo.', true); return; }
+      cacheInvalidar(ALTO_OS, ALTO_RESUMO);
+      telaAltoMedidas();
+    }
+
+    function render(d) {
+      conteudo.innerHTML = '';
+      conteudo.appendChild(el('h2', { class: 'titulo' }, 'Virabrequins do Daniel'));
+      conteudo.appendChild(el('div', { class: 'subtitulo' }, 'Finalizados no Alto Medidas — marque quando o cliente pagar'));
+      conteudo.appendChild(el('div', { style: 'margin-bottom:22px' },
+        cartaoDevidoAoDaniel(d.devidoAoDaniel, d.quantidadeDevida, true, null)));
+      conteudo.appendChild(secao('Pago pelo cliente — a repassar ao Daniel', d.aRepassar, 'Nenhum virabrequim pago aguardando repasse.'));
+      conteudo.appendChild(secao('Aguardando o cliente pagar', d.aguardando, 'Nenhum virabrequim aguardando pagamento.'));
+      conteudo.appendChild(secao('Já repassado ao Daniel', d.repassado, 'Nenhum repasse confirmado ainda.'));
+    }
+
+    await comCache(ALTO_OS, render);
   }
 
   // ---------- Serviços / Peças (catálogo com categoria) ----------

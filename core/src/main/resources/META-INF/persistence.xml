@@ -20,6 +20,7 @@
         <class>org.example.model.UsuarioModel</class>
         <class>org.example.model.PedidoCategoriaModel</class>
         <class>org.example.model.EmpresaLogoModel</class>
+        <class>org.example.model.OsAltoMedidasModel</class>
 
         <properties>
             <!-- Valores default aqui batem com o Postgres local do docker-compose.yml
