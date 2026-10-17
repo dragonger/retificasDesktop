@@ -9,8 +9,8 @@ import java.util.TimeZone;
 
 /**
  * Backend REST + servidor da versão web/mobile (PWA) da retífica.
- * Usa o mesmo banco H2 do app desktop (arquivo em ~/.retificasDesktop,
- * modo AUTO_SERVER) — desktop e mobile enxergam os mesmos pedidos.
+ * Acessa o Postgres pelas entidades e repositórios do módulo core (local via
+ * docker-compose.yml, produção no Neon). Ver docs/ARQUITETURA.md.
  */
 @SpringBootApplication
 @EnableScheduling
