@@ -2,7 +2,7 @@
 
 ## Situação atual
 
-- `core/.../META-INF/persistence.xml` usa `hibernate.hbm2ddl.auto=update`. A cada criação da `EntityManagerFactory` o Hibernate lê o metadata do banco (tabelas, colunas, índices, FKs) e compara com as 11 entidades. Em produção isso são idas e voltas de rede até o Neon.
+- `core/.../META-INF/persistence.xml` usa `hibernate.hbm2ddl.auto=update`. A cada criação da `EntityManagerFactory` o Hibernate lê o metadata do banco (tabelas, colunas, índices, FKs) e compara com as 13 entidades. Em produção isso são idas e voltas de rede até o Neon.
 - A fábrica é criada no caminho crítico: `BootstrapUsuario` (CommandLineRunner) e `GET /health` (sinal de "pronto" do Railway e do wake-proxy) chamam `JPAUtil.getEntityManagerFactory()`. Criação preguiçosa não ajuda.
 - Como o backend é ligado/desligado todo dia, o update roda a cada despertar, quase sempre sem nada para mudar.
 - A tabela legada `pedido_categoria` (sem entidade, com FK para `pedido`) é ignorada por update/validate/none; quem trata dela é `PedidoRepository.apagarCategoriasLegadas`.

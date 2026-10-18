@@ -74,6 +74,7 @@ variáveis opcionais abaixo.
 | `WHATSAPP_TEMPLATE_NAME` | não | `orcamento` | nome do modelo |
 | `WHATSAPP_TEMPLATE_LANG` | não | `pt_BR` | idioma do modelo |
 | `WHATSAPP_API_VERSION` | não | `v23.0` | versão da Graph API |
+| `WHATSAPP_GRAPH_URL` | não | `https://graph.facebook.com` | endereço base da Graph API (serve para apontar para um servidor falso em testes; nenhum teste usa hoje) |
 
 O token é segredo. Configure pelo painel do Railway (Variables do serviço
 retifica-backend), nunca em arquivo do repositório. Salvar a variável reinicia
