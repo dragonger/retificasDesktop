@@ -14,6 +14,7 @@ RUN mvn -pl core,backend -am -DskipTests package
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/backend/target/retificas-backend.jar app.jar
+# Local o app escuta na 8443; no Railway a porta vem da variável PORT (8080).
 EXPOSE 8443
 # Flags de memoria: sem elas a JVM usa heap ate 25% do limite do container
 # (bem mais do que a app realmente usa) e G1GC, que reserva mais memoria

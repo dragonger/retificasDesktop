@@ -229,7 +229,7 @@ function paginaCarregando(res) {
 // ---------- servidor ----------
 
 const server = http.createServer(async (req, res) => {
-  // healthcheck do próprio proxy (railway.json) — não pode repassar nem
+  // healthcheck do próprio proxy (configurado no ambiente do Railway) — não pode repassar nem
   // acordar o backend, senão cada deploy do proxy à noite o ligaria.
   if (req.url === '/__proxy_health') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });

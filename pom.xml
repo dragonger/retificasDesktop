@@ -15,8 +15,8 @@
                      reaproveitado tanto pelo desktop quanto pelo backend.
           - desktop: aplicação JavaFX (app de mesa já existente).
           - backend: API REST + PWA (versão mobile/web), acessa o MESMO banco
-                     que o desktop (H2 em modo AUTO_SERVER), então os dados
-                     ficam sempre sincronizados entre desktop e celular.
+                     banco Postgres que o desktop usava (hoje o desktop não
+                     compila; ver docs/ARQUITETURA.md).
     -->
     <modules>
         <module>core</module>
@@ -37,7 +37,7 @@
 
     <!--
         BOM do Spring Boot importado aqui na raiz (não só no backend) pra que o
-        core também herde versões gerenciadas (Hibernate, H2) consistentes com
+        core também herde versões gerenciadas (Hibernate, driver do Postgres) consistentes com
         o Spring Boot, mesmo sem depender do Spring em si.
     -->
     <dependencyManagement>

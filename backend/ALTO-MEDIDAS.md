@@ -42,7 +42,7 @@ firebase functions:secrets:set DIH_ENTRADA_KEY    # cola a chave A
 firebase functions:secrets:set DIH_SAIDA_KEY      # cola a chave B
 firebase deploy --only functions                  # na pasta do alto-medidas
 ```
-- A URL da DIH vai no parâmetro `DIH_BASE_URL` (o padrão já é `https://retifica-backend-production.up.railway.app`).
+- A URL da DIH vai no parâmetro `DIH_BASE_URL` (o padrão já é `https://retifica-backend-production.up.railway.app`, o domínio público, que passa pelo wake-proxy: se o backend estiver desligado, a entrada espera ele acordar; ver `docs/PRODUCAO.md`).
 - As funções novas: `enviarOsParaDih` (ao finalizar / ao Daniel confirmar), `reenviarOsParaDih` (de hora em hora, reenvia o que não chegou **e na primeira execução manda as OS já finalizadas dos últimos 30 dias**) e `dihPagamento`.
 - Publique também a nova versão do app do Daniel (mostra o botão "Confirmar recebimento" nas OS finalizadas e mantém visíveis as que aguardam repasse).
 
@@ -66,7 +66,7 @@ A tela tem um seletor **Mês de finalização** (o mês, no horário de Brasíli
 
 ## Regras de segurança
 - A entrada compara a chave em tempo constante; sem `ALTO_MEDIDAS_ENTRADA_KEY` responde 503; chave errada, 401.
-- A rota `/api/integracoes/**` é a única fora do login; todo o resto da tela exige o login da DIH.
+- As rotas públicas do backend são `/api/auth/**`, `/health` e `/api/integracoes/**` (esta, só com a chave `X-Api-Key`); todas as rotas da tela (`/api/alto-medidas/**`) exigem o token da DIH. `/status` só habilita a tela para a empresa `ALTO_MEDIDAS_EMPRESA_ID`; as demais rotas filtram pela empresa do token, então outra empresa vê listas vazias e recebe 404 ao tentar marcar a OS de outra.
 - Se uma chave vazar, gere outra e troque nos dois lados.
 
 ## Aviso sobre o repositório `alto-medidas`
