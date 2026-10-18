@@ -73,6 +73,18 @@ final class ApiTeste {
                 .PUT(HttpRequest.BodyPublishers.ofByteArray(corpo.toByteArray())).build());
     }
 
+    /** POST multipart com um unico arquivo (usado no PDF do WhatsApp). */
+    Resposta postArquivo(String caminho, String token, String campo, byte[] conteudo) {
+        String limite = "----teste" + System.nanoTime();
+        ByteArrayOutputStream corpo = new ByteArrayOutputStream();
+        corpo.writeBytes(("--" + limite + "\r\nContent-Disposition: form-data; name=\"" + campo
+                + "\"; filename=\"arquivo.pdf\"\r\nContent-Type: application/pdf\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+        corpo.writeBytes(conteudo);
+        corpo.writeBytes(("\r\n--" + limite + "--\r\n").getBytes(StandardCharsets.UTF_8));
+        return enviar(montar(caminho, token).header("Content-Type", "multipart/form-data; boundary=" + limite)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(corpo.toByteArray())).build());
+    }
+
     Resposta requisicao(String metodo, String caminho, String token) {
         HttpRequest.Builder b = montar(caminho, token).header("Content-Type", "application/json");
         return enviar(b.method(metodo, HttpRequest.BodyPublishers.ofString("{}")).build());
