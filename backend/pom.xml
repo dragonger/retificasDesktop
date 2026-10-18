@@ -53,11 +53,43 @@
             <version>0.13.0</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <finalName>retificas-backend</finalName>
         <plugins>
+            <!--
+                Testes de integração rodam contra um Postgres DESCARTÁVEL local
+                (docker-compose.test.yml, porta 5544, banco retificas_test) — nunca
+                o banco de produção. As variáveis abaixo substituem as do ambiente
+                do processo de teste; GuardaBancoLocal ainda aborta se algo apontar
+                para fora da máquina. HOME próprio para o bootstrap não escrever
+                credenciais no home real.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.3</version>
+                <configuration>
+                    <argLine>-Duser.home=${project.build.directory}/test-home</argLine>
+                    <environmentVariables>
+                        <DATABASE_URL>jdbc:postgresql://localhost:5544/retificas_test</DATABASE_URL>
+                        <DATABASE_USER>retificas</DATABASE_USER>
+                        <DATABASE_PASSWORD>retificas_teste</DATABASE_PASSWORD>
+                        <JWT_SECRET>dGVzdGUtc2ludGV0aWNvLXNlbS12YWxvci1yZWFsLTMyYnl0ZXM=</JWT_SECRET>
+                        <SSL_ENABLED>false</SSL_ENABLED>
+                        <WHATSAPP_TOKEN></WHATSAPP_TOKEN>
+                        <WHATSAPP_PHONE_NUMBER_ID></WHATSAPP_PHONE_NUMBER_ID>
+                        <ALTO_MEDIDAS_PAGAMENTO_URL></ALTO_MEDIDAS_PAGAMENTO_URL>
+                        <ALTO_MEDIDAS_SAIDA_KEY></ALTO_MEDIDAS_SAIDA_KEY>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

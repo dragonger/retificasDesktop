@@ -1,0 +1,22 @@
+# Postgres DESCARTÁVEL só para os testes de integração do backend.
+# Porta 5544 (não colide com o docker-compose.yml de desenvolvimento) e dados em
+# memória: cada "up" começa de um banco vazio, sem volume.
+#   docker compose -f docker-compose.test.yml up -d --wait
+#   mvn -pl core,backend -am test
+#   docker compose -f docker-compose.test.yml down
+services:
+  postgres-teste:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: retificas_test
+      POSTGRES_USER: retificas
+      POSTGRES_PASSWORD: retificas_teste
+    ports:
+      - "127.0.0.1:5544:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U retificas -d retificas_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
