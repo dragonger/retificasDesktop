@@ -15,16 +15,17 @@ Ponto de partida para quem retoma o projeto (pessoa ou assistente). Este arquivo
 | O que o app faz e como o `app.js` funciona | [docs/PWA.md](docs/PWA.md) |
 | Multiempresa: estado, decisões, o que falta, login automático | [docs/SAAS.md](docs/SAAS.md) |
 | Armadilhas já encontradas e cuidados com os dados reais | [docs/LICOES.md](docs/LICOES.md) |
-| Alto Medidas, WhatsApp, `hbm2ddl`, testes | [backend/ALTO-MEDIDAS.md](backend/ALTO-MEDIDAS.md), [backend/WHATSAPP-API.md](backend/WHATSAPP-API.md), [backend/SCHEMA-STARTUP.md](backend/SCHEMA-STARTUP.md), [backend/TESTES.md](backend/TESTES.md) |
+| Alto Medidas, WhatsApp, ditado, `hbm2ddl`, testes | [backend/ALTO-MEDIDAS.md](backend/ALTO-MEDIDAS.md), [backend/WHATSAPP-API.md](backend/WHATSAPP-API.md), [backend/DITADO.md](backend/DITADO.md), [backend/SCHEMA-STARTUP.md](backend/SCHEMA-STARTUP.md), [backend/TESTES.md](backend/TESTES.md) |
 
 ## Estado em uma olhada
 
 - **Em produção**: backend + PWA no Railway (`retifica-backend`), proxy que acorda o backend fora do horário, cron que o liga e desliga, banco no Neon. Fases 1a e 1b do SaaS (login e isolamento por empresa) prontas.
 - **Integração com o Alto Medidas**: ligada. O lado do Firebase (PR #2 do `alto-medidas`) ainda espera aprovação e publicação; enquanto isso nenhuma OS chega.
 - **WhatsApp**: código pronto, desligado (faltam as credenciais da Meta).
+- **Ditar o pedido por voz** (IA com perguntas de esclarecimento): código pronto, **desligado** até existir `ANTHROPIC_API_KEY` no Railway. Haiku 5.5, 100 ditados por empresa por dia e 300 no total, só em pedido novo. Ver [backend/DITADO.md](backend/DITADO.md).
 - **Login automático**: ativo e mantido (decisão do dono em 2026-10-17). Ver [docs/SAAS.md](docs/SAAS.md#login-automático).
 - **Desktop JavaFX**: não compila desde a Fase 1b; será remodelado depois (decisão do dono em 2026-10-17), então não é prioridade agora.
-- **Testes**: 124 testes automatizados (isolamento, dinheiro, sessão, pedidos, PDF, WhatsApp, Alto Medidas e contratos da API); ver [backend/TESTES.md](backend/TESTES.md). Falta só desempenho (N+1), a lista de valores aceitos do `HIBERNATE_HBM2DDL` e o ponta a ponta do PWA.
+- **Testes**: 187 testes Java e 15 de JavaScript (isolamento, dinheiro, sessão, pedidos, PDF, WhatsApp, Alto Medidas, contratos da API e ditado); ver [backend/TESTES.md](backend/TESTES.md). Falta só desempenho (N+1), a lista de valores aceitos do `HIBERNATE_HBM2DDL` e o ponta a ponta do PWA.
 
 ## Regras de trabalho
 
@@ -39,6 +40,7 @@ Ponto de partida para quem retoma o projeto (pessoa ou assistente). Este arquivo
 
 - Aprovar e publicar o PR do Alto Medidas (segredos do Firebase `DIH_ENTRADA_KEY` e `DIH_SAIDA_KEY`, `firebase deploy --only functions`, nova versão do app do Daniel) e testar com uma OS de teste.
 - Decidir as integrações por empresa (ver [docs/SAAS.md](docs/SAAS.md)). O login automático e o desktop já têm decisão (mantido e remodelado depois).
+- Ligar o ditado: criar a chave na Anthropic (com limite de gasto mensal no Console), colocar `ANTHROPIC_API_KEY` no Railway e testar no celular (microfone no Chrome e no APK) e com a IA de verdade (avaliar o acerto com algumas frases reais).
 - Fase 2 do SaaS: onboarding de outras oficinas.
 - Entradas ruins que hoje respondem 500 em vez de 400 (item nulo, data inválida, nome longo) e o upsert simultâneo do Alto Medidas: ver [backend/TESTES.md](backend/TESTES.md).
 - Conferir no celular real: fontes, busca, logo, rascunhos e a tela do Daniel.
