@@ -1585,6 +1585,353 @@
 
   // ---------- Pedido: criar/editar ----------
 
+  // ---------- ditar o pedido (ver backend/DITADO.md; a regra pura fica em ditado.js) ----------
+  // Falar -> o navegador transcreve -> o servidor entende com a IA (e pode perguntar) -> conferência -> preenche o
+  // formulário. Nada é salvo sozinho, e nada que já estava preenchido é trocado (vira conflito na conferência).
+  let ditadoStatus = null;
+  function ditadoHabilitado() {
+    if (!ditadoStatus) {
+      ditadoStatus = api('GET', '/api/ditado/status', undefined, [404, 500, 502, 503])
+        .then(r => !!(r && r.habilitado))
+        .catch(() => { ditadoStatus = null; return false; });
+    }
+    return ditadoStatus;
+  }
+
+  const DITADO_AVISO_CHAVE = 'retifica_ditado_aviso';
+
+  async function ditadoAvisoDePrivacidade() {
+    let visto = false;
+    try { visto = localStorage.getItem(DITADO_AVISO_CHAVE) === '1'; } catch (e) { /* sem armazenamento: pergunta toda vez */ }
+    if (visto) return true;
+    const resposta = await escolher(
+      'O áudio é transcrito pelo navegador (no Chrome, pelo Google). O texto, junto com os nomes de clientes e do catálogo da empresa, '
+      + 'vai para a IA da Anthropic montar o pedido. Nada é salvo sozinho: você confere antes de preencher.',
+      [{ rotulo: 'Cancelar', valor: false }, { rotulo: 'Continuar', valor: true, estilo: 'btn-primary' }]);
+    if (resposta) { try { localStorage.setItem(DITADO_AVISO_CHAVE, '1'); } catch (e) { /* ignora */ } }
+    return !!resposta;
+  }
+
+  // Reconhecimento de voz em pt-BR escrevendo numa caixa de texto. Reinicia sozinho quando o navegador para por silêncio.
+  function ditadoVoz(alvo, aoMudar, aoParar) {
+    const SR = Ditado.reconhecimentoDisponivel(window);
+    if (!SR) return null;
+    const rec = new SR();
+    rec.lang = 'pt-BR'; rec.interimResults = true; rec.continuous = true;
+    let ativo = false; let base = ''; let final = '';
+    const aoEditar = () => { if (ativo) { base = alvo.value ? alvo.value.trim() + ' ' : ''; final = ''; } };
+    alvo.addEventListener('input', aoEditar);
+    rec.onresult = ev => {
+      let parcial = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        if (r.isFinal) final += r[0].transcript + ' '; else parcial += r[0].transcript;
+      }
+      alvo.value = (base + final + parcial).slice(0, 2000);
+      aoMudar();
+    };
+    rec.onerror = ev => {
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+        toast('Sem permissão para o microfone. Escreva o pedido, ou libere o microfone para este site.', true); ativo = false;
+      } else if (ev.error === 'network') {
+        toast('O reconhecimento de voz precisa de internet. Escreva o pedido.', true); ativo = false;
+      } else if (ev.error === 'audio-capture') {
+        toast('Não achei o microfone. Escreva o pedido.', true); ativo = false;
+      }
+    };
+    rec.onend = () => {
+      if (ativo) { try { rec.start(); return; } catch (e) { ativo = false; } }
+      aoParar();
+    };
+    return {
+      iniciar() { base = alvo.value ? alvo.value.trim() + ' ' : ''; final = ''; ativo = true; try { rec.start(); } catch (e) { ativo = false; } return ativo; },
+      parar() { ativo = false; try { rec.stop(); } catch (e) { /* já parado */ } },
+      ativo() { return ativo; },
+      encerrar() { ativo = false; alvo.removeEventListener('input', aoEditar); try { rec.abort(); } catch (e) { /* já parado */ } }
+    };
+  }
+
+  const ICONE_MICROFONE = '<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"></path><path d="M19 11a7 7 0 0 1-14 0"></path><path d="M12 18v3"></path>';
+
+  // ctx: { obterAtual(), catalogo(), aplicar(dados), cadastrarCliente(nome), irParaAba(aba), ordemAbas }
+  async function abrirDitado(ctx) {
+    if (!(await ditadoAvisoDePrivacidade())) return;
+
+    const fundo = el('div', { class: 'ditado-overlay', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Ditar pedido' });
+    const painel = blueprintBox('div', { class: 'ditado-painel' });
+    fundo.appendChild(painel);
+    document.body.appendChild(fundo);
+
+    let voz = null;
+    let sessaoId = null; let perguntas = []; let entendimento = null; let avisosServidor = [];
+    let textoOriginal = ''; let escolhas = {}; let rodada = 1; let maxRodadas = 4;
+    let fechado = false;
+
+    function fechar() {
+      if (fechado) return;
+      fechado = true;
+      if (voz) voz.encerrar();
+      document.removeEventListener('keydown', aoTecla);
+      window.removeEventListener('hashchange', fechar);
+      fundo.remove();
+    }
+    function aoTecla(ev) { if (ev.key === 'Escape' && !document.querySelector('.ocultar-esc')) fechar(); }
+    document.addEventListener('keydown', aoTecla);
+    window.addEventListener('hashchange', fechar);
+
+    function limpar(...filhos) { painel.innerHTML = ''; filhos.flat().forEach(f => f && painel.appendChild(f)); fundo.scrollTop = 0; }
+    const titulo = t => el('h2', { class: 'ditado-titulo' }, t);
+    const nota = (t, cls) => el('p', { class: 'ditado-nota' + (cls ? ' ' + cls : '') }, t);
+
+    // ---- 1) gravar / escrever
+    function faseGravar(mensagemErro) {
+      if (voz) { voz.encerrar(); voz = null; }
+      const fld = el('textarea', { class: 'input', rows: '6', maxlength: '2000', 'aria-label': 'Pedido ditado',
+        placeholder: 'Fale ou escreva o pedido…', id: 'ditadoTexto' }, textoOriginal);
+      const btnEntender = btnBlueprint('Entender o pedido', 'btn-primary btn-block', { onclick: () => enviar() });
+      const btnFalar = el('button', { type: 'button', class: 'btn btn-secondary btn-block', style: 'gap:8px' });
+      const estado = nota('', 'ditado-ouvindo');
+      function atualizar() { btnEntender.disabled = !fld.value.trim(); }
+      fld.addEventListener('input', atualizar);
+      voz = ditadoVoz(fld, atualizar, () => rotuloBotao());
+      function rotuloBotao() {
+        btnFalar.innerHTML = '';
+        const ouvindo = voz && voz.ativo();
+        btnFalar.appendChild(svgIcone('currentColor', 16, ICONE_MICROFONE));
+        btnFalar.appendChild(document.createTextNode(ouvindo ? 'Parar' : 'Falar'));
+        btnFalar.classList.toggle('ditado-gravando', !!ouvindo);
+        estado.textContent = ouvindo ? 'Ouvindo… fale o pedido e toque em Parar.' : '';
+      }
+      btnFalar.addEventListener('click', () => {
+        if (voz.ativo()) voz.parar(); else voz.iniciar();
+        rotuloBotao();
+      });
+      rotuloBotao(); atualizar();
+
+      async function enviar() {
+        if (voz) voz.parar();
+        textoOriginal = fld.value.trim();
+        if (!textoOriginal) return;
+        faseEntendendo('Entendendo o pedido…');
+        try {
+          const r = await api('POST', '/api/ditado', { texto: textoOriginal }, [400, 404, 409, 429, 502, 503]);
+          receber(r);
+        } catch (e) {
+          faseGravar(e.detalhe || 'Não consegui entender agora. Tente de novo ou preencha à mão.');
+        }
+      }
+
+      limpar(
+        titulo('Ditar pedido'),
+        mensagemErro ? nota(mensagemErro, 'ditado-erro') : null,
+        voz ? btnFalar : nota('Este navegador não ouve a voz. Escreva o pedido aqui, ou toque no microfone do teclado do celular.'),
+        estado, fld,
+        nota('Exemplo: "Pedido do João da Silva, cabeçote do AP 1.8, plainar e trocar guias, quatro válvulas, cento e cinquenta de serviço, entrega sexta."'),
+        el('div', { class: 'ditado-botoes' }, btnEntender, btnBlueprint('Cancelar', 'btn-ghost btn-block', { onclick: fechar })));
+      setTimeout(() => { try { fld.focus(); } catch (e) { /* sem foco */ } }, 50);
+    }
+
+    // ---- 2) aguardando a IA
+    function faseEntendendo(texto) {
+      if (voz) { voz.encerrar(); voz = null; }
+      limpar(titulo('Ditar pedido'), el('div', { class: 'ditado-espera', role: 'status' }, texto),
+        nota('Leva alguns segundos.'));
+    }
+
+    function receber(r) {
+      sessaoId = r.sessaoId; perguntas = r.perguntas || []; entendimento = r.entendimento; avisosServidor = r.avisos || [];
+      rodada = r.rodada; maxRodadas = r.maxRodadas; escolhas = {};
+      if (r.situacao === 'PERGUNTAS' && perguntas.length) fasePerguntas(); else faseConferir();
+    }
+
+    // ---- 3) perguntas de esclarecimento
+    function fasePerguntas(mensagemErro) {
+      const blocos = perguntas.map(p => {
+        const caixa = el('div', { class: 'ditado-pergunta' }, el('div', { class: 'ditado-pergunta-texto' }, p.texto));
+        function marcar(valor) { escolhas[p.id] = valor; atualizarBotoes(); }
+        const botoes = [];
+        if (p.tipo === 'ESCOLHA') {
+          const lista = el('div', { class: 'ditado-opcoes' });
+          p.opcoes.forEach(o => {
+            const b = el('button', { type: 'button', class: 'chip', 'aria-pressed': 'false' }, o.rotulo);
+            b.addEventListener('click', () => { campoLivre.value = ''; marcar(o.indice); marcarSelecao(); });
+            botoes.push([o.indice, b]); lista.appendChild(b);
+          });
+          caixa.appendChild(lista);
+        }
+        const campoLivre = el('input', { class: 'input', type: 'text', maxlength: '300', 'aria-label': 'Outra resposta',
+          placeholder: p.tipo === 'ESCOLHA' ? 'Outra resposta…' : 'Sua resposta…' });
+        function marcarSelecao() {
+          botoes.forEach(([i, b]) => { const on = escolhas[p.id] === i; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
+        }
+        campoLivre.addEventListener('input', () => {
+          if (campoLivre.value.trim()) { marcar(campoLivre.value); } else { delete escolhas[p.id]; atualizarBotoes(); }
+          marcarSelecao();
+        });
+        const linha = el('div', { class: 'ditado-resposta' }, campoLivre);
+        const mic = Ditado.reconhecimentoDisponivel(window) ? el('button', { type: 'button', class: 'btn btn-ghost ditado-mic',
+          'aria-label': 'Responder falando' }, svgIcone('currentColor', 16, ICONE_MICROFONE)) : null;
+        if (mic) {
+          let vozLocal = null;
+          mic.addEventListener('click', () => {
+            if (!vozLocal) vozLocal = ditadoVoz(campoLivre, () => campoLivre.dispatchEvent(new Event('input')), () => mic.classList.remove('ditado-gravando'));
+            if (vozLocal.ativo()) { vozLocal.parar(); mic.classList.remove('ditado-gravando'); }
+            else { vozLocal.iniciar(); mic.classList.add('ditado-gravando'); }
+          });
+          linha.appendChild(mic);
+        }
+        caixa.appendChild(linha);
+        return caixa;
+      });
+
+      const btnResponder = btnBlueprint('Responder', 'btn-primary btn-block', { onclick: () => responder() });
+      function atualizarBotoes() { btnResponder.disabled = Ditado.montarRespostas(perguntas, escolhas).length === 0; }
+      atualizarBotoes();
+
+      async function responder() {
+        const respostas = Ditado.montarRespostas(perguntas, escolhas);
+        if (!respostas.length) return;
+        faseEntendendo('Entendendo as respostas…');
+        try {
+          receber(await api('POST', '/api/ditado/' + encodeURIComponent(sessaoId) + '/respostas', { respostas },
+            [400, 404, 409, 429, 502, 503]));
+        } catch (e) {
+          if (e.message === 'HTTP 404') { await recomecarComOQueJaFoiDito(respostas); return; }
+          fasePerguntas(e.detalhe || 'Não consegui entender agora. Tente de novo ou toque em "Pular e conferir".');
+        }
+      }
+
+      limpar(
+        titulo('A IA tem uma dúvida'),
+        nota('Pergunta ' + rodada + ' de até ' + (maxRodadas - 1) + '. Toque numa opção, ou responda falando ou escrevendo.'),
+        mensagemErro ? nota(mensagemErro, 'ditado-erro') : null,
+        blocos,
+        el('div', { class: 'ditado-botoes' }, btnResponder,
+          btnBlueprint('Pular e conferir', 'btn-secondary btn-block', { onclick: () => { perguntas = []; faseConferir(); } }),
+          btnBlueprint('Cancelar', 'btn-ghost btn-block', { onclick: fechar })));
+    }
+
+    // A conversa guardada no servidor expirou (ficou parada ou o servidor reiniciou): recomeça com o que já foi dito.
+    async function recomecarComOQueJaFoiDito(respostas) {
+      const jaRespondido = respostas.map(r => {
+        const p = perguntas.find(x => x.id === r.perguntaId);
+        const o = p && typeof r.opcaoIndice === 'number' ? p.opcoes.find(x => x.indice === r.opcaoIndice) : null;
+        return (p ? p.texto + ' ' : '') + (o ? o.rotulo : (r.texto || ''));
+      }).join('. ');
+      textoOriginal = (textoOriginal + '. ' + jaRespondido).slice(0, 2000);
+      faseEntendendo('A conversa expirou; recomeçando com o que você já disse…');
+      try {
+        receber(await api('POST', '/api/ditado', { texto: textoOriginal }, [400, 404, 409, 429, 502, 503]));
+      } catch (e) {
+        faseGravar(e.detalhe || 'Não consegui recomeçar. Tente de novo ou preencha à mão.');
+      }
+    }
+
+    // ---- 4) conferência
+    function faseConferir() {
+      const { pendencias, conflitos } = Ditado.paraRascunho(entendimento, ctx.obterAtual(), ctx.catalogo());
+      const linhas = [];
+      const tag = (cls, t) => el('span', { class: 'ditado-tag ' + cls }, t);
+      const linha = (cls, rotuloTag, texto, extra, aoRemover) => el('div', { class: 'ditado-linha ' + cls },
+        tag(cls, rotuloTag), el('div', { class: 'ditado-linha-corpo' }, el('div', null, texto), extra || null),
+        aoRemover ? el('button', { type: 'button', class: 'ditado-remover', 'aria-label': 'Remover', onclick: aoRemover }, '✕') : null);
+
+      function opcoesDuvida(lista, indice) {
+        const ref = lista[indice];
+        return el('div', { class: 'ditado-opcoes' }, (ref.opcoes || []).map(o => {
+          const b = el('button', { type: 'button', class: 'chip' }, o.nome);
+          b.addEventListener('click', () => { lista[indice] = Ditado.escolherOpcao(ref, o.id); faseConferir(); });
+          return b;
+        }));
+      }
+      function refs(rotulo, lista, nomeTipo) {
+        lista.forEach((r, i) => {
+          if (r.estado === 'OK') linhas.push(linha('ok', 'Entendi', rotulo + ': ' + r.nome, null, () => { lista.splice(i, 1); faseConferir(); }));
+          else if (r.estado === 'DUVIDA') linhas.push(linha('duvida', 'Dúvida', 'Qual ' + nomeTipo + '?', opcoesDuvida(lista, i)));
+          else if (r.estado === 'NAO_ENCONTRADO') linhas.push(linha('falta', 'Não achei', rotulo + ' "' + (r.ouvido || '') + '" não está cadastrado.', null, () => { lista.splice(i, 1); faseConferir(); }));
+        });
+      }
+      // o cliente é um só (não uma lista): a dúvida troca entendimento.cliente
+      if (entendimento.cliente && entendimento.cliente.estado !== 'AUSENTE') {
+        const c = entendimento.cliente;
+        if (c.estado === 'OK') linhas.push(linha('ok', 'Entendi', 'Cliente: ' + c.nome));
+        else if (c.estado === 'DUVIDA') {
+          linhas.push(linha('duvida', 'Dúvida', 'Qual cliente?', el('div', { class: 'ditado-opcoes' }, (c.opcoes || []).map(o => {
+            const b = el('button', { type: 'button', class: 'chip' }, o.nome);
+            b.addEventListener('click', () => { entendimento.cliente = Ditado.escolherOpcao(c, o.id); faseConferir(); });
+            return b;
+          }))));
+        } else linhas.push(linha('falta', 'Não achei', 'Cliente "' + (c.ouvido || '') + '" não está cadastrado. Você poderá cadastrar ao preencher.'));
+      }
+      refs('Modelo', entendimento.componentes, 'modelo');
+
+      function itensLista(rotulo, lista, nomeTipo) {
+        lista.forEach((i, idx) => {
+          const qtd = i.quantidade ? i.quantidade + ' × ' : '';
+          const cat = i.categoria ? ' (' + Ditado.rotuloCategoria(i.categoria) + ')' : '';
+          const remover = () => { lista.splice(idx, 1); faseConferir(); };
+          if (i.estado === 'DUVIDA') linhas.push(linha('duvida', 'Dúvida', 'Qual ' + nomeTipo + '?', opcoesDuvida(lista, idx)));
+          else linhas.push(linha('ok', i.estado === 'LIVRE' ? 'Texto livre' : 'Entendi', rotulo + ': ' + qtd + (i.nome || '') + cat, null, remover));
+        });
+      }
+      itensLista('Serviço', entendimento.servicos, 'serviço');
+      itensLista('Peça', entendimento.pecas, 'peça');
+
+      (entendimento.valores || []).forEach((v, idx) => {
+        const campoValor = (chave, rotulo) => {
+          const inp = el('input', { class: 'input', type: 'number', min: '0', step: '0.01', value: v[chave] || '', 'aria-label': rotulo + ' de ' + Ditado.rotuloCategoria(v.categoria) });
+          inp.addEventListener('change', () => { v[chave] = Math.max(0, Number(inp.value) || 0); });
+          return el('label', { class: 'ditado-valor' }, el('span', null, rotulo), inp);
+        };
+        linhas.push(linha('ok', 'Entendi', 'Valores de ' + Ditado.rotuloCategoria(v.categoria),
+          el('div', { class: 'ditado-valores' }, campoValor('valorServicos', 'Serviços R$'), campoValor('valorPecas', 'Peças R$')),
+          () => { entendimento.valores.splice(idx, 1); faseConferir(); }));
+      });
+
+      if (entendimento.entregaData) {
+        const inp = el('input', { class: 'input', type: 'date', value: entendimento.entregaData, 'aria-label': 'Data de entrega' });
+        inp.addEventListener('change', () => { entendimento.entregaData = inp.value || null; });
+        linhas.push(linha('ok', 'Entendi', 'Entrega:', inp, () => { entendimento.entregaData = null; faseConferir(); }));
+      }
+      if (entendimento.descricao) linhas.push(linha('ok', 'Entendi', 'Descrição: ' + entendimento.descricao, null, () => { entendimento.descricao = null; faseConferir(); }));
+      if (entendimento.observacao) linhas.push(linha('ok', 'Entendi', 'Observação: ' + entendimento.observacao, null, () => { entendimento.observacao = null; faseConferir(); }));
+      if (entendimento.status) linhas.push(linha('ok', 'Entendi', 'Situação: ' + entendimento.status.replace('_', ' ').toLowerCase(), null, () => { entendimento.status = null; faseConferir(); }));
+      if (entendimento.descontoTipo) {
+        linhas.push(linha('ok', 'Entendi', 'Desconto: ' + (entendimento.descontoTipo === 'PERCENTUAL' ? entendimento.descontoValor + '%' : Ditado.moeda(entendimento.descontoValor)),
+          null, () => { entendimento.descontoTipo = null; entendimento.descontoValor = null; faseConferir(); }));
+      }
+
+      const secaoConflitos = conflitos.length ? el('div', { class: 'ditado-secao' },
+        el('h3', null, 'O formulário já tinha outra coisa (não vou trocar)'),
+        conflitos.map(c => el('div', { class: 'ditado-linha duvida' }, tag('duvida', 'Conflito'), el('div', { class: 'ditado-linha-corpo' }, c.texto)))) : null;
+      const todasPendencias = pendencias.map(p => p.texto).concat(avisosServidor);
+      const secaoPendencias = todasPendencias.length ? el('div', { class: 'ditado-secao' },
+        el('h3', null, 'Ficou pendente (você completa à mão)'),
+        el('ul', { class: 'ditado-pendencias' }, todasPendencias.map(t => el('li', null, t)))) : null;
+
+      const btnAplicar = btnBlueprint('Preencher formulário', 'btn-primary btn-block', { onclick: () => {
+        const r = Ditado.paraRascunho(entendimento, ctx.obterAtual(), ctx.catalogo());
+        ctx.aplicar(r.dados);
+        const cadastrar = r.pendencias.find(p => p.acao === 'cadastrarCliente');
+        if (cadastrar) ctx.cadastrarCliente(cadastrar.nome);
+        const aba = Ditado.primeiraAba(r.pendencias, r.conflitos, ctx.ordemAbas);
+        if (aba) ctx.irParaAba(aba);
+        toast(r.pendencias.length ? 'Formulário preenchido. Falta completar o que ficou pendente.' : 'Formulário preenchido. Confira e salve.');
+        fechar();
+      } });
+
+      limpar(
+        titulo('Confira o que entendi'),
+        linhas.length ? linhas : nota('Não entendi nada que dê para preencher. Tente de novo.', 'ditado-erro'),
+        secaoConflitos, secaoPendencias,
+        el('div', { class: 'ditado-botoes' }, linhas.length ? btnAplicar : null,
+          btnBlueprint('Ditar de novo', 'btn-secondary btn-block', { onclick: () => faseGravar() }),
+          btnBlueprint('Cancelar', 'btn-ghost btn-block', { onclick: fechar })));
+    }
+
+    faseGravar();
+  }
+
   async function telaFormPedido(id) {
     tituloTopo.textContent = id ? 'Editar pedido #' + id : 'Novo pedido';
     conteudo.innerHTML = '';
@@ -2233,6 +2580,23 @@
     const dicaSalvarMinimo = el('div', { style: 'font-size:12px;opacity:.6;padding:2px 2px 0' },
       'Só o cliente é obrigatório — dá pra completar o resto depois.');
 
+    // — ditar o pedido: só em pedido novo e só quando a IA está ligada no servidor (ver ditadoHabilitado) —
+    const barraDitado = el('div', { hidden: true, style: 'margin-bottom:12px' },
+      el('button', {
+        type: 'button', class: 'btn btn-secondary btn-block', style: 'gap:8px',
+        onclick: () => abrirDitado({
+          obterAtual: () => dadosDoRascunho(false),
+          catalogo: () => ({ clientes: catalogoCache.clientes, cabecotes: catalogoCache.cabecotes }),
+          aplicar: (dados) => { aplicarRascunho(dados); guardarRascunhoAgora(); },
+          cadastrarCliente: (nome) => { fldNovoNome.value = nome || ''; novoClienteBox.hidden = false; },
+          irParaAba: (aba) => { if (paineis[aba]) selecionarAba(aba); },
+          ordemAbas: ORDEM_PASSOS
+        })
+      }, svgIcone('currentColor', 16, ICONE_MICROFONE), 'Ditar pedido'));
+    if (!id) {
+      ditadoHabilitado().then(ligado => { if (ligado && typeof Ditado !== 'undefined' && renderGen === genTela) barraDitado.hidden = false; });
+    }
+
     const form = el('form', {
       novalidate: 'novalidate',
       onsubmit: async (ev) => {
@@ -2282,7 +2646,7 @@
         toast('Pedido salvo.');
         location.hash = '#/pedidos/' + salvo.id;
       }
-    }, dicaSalvarMinimo, painelBox, navegacaoPassos);
+    }, barraDitado, dicaSalvarMinimo, painelBox, navegacaoPassos);
 
     conteudo.appendChild(form);
 

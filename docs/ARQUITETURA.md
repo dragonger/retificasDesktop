@@ -85,6 +85,7 @@ Todas exigem `Authorization: Bearer <token>`, exceto as marcadas como públicas.
 | Empresa | `GET/PUT /api/empresa`, `GET/PUT/DELETE /api/empresa/logo` |
 | Usuário | `PUT /api/usuario/senha` |
 | WhatsApp | `GET /api/whatsapp/status` |
+| Ditado do pedido (IA) | `GET /api/ditado/status`, `POST /api/ditado`, `POST /api/ditado/{id}/respostas` |
 | Alto Medidas | `GET /api/alto-medidas/status`, `/os?mes=`, `/resumo`; `PUT /api/alto-medidas/os/{id}/pagamento` |
 | Alto Medidas, entrada (**pública**, protegida por chave) | `POST /api/integracoes/alto-medidas/os` |
 | Saúde (**pública**) | `GET /health` |
@@ -109,7 +110,7 @@ Uma matriz equivalente a esta, dentro do `MatrizDeEndpointsTest`, é conferida c
 | Sessão não revogável | Trocar a senha não invalida tokens já emitidos, e a renovação os mantém vivos. Só trocar o `JWT_SECRET` derruba todos. |
 | `salvar(entity)` não confere a empresa | Os controllers atuais buscam por `id + empresa` antes de salvar, mas um controller novo que não faça isso abriria uma brecha. |
 | Backfill para a primeira empresa | Com várias empresas, uma linha criada sem empresa (por um bug ou pelo desktop) vira dado da empresa 1 no próximo boot. |
-| Integrações globais | WhatsApp (token e número), Alto Medidas (`ALTO_MEDIDAS_EMPRESA_ID`) e as condições do PDF são da plataforma, não por empresa. |
+| Integrações globais | WhatsApp (token e número), Alto Medidas (`ALTO_MEDIDAS_EMPRESA_ID`), a chave da IA do ditado (gasto não medido por empresa) e as condições do PDF são da plataforma, não por empresa. |
 | Numeração do orçamento | O número é o id do pedido (`%04d`), uma sequência única para todas as empresas. |
 
 ## PDF do orçamento
@@ -126,3 +127,6 @@ Uma matriz equivalente a esta, dentro do `MatrizDeEndpointsTest`, é conferida c
 |---|---|---|
 | Alto Medidas (virabrequins do Daniel) | Ligada em produção | [backend/ALTO-MEDIDAS.md](../backend/ALTO-MEDIDAS.md) |
 | WhatsApp Business (envio do orçamento) | Código pronto, **desligado** (faltam as credenciais da Meta) | [backend/WHATSAPP-API.md](../backend/WHATSAPP-API.md) |
+| Anthropic (ditar o pedido por voz) | Código pronto, **desligado** (falta `ANTHROPIC_API_KEY`) | [backend/DITADO.md](../backend/DITADO.md) |
+
+O **ditado** (`org.example.backend.ditado`) manda o texto transcrito pelo navegador ao Claude (SDK oficial `anthropic-java`, saída estruturada) junto com o catálogo da empresa do token. Tudo que a IA devolve passa pelo `NormalizadorDitado`, que descarta ids que não existam no catálogo **da empresa** e limita valores, datas e tamanhos. A conversa (perguntas de esclarecimento, até 4 chamadas por ditado) fica numa sessão **em memória** no servidor (20 minutos, no máximo 200), e o limite diário (100 por empresa, 300 no total) também é em memória e zera no reinício. Até 4 chamadas simultâneas à IA, para não ocupar as 20 threads do Tomcat.

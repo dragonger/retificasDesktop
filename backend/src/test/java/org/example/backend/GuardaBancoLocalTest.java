@@ -43,7 +43,8 @@ class GuardaBancoLocalTest {
 
     @Test
     void recusaIntegracoesExternasLigadas() {
-        for (String variavel : new String[]{"WHATSAPP_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "ALTO_MEDIDAS_PAGAMENTO_URL"}) {
+        for (String variavel : new String[]{"WHATSAPP_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "ALTO_MEDIDAS_PAGAMENTO_URL",
+                "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL"}) {
             assertThatThrownBy(() -> verificar(Map.of("DATABASE_URL", LOCAL, variavel, "qualquer-coisa")))
                     .as(variavel).isInstanceOf(IllegalStateException.class);
         }

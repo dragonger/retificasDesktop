@@ -1,7 +1,7 @@
 # Testes do backend
 
-Testes automatizados do backend (124 hoje): isolamento entre empresas, regras de dinheiro, sessao, integracoes,
-PDF e contratos da API. Eles rodam contra um **Postgres descartavel local**, nunca contra o banco de producao.
+Testes automatizados do backend (187 de Java + 15 de JavaScript hoje): isolamento entre empresas, regras de dinheiro, sessao,
+integracoes, PDF, contratos da API e o ditado do pedido. Eles rodam contra um **Postgres descartavel local**, nunca contra o banco de producao.
 
 ## Como rodar
 
@@ -59,6 +59,29 @@ Verificado por mutacao (matriz completa): prefixo de itens sem conferir a descri
 60 s por pedido, telefone fixo de 10 digitos, logo ate 800 px, finalizar mudando a data, 409 sem encerrar a repeticao e
 sincronia marcando com o estado mudado.
 
+### Ditado do pedido (ver [DITADO.md](DITADO.md))
+
+| Classe | O que garante |
+|---|---|
+| `NormalizadorDitadoTest` | A barreira de seguranca: id inventado, de outra empresa ou do tipo errado e descartado (cliente, modelo, servico, peca e opcoes de pergunta); nome e categoria vem do catalogo; duvida com 1 candidato vira OK; limites de candidatos, itens, perguntas, opcoes; valores (negativo, NaN, acima do limite, soma por categoria); datas (passado, distante, mal formada); desconto, status e textos; ultima rodada sem perguntas; respostas nulas. Puro. |
+| `PromptDitadoTest` | Prompt de sistema deterministico e ordenado por id (cache); sem telefone nem endereco; nomes com barra, tags ou quebras de linha nao quebram o formato nem fingem blocos; pre-filtro de clientes em catalogo grande; texto do usuario nao fecha as tags; mensagem de respostas montada pelas perguntas guardadas no servidor. Puro. |
+| `LimiteESessoesDitadoTest` | Limite por empresa e global, devolver uso, virada do dia em Brasilia (nao em UTC); sessao so para a mesma empresa e usuario, validade renovada pelo uso, teto de 200 (nunca descarta uma em andamento), tranca de chamada em andamento. Relogio controlado. |
+| `DitadoServiceTest` | O servico sem rede nem banco, com modelo falso roteirizado: desligado = 503, validacoes, ciclo pergunta e resposta, perguntas nao gastam uso, 4 chamadas no maximo, falha devolve o uso e nao avanca a rodada, 404 para sessao alheia, 429 no limite, 409 em chamada simultanea na mesma sessao, no maximo 4 chamadas simultaneas a IA. |
+| `DitadoIntegracaoTest` | O SDK REAL da Anthropic contra um servidor falso no localhost, com banco real: o que sai (chave, modelo, saida estruturada, effort, cache, catalogo da empresa, sem telefone), o catalogo da outra empresa nunca vai, id de outra empresa na resposta e descartado, historico reenviado sem alteracao, 404 e 401, recusa/max_tokens/JSON invalido/HTTP 500/429 viram 502 sem gastar uso, 401 da Anthropic vira 503, limite diario, textos invalidos. |
+| `SessaoEIntegracoesDesligadasTest` | (acrescimo) sem a chave da IA o status mostra desligado e as duas rotas respondem 503. |
+| `static/ditado.js` (`node --test`) | A regra pura do front: preenche o pedido completo, o que falta vira pendencia com a aba certa, **nunca troca o que ja estava preenchido (vira conflito)**, nao duplica itens, escolher uma duvida resolve, respostas montadas, deteccao do reconhecimento de voz. |
+
+Os testes de JavaScript rodam com `node --test backend/src/test/js/ditado.test.js` (precisa so do Node; nao ha `package.json`). No Bash do Windows
+passe o caminho do arquivo: pasta e glob nao rodam nada.
+
+O `GuardaBancoLocal` agora tambem aborta se `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` ou `ANTHROPIC_BASE_URL` estiverem definidas no ambiente, e o
+surefire as zera: uma chave real do seu computador nunca chega aos testes (a IA e ligada nos testes por propriedade do Spring, com chave falsa).
+
+Verificado por mutacao (ditado): aceitar qualquer id sem validar no catalogo, aceitar candidatos sem validar, entregar a sessao a qualquer
+empresa ou usuario, folga de 1 no limite por empresa, falha sem devolver o uso, texto do usuario fechando a tag, ultima rodada aceitando
+perguntas, aceitar data no passado e carregar clientes de outra empresa derrubam pelo menos um teste cada. A tela foi percorrida no Chrome
+contra um servidor falso: perguntas, escolha, resposta aberta, conferencia, preenchimento, rascunho e conflito com o formulario.
+
 ## Comportamento atual registrado (nao e aprovacao)
 
 - `autoLoginPublicoEstaAtivoHoje`: `POST /api/auth/auto-login` responde 200 sem senha. Foi um risco aceito pelo dono
@@ -87,4 +110,5 @@ repositorio quando precisam de uma foto exata.
 
 - Desempenho (contagem de consultas / N+1) em `listar` e `encerrados`.
 - A whitelist de `HIBERNATE_HBM2DDL` no `JPAUtil` (le `System.getenv` direto; testar exigiria uma pequena refatoracao).
-- Ponta a ponta do PWA no navegador e o desktop, que continua fora do build.
+- Ponta a ponta automatizado do PWA no navegador (a tela do ditado foi percorrida a mao; nao ha Playwright) e o desktop, que continua fora do build.
+- **O reconhecimento de voz em si** (microfone, permissao, Android e o APK) e a qualidade real da IA com a chave verdadeira: so testaveis em aparelho e com a chave.

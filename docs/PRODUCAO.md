@@ -63,6 +63,9 @@ Detalhes do proxy: [railway-wake-proxy/LEIA-ME.txt](../railway-wake-proxy/LEIA-M
 | `ALTO_MEDIDAS_RETRY_MS` | não | `600000` | Intervalo da repetição do aviso de pagamento. |
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | para ligar | — | Ver [WHATSAPP-API.md](../backend/WHATSAPP-API.md). **Hoje desligado.** |
 | `WHATSAPP_TEMPLATE_NAME`, `WHATSAPP_TEMPLATE_LANG`, `WHATSAPP_API_VERSION`, `WHATSAPP_GRAPH_URL` | não | `orcamento`, `pt_BR`, `v23.0`, `https://graph.facebook.com` | Ajustes do WhatsApp. |
+| `ANTHROPIC_API_KEY` | para ligar o ditado | — | Chave da API da Anthropic para ditar o pedido por voz. Ver [DITADO.md](../backend/DITADO.md). **Hoje desligado.** Defina também um limite de gasto no Console da Anthropic. |
+| `DITADO_MODELO`, `DITADO_EFFORT`, `DITADO_LIMITE_DIA`, `DITADO_LIMITE_GLOBAL_DIA`, `DITADO_TIMEOUT_S`, `DITADO_MAX_RETRIES` | não | `claude-haiku-5-5`, `low`, `100`, `300`, `30`, `1` | Ajustes do ditado (modelo, limites por dia, tempo e novas tentativas). |
+| `ANTHROPIC_BASE_URL` | não | — | **Só testes**: aponta o ditado para um servidor falso. Não defina em produção. |
 
 As variáveis do cron estão listadas acima; as do proxy, no [LEIA-ME.txt](../railway-wake-proxy/LEIA-ME.txt).
 

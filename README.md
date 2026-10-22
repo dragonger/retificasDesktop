@@ -38,7 +38,7 @@ mvn -pl core,backend -am test
 docker compose -f docker-compose.test.yml down
 ```
 
-Os testes rodam só contra esse banco descartável e abortam se o ambiente apontar para outro lugar. Detalhes em [backend/TESTES.md](backend/TESTES.md).
+Os testes rodam só contra esse banco descartável e abortam se o ambiente apontar para outro lugar. Os de JavaScript (`static/ditado.js`) rodam com `node --test backend/src/test/js/ditado.test.js`. Detalhes em [backend/TESTES.md](backend/TESTES.md).
 
 ## Documentação
 
@@ -51,6 +51,7 @@ Os testes rodam só contra esse banco descartável e abortam se o ambiente apont
 | [docs/SAAS.md](docs/SAAS.md) | Estado do multiempresa, decisões já tomadas e o que falta. |
 | [docs/LICOES.md](docs/LICOES.md) | Armadilhas já encontradas e cuidados com os dados reais. |
 | [backend/ALTO-MEDIDAS.md](backend/ALTO-MEDIDAS.md) | Integração com o Alto Medidas: configuração e operação. |
+| [backend/DITADO.md](backend/DITADO.md) | Ditar o pedido por voz, com IA que faz perguntas de esclarecimento (pronto e desligado). |
 | [backend/WHATSAPP-API.md](backend/WHATSAPP-API.md) | Envio do orçamento pela API do WhatsApp (pronto e desligado). |
 | [backend/SCHEMA-STARTUP.md](backend/SCHEMA-STARTUP.md) | Custo do `hbm2ddl=update` na subida e alternativas. |
 | [backend/TESTES.md](backend/TESTES.md) | Como rodar os testes e o que cada um garante. |

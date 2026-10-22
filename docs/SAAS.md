@@ -26,7 +26,7 @@ Como o isolamento funciona e onde ele é frágil: [ARQUITETURA.md](ARQUITETURA.m
 - Administração por empresa e papéis de usuário (hoje não há papéis).
 - Revogação de sessão (ver o risco em [ARQUITETURA.md](ARQUITETURA.md#riscos-conhecidos-auditoria-de-2026-10-17)).
 - Numeração do orçamento por empresa (hoje o número é o id global do pedido).
-- Decidir se WhatsApp, Alto Medidas e as condições do PDF continuam exclusivos da Dih ou passam a ser configuráveis por empresa.
+- Decidir se WhatsApp, Alto Medidas, a chave da IA do ditado (hoje uma só, com limite por empresa mas sem medir o gasto de cada uma) e as condições do PDF continuam exclusivos da Dih ou passam a ser configuráveis por empresa.
 - Migrações de schema versionadas (Flyway ou equivalente) em vez do `hbm2ddl=update`.
 
 **Fase 3 — produto vendável**
