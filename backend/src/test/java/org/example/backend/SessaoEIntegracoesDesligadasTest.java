@@ -92,6 +92,19 @@ class SessaoEIntegracoesDesligadasTest {
     }
 
     @Test
+    void ditadoSemChaveDaIaFicaDesligadoEDa503EmTodasAsRotas() {
+        ApiTeste api = new ApiTeste(porta);
+        String token = tokenQueExpiraEm(20);
+        var status = api.get("/api/ditado/status", token);
+        assertThat(status.status()).isEqualTo(200);
+        assertThat(status.json().get("habilitado").asBoolean()).isFalse();
+        assertThat(status.json().get("usosRestantesHoje").asInt()).isZero();
+        assertThat(api.post("/api/ditado", token, Map.of("texto", "pedido do joao")).status()).isEqualTo(503);
+        assertThat(api.post("/api/ditado/qualquer/respostas", token,
+                Map.of("respostas", java.util.List.of(Map.of("perguntaId", "r1p1", "opcaoIndice", 0)))).status()).isEqualTo(503);
+    }
+
+    @Test
     void whatsAppSemTokenFicaDesligadoEOEnvioDa503SemTentarARede() {
         ApiTeste api = new ApiTeste(porta);
         String token = tokenQueExpiraEm(20);

@@ -53,6 +53,12 @@
             <version>0.13.0</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- SDK oficial da Anthropic: usado so pelo recurso de ditar o pedido (ver backend/DITADO.md). -->
+        <dependency>
+            <groupId>com.anthropic</groupId>
+            <artifactId>anthropic-java</artifactId>
+            <version>2.34.0</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -87,6 +93,9 @@
                         <WHATSAPP_PHONE_NUMBER_ID></WHATSAPP_PHONE_NUMBER_ID>
                         <ALTO_MEDIDAS_PAGAMENTO_URL></ALTO_MEDIDAS_PAGAMENTO_URL>
                         <ALTO_MEDIDAS_SAIDA_KEY></ALTO_MEDIDAS_SAIDA_KEY>
+                        <ANTHROPIC_API_KEY></ANTHROPIC_API_KEY>
+                        <ANTHROPIC_AUTH_TOKEN></ANTHROPIC_AUTH_TOKEN>
+                        <ANTHROPIC_BASE_URL></ANTHROPIC_BASE_URL>
                     </environmentVariables>
                 </configuration>
             </plugin>

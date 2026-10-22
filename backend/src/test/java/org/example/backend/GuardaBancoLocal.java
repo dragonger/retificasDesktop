@@ -30,7 +30,8 @@ final class GuardaBancoLocal {
                             + "(jdbc:postgresql://localhost:PORTA/retificas_test). Suba-o com "
                             + "'docker compose -f docker-compose.test.yml up -d --wait'.");
         }
-        for (String variavel : new String[]{"WHATSAPP_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "ALTO_MEDIDAS_PAGAMENTO_URL"}) {
+        for (String variavel : new String[]{"WHATSAPP_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "ALTO_MEDIDAS_PAGAMENTO_URL",
+                "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL"}) {
             String valor = ambiente.apply(variavel);
             if (valor != null && !valor.isBlank()) {
                 throw new IllegalStateException("Teste abortado: " + variavel
