@@ -1,7 +1,7 @@
 # Testes do backend
 
-Primeiros testes automatizados do projeto: auditoria do isolamento entre empresas.
-Eles rodam contra um **Postgres descartavel local**, nunca contra o banco de producao.
+Testes automatizados do backend (124 hoje): isolamento entre empresas, regras de dinheiro, sessao, integracoes,
+PDF e contratos da API. Eles rodam contra um **Postgres descartavel local**, nunca contra o banco de producao.
 
 ## Como rodar
 
@@ -36,6 +36,15 @@ O build da imagem Docker continua com `-DskipTests`.
 | `MesDeReferenciaTest` | Mes do filtro "Virabrequins do Daniel" pelo relogio de Brasilia (virada do mes e do ano), formatos de data e fallbacks. |
 | `AltoMedidasRegrasTest` | Entrada idempotente que nunca desmarca o pago da DIH; validacoes (400); total devido (polimento, abatimento, nao pago, repassado); total geral igual em qualquer filtro de mes; pagamento (400/404/409, idempotente, pendente de sincronia). Totais conferidos por diferenca. |
 | `SessaoEIntegracoesDesligadasTest` | Header `X-Auth-Refresh` (renova perto de expirar, mantem a empresa); com Alto Medidas sem chave a entrada da 503; WhatsApp sem token fica desligado e o envio da 503 sem tentar a rede. |
+| `PedidoRegrasTest` | Pedido pela API: sincronizacao de itens (repetidos, prefixo estavel, troca no meio, descricao vazia, peca sem quantidade, categoria), totais gravados e recalculados, tipo de desconto/categoria/status desconhecidos, limites de texto (255/2000) e valores negativos, finalizar idempotente (carimbo exato no banco), encerrados por mes, dashboard, situacao atrasado/finalizado, cascade e orphanRemoval, tabela legada `pedido_categoria`, 409 ao apagar cliente/componente em uso, validacao dos cadastros e catalogos, PDF e `/health`. Cada teste usa uma empresa propria. |
+| `AutenticacaoEEmpresaTest` | Login (e-mail normalizado, 401/400), troca de senha, dados da empresa (limites, `@` do Instagram, vazio de proposito) e logo (rejeita texto/GIF/vazio/8001 px/acima de 5 MB; reduz a 400 px; nova versao; remocao). |
+| `LogoNormalizadorTest` | Normalizacao da logo sem subir o servidor: nao amplia, limita a 400 px mantendo a proporcao, JPEG vira PNG, rejeicoes. |
+| `WhatsAppServiceTest` | Telefone brasileiro (DDI, DDD), parametro do modelo (quebra de linha, tab, espacos) e mensagem de erro da Meta. |
+| `WhatsAppEnvioTest` | Envio com a API ligada contra um servidor falso no lugar da Meta: sobe o PDF e manda o modelo com 3 parametros; usa o PDF do aparelho; 429 para o mesmo pedido em menos de 60 s; 502 libera a reserva; 400/413/422/404 sem chamar a Meta. |
+| `AltoMedidasSaidaTest` | Volta do pagamento contra um servidor falso: chave e corpo da chamada (`osId`, `pago`, `em` com -03:00), 2xx sincroniza, 500 deixa pendente com o motivo e o sincronizador repete, 404/409 encerram, servidor fora do ar nao derruba a marcacao, estado mudado durante o envio nao marca, erro truncado em 300, uma execucao por vez. |
+| `PdfOrcamentoTest` | PDF do orcamento gerado em memoria: numero, cliente, itens, totais e desconto em reais, acentos, logo invalida ou ausente, contatos da empresa, varias paginas; `chaveItem` e `precisaCatalogoParaAgrupar`. |
+| `CabecoteFaixaTest` | Faixas de medida: valor unico, faixa com hifen/travessao (sai com travessao), vazio limpa, texto nao numerico lanca. |
+| `ContratoDeApiTest` | Conjunto exato de campos das respostas que o PWA consome (pedido, resumo, dashboard, encerrados, cliente, componente, catalogos, login, empresa, lista do Alto Medidas); payload no formato da Cloud Function (tipos do Firestore); envio simultaneo da mesma OS nunca duplica a linha; o schema criado pelo `update` passa no `validate` do Hibernate. |
 
 Verificado por mutacao (isolamento): remover o filtro de empresa de `Cliente` (buscar, listar, deletar), `Cabecote.deletar`,
 `ServicoCatalogo.deletar`, `PecaCatalogo.deletar`, `Pedido` (carregar com itens, deletar) e `OsAltoMedidas.listar`
@@ -45,6 +54,10 @@ controller do backend (so pelo desktop), por isso nenhum teste o exercita.
 Verificado por mutacao (regras): tirar o limite do desconto, trocar o arredondamento, somar polimento sempre, incluir
 repassadas no devido, deixar o reenvio desmarcar o pago, permitir pagamento apos repasse, mudar a janela de renovacao do
 JWT e calcular o mes pelo UTC derrubam pelo menos um teste cada.
+
+Verificado por mutacao (matriz completa): prefixo de itens sem conferir a descricao, 502 sem liberar a reserva, sem trava de
+60 s por pedido, telefone fixo de 10 digitos, logo ate 800 px, finalizar mudando a data, 409 sem encerrar a repeticao e
+sincronia marcando com o estado mudado.
 
 ## Comportamento atual registrado (nao e aprovacao)
 
@@ -57,8 +70,21 @@ JWT e calcular o mes pelo UTC derrubam pelo menos um teste cada.
 - `textoComPontoESemVirgulaEhLidoComoDecimalNaoComoMilhar`: o texto `"1.250"` (sem virgula) vira 1,25, nao 1.250.
   Hoje o Alto Medidas manda o valor como numero, entao nao ha efeito; confirmar com quem cuida da Cloud Function.
 
+- Entradas ruins que **hoje respondem 500** em vez de 400 (os testes aceitam 400 ou 500, nunca 2xx): item nulo na lista de
+  servicos/pecas, `datEntregaEstimada` fora de `yyyy-MM-dd`, nome de cliente ou de componente acima de 255 caracteres.
+- Envio simultaneo da mesma OS do Alto Medidas: o indice unico impede duplicar, mas alguns envios responderem 500 (a violacao
+  nao e tratada). O teste aceita 200 ou 500 e exige uma unica linha.
+- `DELETE` de recurso de outra empresa ou inexistente responde 204 e nao apaga nada (nos catalogos, pedidos e na rota geral).
+
+## Como os servidores falsos funcionam
+
+`ServidorFalso` sobe um servidor HTTP em `127.0.0.1` numa porta livre e faz o papel da Meta (`WHATSAPP_GRAPH_URL`) e da funcao
+`dihPagamento` (`ALTO_MEDIDAS_PAGAMENTO_URL`). Nenhum teste sai da maquina. Abrir a lista de OS do Alto Medidas reenvia as OS
+pendentes de forma assincrona; por isso esses testes filtram as chamadas pela OS do proprio teste e leem o estado pelo
+repositorio quando precisam de uma foto exata.
+
 ## Fora desta etapa
 
-Itens P1/P2 da matriz de testes do relatorio de analise: sincronizacao de itens do pedido, cascade/orphanRemoval, validacoes
-de texto, PDF, WhatsApp habilitado (contra WireMock), sincronizador do Alto Medidas, contratos de DTO e build do desktop.
-O desktop continua fora do build.
+- Desempenho (contagem de consultas / N+1) em `listar` e `encerrados`.
+- A whitelist de `HIBERNATE_HBM2DDL` no `JPAUtil` (le `System.getenv` direto; testar exigiria uma pequena refatoracao).
+- Ponta a ponta do PWA no navegador e o desktop, que continua fora do build.

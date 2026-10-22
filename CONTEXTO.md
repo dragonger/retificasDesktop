@@ -24,7 +24,7 @@ Ponto de partida para quem retoma o projeto (pessoa ou assistente). Este arquivo
 - **WhatsApp**: código pronto, desligado (faltam as credenciais da Meta).
 - **Login automático**: ativo e mantido (decisão do dono em 2026-10-17). Ver [docs/SAAS.md](docs/SAAS.md#login-automático).
 - **Desktop JavaFX**: não compila desde a Fase 1b; será remodelado depois (decisão do dono em 2026-10-17), então não é prioridade agora.
-- **Testes**: testes automatizados de isolamento, dinheiro, JWT e Alto Medidas, (ver [backend/TESTES.md](backend/TESTES.md)). O resto da matriz de testes ainda não foi feito.
+- **Testes**: 124 testes automatizados (isolamento, dinheiro, sessão, pedidos, PDF, WhatsApp, Alto Medidas e contratos da API); ver [backend/TESTES.md](backend/TESTES.md). Falta só desempenho (N+1), a lista de valores aceitos do `HIBERNATE_HBM2DDL` e o ponta a ponta do PWA.
 
 ## Regras de trabalho
 
@@ -40,5 +40,5 @@ Ponto de partida para quem retoma o projeto (pessoa ou assistente). Este arquivo
 - Aprovar e publicar o PR do Alto Medidas (segredos do Firebase `DIH_ENTRADA_KEY` e `DIH_SAIDA_KEY`, `firebase deploy --only functions`, nova versão do app do Daniel) e testar com uma OS de teste.
 - Decidir as integrações por empresa (ver [docs/SAAS.md](docs/SAAS.md)). O login automático e o desktop já têm decisão (mantido e remodelado depois).
 - Fase 2 do SaaS: onboarding de outras oficinas.
-- Restante da matriz de testes (pedido, PDF, WhatsApp, sincronizador, contratos de DTO).
+- Entradas ruins que hoje respondem 500 em vez de 400 (item nulo, data inválida, nome longo) e o upsert simultâneo do Alto Medidas: ver [backend/TESTES.md](backend/TESTES.md).
 - Conferir no celular real: fontes, busca, logo, rascunhos e a tela do Daniel.
