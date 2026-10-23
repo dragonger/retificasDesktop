@@ -1613,7 +1613,9 @@
   }
 
   // Reconhecimento de voz em pt-BR escrevendo numa caixa de texto. Reinicia sozinho quando o navegador para por silêncio.
-  function ditadoVoz(alvo, aoMudar, aoParar) {
+  // aoPronto(bool): false enquanto o microfone (re)liga, true quando ele de fato voltou a ouvir. O Chrome do
+  // Android encerra a escuta sozinho; o que se fala nesse intervalo se perde, entao o app avisa quando voltou.
+  function ditadoVoz(alvo, aoMudar, aoParar, aoPronto) {
     const SR = Ditado.reconhecimentoDisponivel(window);
     if (!SR) return null;
     const rec = new SR();
@@ -1624,6 +1626,11 @@
     // só edição de verdade (teclado) muda a base; o que o próprio reconhecimento escreve é ignorado
     const aoEditar = () => { if (ativo && !escrevendo) fixarBase(); };
     alvo.addEventListener('input', aoEditar);
+    rec.onaudiostart = () => {
+      if (!ativo) return;
+      if (aoPronto) aoPronto(true);
+      try { if (navigator.vibrate) navigator.vibrate(40); } catch (e) { /* sem vibracao */ }
+    };
     rec.onresult = ev => {
       // monta o texto da sessão inteira do zero a cada evento: o Chrome do Android repete resultados finais
       // e o resultIndex não é confiável, então acumular por evento duplicava o que era falado
@@ -1653,11 +1660,11 @@
       }
     };
     rec.onend = () => {
-      if (ativo) { fixarBase(); try { rec.start(); return; } catch (e) { ativo = false; } }
+      if (ativo) { fixarBase(); if (aoPronto) aoPronto(false); try { rec.start(); return; } catch (e) { ativo = false; } }
       aoParar();
     };
     return {
-      iniciar() { fixarBase(); ativo = true; try { rec.start(); } catch (e) { ativo = false; } return ativo; },
+      iniciar() { fixarBase(); ativo = true; if (aoPronto) aoPronto(false); try { rec.start(); } catch (e) { ativo = false; } return ativo; },
       parar() { ativo = false; try { rec.stop(); } catch (e) { /* já parado */ } },
       ativo() { return ativo; },
       encerrar() { ativo = false; alvo.removeEventListener('input', aoEditar); try { rec.abort(); } catch (e) { /* já parado */ } }
@@ -1706,14 +1713,18 @@
       const estado = nota('', 'ditado-ouvindo');
       function atualizar() { btnEntender.disabled = !fld.value.trim(); }
       fld.addEventListener('input', atualizar);
-      voz = ditadoVoz(fld, atualizar, () => rotuloBotao());
+      let pronto = false;
+      voz = ditadoVoz(fld, atualizar, () => { pronto = false; rotuloBotao(); }, ok => { pronto = ok; rotuloBotao(); });
       function rotuloBotao() {
         btnFalar.innerHTML = '';
         const ouvindo = voz && voz.ativo();
         btnFalar.appendChild(svgIcone('currentColor', 16, ICONE_MICROFONE));
         btnFalar.appendChild(document.createTextNode(ouvindo ? 'Parar' : 'Falar'));
         btnFalar.classList.toggle('ditado-gravando', !!ouvindo);
-        estado.textContent = ouvindo ? 'Ouvindo… fale o pedido e toque em Parar.' : '';
+        estado.textContent = !ouvindo ? '' : (pronto
+          ? 'Ouvindo… pode falar. Toque em Parar quando terminar.'
+          : 'Ligando o microfone… espere a vibração para falar.');
+        estado.classList.toggle('ditado-aguarde', !!ouvindo && !pronto);
       }
       btnFalar.addEventListener('click', () => {
         if (voz.ativo()) voz.parar(); else voz.iniciar();

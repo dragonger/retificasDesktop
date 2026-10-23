@@ -462,3 +462,4 @@ textarea.input { min-height: 90px; resize: vertical; }
 .ditado-pendencias { margin: 0; padding-left: 18px; font-size: 13.5px; display: flex; flex-direction: column; gap: 4px; }
 .ditado-secao { display: flex; flex-direction: column; gap: 8px; }
 @media (min-width: 560px) { .ditado-overlay { padding: 32px 14px; } }
+.ditado-ouvindo.ditado-aguarde { color: #b7791f; font-weight: 600; }
