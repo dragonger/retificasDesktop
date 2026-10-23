@@ -127,6 +127,7 @@ Uma matriz equivalente a esta, dentro do `MatrizDeEndpointsTest`, é conferida c
 |---|---|---|
 | Alto Medidas (virabrequins do Daniel) | Ligada em produção | [backend/ALTO-MEDIDAS.md](../backend/ALTO-MEDIDAS.md) |
 | WhatsApp Business (envio do orçamento) | Código pronto, **desligado** (faltam as credenciais da Meta) | [backend/WHATSAPP-API.md](../backend/WHATSAPP-API.md) |
+| App Android (Capacitor, voz nativa) | Pronto para teste; instalação direta do APK | [android-app/LEIA-ME.md](../android-app/LEIA-ME.md) |
 | Anthropic (ditar o pedido por voz) | Código pronto, **desligado** (falta `ANTHROPIC_API_KEY`) | [backend/DITADO.md](../backend/DITADO.md) |
 
 O **ditado** (`org.example.backend.ditado`) manda o texto transcrito pelo navegador ao Claude (SDK oficial `anthropic-java`, saída estruturada) junto com o catálogo da empresa do token. Tudo que a IA devolve passa pelo `NormalizadorDitado`, que descarta ids que não existam no catálogo **da empresa** e limita valores, datas e tamanhos. A conversa (perguntas de esclarecimento, até 4 chamadas por ditado) fica numa sessão **em memória** no servidor (20 minutos, no máximo 200), e o limite diário (100 por empresa, 300 no total) também é em memória e zera no reinício. Até 4 chamadas simultâneas à IA, para não ocupar as 20 threads do Tomcat.

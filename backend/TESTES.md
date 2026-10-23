@@ -111,4 +111,5 @@ repositorio quando precisam de uma foto exata.
 - Desempenho (contagem de consultas / N+1) em `listar` e `encerrados`.
 - A whitelist de `HIBERNATE_HBM2DDL` no `JPAUtil` (le `System.getenv` direto; testar exigiria uma pequena refatoracao).
 - Ponta a ponta automatizado do PWA no navegador (a tela do ditado foi percorrida a mao; nao ha Playwright) e o desktop, que continua fora do build.
+- **O plugin nativo de voz** (`android-app/`, `DitadoVozPlugin.java`): sem testes automatizados e sem celular nesta máquina. A lógica do lado do app (`ditadoVozNativa`) foi simulada em node com um plugin falso; o plugin Java só compila e foi conferido no APK (permissão do microfone, assinatura igual à do APK antigo). Precisa de teste nos aparelhos (S22 Ultra e S26).
 - **O reconhecimento de voz em si** (microfone, permissao, Android e o APK) e a qualidade real da IA com a chave verdadeira: so testaveis em aparelho e com a chave.
