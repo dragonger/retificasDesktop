@@ -1627,8 +1627,17 @@
     rec.onresult = ev => {
       // monta o texto da sessão inteira do zero a cada evento: o Chrome do Android repete resultados finais
       // e o resultIndex não é confiável, então acumular por evento duplicava o que era falado
+      // Android: cada hipotese parcial ("pedido", "pedido do", "pedido do Joao"...) chega como um resultado
+      // separado. Um resultado que continua o anterior o substitui; so um trecho novo e acrescentado.
       const partes = [];
-      for (let i = 0; i < ev.results.length; i++) partes.push(ev.results[i][0].transcript.trim());
+      for (let i = 0; i < ev.results.length; i++) {
+        const t = ev.results[i][0].transcript.trim();
+        if (!t) continue;
+        const ant = partes.length ? partes[partes.length - 1] : '';
+        if (ant && (t.toLowerCase().startsWith(ant.toLowerCase()) || ant.toLowerCase().startsWith(t.toLowerCase()))) {
+          partes[partes.length - 1] = t.length >= ant.length ? t : ant;
+        } else partes.push(t);
+      }
       escrevendo = true;
       alvo.value = (base + partes.filter(Boolean).join(' ')).slice(0, 2000);
       aoMudar();
