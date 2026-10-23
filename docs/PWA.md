@@ -30,6 +30,10 @@ Roteamento por hash (`#/...`) em `rotear()`. Abas da barra inferior: **Início**
 - **Catálogo**: Clientes (CRUD e busca), Serviços e Peças, todos com categoria.
 - **Virabrequins do Daniel**: cartão grande com o total devido, seletor de **mês de finalização** e três listas, nesta ordem na tela: pago pelo cliente (a repassar), aguardando o cliente pagar e já repassado. Ver [ALTO-MEDIDAS.md](../backend/ALTO-MEDIDAS.md).
 
+## App Android (APK)
+
+O PWA pode ser instalado como app de verdade pelo APK em `android-app/` (Capacitor): uma casca que abre o site de produção. A única parte nativa é a **voz do ditado**: dentro do APK, `ditadoNativo()` (app.js) detecta o plugin `DitadoVoz` e `ditadoVozNativa()` usa o `SpeechRecognizer` do Android, com sessão segmentada no Android 13+. Fora do APK nada muda (Web Speech API). Como o app carrega o site do servidor, **mudanças no `app.js` valem para o APK sem gerar APK novo**; só mudança no código Java pede APK novo. Detalhes, assinatura e instalação em [android-app/LEIA-ME.md](../android-app/LEIA-ME.md).
+
 ## Identidade da empresa
 
 Cada empresa tem logo e dados de cabeçalho próprios, editados em **Catálogo → Minha empresa** (`#/empresa`).

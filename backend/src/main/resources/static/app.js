@@ -1613,9 +1613,60 @@
   }
 
   // Reconhecimento de voz em pt-BR escrevendo numa caixa de texto. Reinicia sozinho quando o navegador para por silêncio.
+  // Dentro do APK (Capacitor) o plugin DitadoVoz usa o reconhecimento de voz do Android, que no Android 13+
+  // mantem o microfone aberto entre as pausas. No navegador isso nao existe e vale o Web Speech API abaixo.
+  function ditadoNativo() {
+    try {
+      const cap = window.Capacitor;
+      if (cap && cap.isNativePlatform && cap.isNativePlatform() && cap.Plugins && cap.Plugins.DitadoVoz) return cap.Plugins.DitadoVoz;
+    } catch (e) { /* sem ponte nativa */ }
+    return null;
+  }
+
+  function ditadoVozNativa(plugin, alvo, aoMudar, aoParar, aoPronto) {
+    let ativo = false; let base = ''; let escrevendo = false; let ouvintes = [];
+    const fixarBase = () => { base = alvo.value.trim() ? alvo.value.trim() + ' ' : ''; };
+    const aoEditar = () => { if (ativo && !escrevendo) fixarBase(); };
+    alvo.addEventListener('input', aoEditar);
+    const soltar = () => { ouvintes.forEach(h => { try { h.remove(); } catch (e) { /* ja removido */ } }); ouvintes = []; };
+    const ligar = (nome, fn) => { Promise.resolve(plugin.addListener(nome, fn)).then(h => { if (h) ouvintes.push(h); }).catch(() => {}); };
+    ligar('resultado', ev => {
+      if (!ativo) return;
+      escrevendo = true;
+      alvo.value = (base + (ev.texto || '').trim()).slice(0, 2000);
+      aoMudar();
+      escrevendo = false;
+    });
+    ligar('estado', ev => { if (aoPronto && ativo) aoPronto(!!ev.pronto); if (ev.pronto && ativo) { try { if (navigator.vibrate) navigator.vibrate(40); } catch (e) { /* sem vibracao */ } } });
+    ligar('erro', ev => {
+      ativo = false;
+      const msg = { permissao: 'Sem permissão para o microfone. Libere nas configurações do app, ou escreva o pedido.',
+        rede: 'O reconhecimento de voz precisou de internet e falhou. Escreva o pedido.',
+        microfone: 'Não achei o microfone. Escreva o pedido.', ocupado: 'O reconhecimento de voz está ocupado. Tente de novo.' }[ev.codigo] || 'O reconhecimento de voz falhou. Escreva o pedido.';
+      toast(msg, true);
+      aoParar();
+    });
+    return {
+      iniciar() {
+        fixarBase(); ativo = true; if (aoPronto) aoPronto(false);
+        plugin.iniciar({ idioma: 'pt-BR' }).catch(e => {
+          ativo = false;
+          toast(String(e && (e.message || e)).includes('permissao') ? 'Sem permissão para o microfone. Libere nas configurações do app, ou escreva o pedido.' : 'Não consegui ligar o microfone. Escreva o pedido.', true);
+          aoParar();
+        });
+        return true;
+      },
+      parar() { ativo = false; try { plugin.parar(); } catch (e) { /* ja parado */ } setTimeout(aoParar, 0); },
+      ativo() { return ativo; },
+      encerrar() { ativo = false; alvo.removeEventListener('input', aoEditar); soltar(); try { plugin.encerrar(); } catch (e) { /* ja parado */ } }
+    };
+  }
+
   // aoPronto(bool): false enquanto o microfone (re)liga, true quando ele de fato voltou a ouvir. O Chrome do
   // Android encerra a escuta sozinho; o que se fala nesse intervalo se perde, entao o app avisa quando voltou.
   function ditadoVoz(alvo, aoMudar, aoParar, aoPronto) {
+    const nat = ditadoNativo();
+    if (nat) return ditadoVozNativa(nat, alvo, aoMudar, aoParar, aoPronto);
     const SR = Ditado.reconhecimentoDisponivel(window);
     if (!SR) return null;
     const rec = new SR();
@@ -1793,7 +1844,7 @@
           marcarSelecao();
         });
         const linha = el('div', { class: 'ditado-resposta' }, campoLivre);
-        const mic = Ditado.reconhecimentoDisponivel(window) ? el('button', { type: 'button', class: 'btn btn-ghost ditado-mic',
+        const mic = (ditadoNativo() || Ditado.reconhecimentoDisponivel(window)) ? el('button', { type: 'button', class: 'btn btn-ghost ditado-mic',
           'aria-label': 'Responder falando' }, svgIcone('currentColor', 16, ICONE_MICROFONE)) : null;
         if (mic) {
           let vozLocal = null;

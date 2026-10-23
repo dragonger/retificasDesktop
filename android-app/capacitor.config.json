@@ -1,0 +1,13 @@
+{
+  "appId": "com.retificadih.retifica",
+  "appName": "Retífica",
+  "webDir": "www",
+  "server": {
+    "url": "https://retifica-backend-production.up.railway.app",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
