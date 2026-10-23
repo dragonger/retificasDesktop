@@ -1618,17 +1618,21 @@
     if (!SR) return null;
     const rec = new SR();
     rec.lang = 'pt-BR'; rec.interimResults = true; rec.continuous = true;
-    let ativo = false; let base = ''; let final = '';
-    const aoEditar = () => { if (ativo) { base = alvo.value ? alvo.value.trim() + ' ' : ''; final = ''; } };
+    let ativo = false; let base = '';
+    let escrevendo = false;
+    const fixarBase = () => { base = alvo.value.trim() ? alvo.value.trim() + ' ' : ''; };
+    // só edição de verdade (teclado) muda a base; o que o próprio reconhecimento escreve é ignorado
+    const aoEditar = () => { if (ativo && !escrevendo) fixarBase(); };
     alvo.addEventListener('input', aoEditar);
     rec.onresult = ev => {
-      let parcial = '';
-      for (let i = ev.resultIndex; i < ev.results.length; i++) {
-        const r = ev.results[i];
-        if (r.isFinal) final += r[0].transcript + ' '; else parcial += r[0].transcript;
-      }
-      alvo.value = (base + final + parcial).slice(0, 2000);
+      // monta o texto da sessão inteira do zero a cada evento: o Chrome do Android repete resultados finais
+      // e o resultIndex não é confiável, então acumular por evento duplicava o que era falado
+      const partes = [];
+      for (let i = 0; i < ev.results.length; i++) partes.push(ev.results[i][0].transcript.trim());
+      escrevendo = true;
+      alvo.value = (base + partes.filter(Boolean).join(' ')).slice(0, 2000);
       aoMudar();
+      escrevendo = false;
     };
     rec.onerror = ev => {
       if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
@@ -1640,11 +1644,11 @@
       }
     };
     rec.onend = () => {
-      if (ativo) { try { rec.start(); return; } catch (e) { ativo = false; } }
+      if (ativo) { fixarBase(); try { rec.start(); return; } catch (e) { ativo = false; } }
       aoParar();
     };
     return {
-      iniciar() { base = alvo.value ? alvo.value.trim() + ' ' : ''; final = ''; ativo = true; try { rec.start(); } catch (e) { ativo = false; } return ativo; },
+      iniciar() { fixarBase(); ativo = true; try { rec.start(); } catch (e) { ativo = false; } return ativo; },
       parar() { ativo = false; try { rec.stop(); } catch (e) { /* já parado */ } },
       ativo() { return ativo; },
       encerrar() { ativo = false; alvo.removeEventListener('input', aoEditar); try { rec.abort(); } catch (e) { /* já parado */ } }

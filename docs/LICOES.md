@@ -43,3 +43,5 @@ O gatilho `enviarOsParaDih` do Alto Medidas roda também quando a própria funç
 - Comandos encadeados com `&&` escondem erros: já aconteceu de um `git fetch` com argumento errado interromper a cadeia enquanto o `railway up` seguinte publicou código antigo.
 - No PowerShell 5.1, `Set-Content -Encoding utf8` grava BOM, e o `javac` quebra com `illegal character: '﻿'`.
 - O prefixo `!` para rodar comando no chat é uma instrução do Claude Code; ao colar um comando em um terminal PowerShell separado, não inclua o `!`.
+
+- **Reconhecimento de voz repete o texto no Android.** No Chrome do Android o `SpeechRecognition` contínuo reenvia resultados finais e o `resultIndex` não é confiável; acumular por evento duplicava a fala. O `ditadoVoz` (app.js) monta o texto da sessão do zero a cada evento, fixa a base só em edição de teclado ou reinício da escuta e ignora o `input` que ele mesmo gera. Só dá para ver o defeito num aparelho real.
